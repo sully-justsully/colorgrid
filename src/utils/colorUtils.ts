@@ -4,7 +4,7 @@ export const rgbToHex = (r: number, g: number, b: number): string => {
     "#" +
     [r, g, b]
       .map((x) => {
-        const hex = x.toString(16);
+        const hex = x.toString(16).toUpperCase();
         return hex.length === 1 ? "0" + hex : hex;
       })
       .join("")
@@ -198,4 +198,58 @@ export const calculateContrastRatio = (
   const lighter = Math.max(l1, l2);
   const darker = Math.min(l1, l2);
   return (lighter + 0.05) / (darker + 0.05);
+};
+
+export function rgbToHsb(
+  r: number,
+  g: number,
+  b: number
+): [number, number, number] {
+  r /= 255;
+  g /= 255;
+  b /= 255;
+
+  const max = Math.max(r, g, b);
+  const min = Math.min(r, g, b);
+  const delta = max - min;
+
+  let h = 0;
+  let s = max === 0 ? 0 : delta / max;
+  let v = max;
+
+  if (delta !== 0) {
+    if (max === r) {
+      h = ((g - b) / delta) % 6;
+    } else if (max === g) {
+      h = (b - r) / delta + 2;
+    } else {
+      h = (r - g) / delta + 4;
+    }
+
+    h = Math.round(h * 60);
+    if (h < 0) h += 360;
+  }
+
+  s = Math.round(s * 100);
+  v = Math.round(v * 100);
+
+  return [h, s, v];
+}
+
+// Convert hex to RGB
+export const hexToRgb = (hex: string): [number, number, number] => {
+  const r = parseInt(hex.slice(1, 3), 16);
+  const g = parseInt(hex.slice(3, 5), 16);
+  const b = parseInt(hex.slice(5, 7), 16);
+  return [r, g, b];
+};
+
+// Calculate Euclidean distance between two colors in RGB space
+export const colorDistance = (hex1: string, hex2: string): number => {
+  const [r1, g1, b1] = hexToRgb(hex1);
+  const [r2, g2, b2] = hexToRgb(hex2);
+
+  return Math.sqrt(
+    Math.pow(r1 - r2, 2) + Math.pow(g1 - g2, 2) + Math.pow(b1 - b2, 2)
+  );
 };

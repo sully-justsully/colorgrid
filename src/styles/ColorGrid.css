@@ -27,8 +27,35 @@
 }
 
 .dot.active {
-  outline: 2px solid #ff0000;
+  transform: scale(1.5);
   z-index: 2;
+  outline: none;
+  box-shadow: 0 0 0 2px transparent;
+  animation: rainbow-border 2s linear infinite;
+}
+
+@keyframes rainbow-border {
+  0% {
+    box-shadow: 0 0 0 2px #ff0000;
+  }
+  17% {
+    box-shadow: 0 0 0 2px #ff9900;
+  }
+  33% {
+    box-shadow: 0 0 0 2px #ffff00;
+  }
+  50% {
+    box-shadow: 0 0 0 2px #00ff00;
+  }
+  67% {
+    box-shadow: 0 0 0 2px #00ffff;
+  }
+  83% {
+    box-shadow: 0 0 0 2px #0000ff;
+  }
+  100% {
+    box-shadow: 0 0 0 2px #ff0000;
+  }
 }
 
 .dot.filtered {
