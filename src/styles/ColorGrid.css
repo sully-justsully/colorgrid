@@ -1,0 +1,73 @@
+.color-grid {
+  display: grid;
+  grid-template-columns: repeat(101, 10px);
+  grid-template-rows: repeat(101, 10px);
+  gap: 1px;
+  background-color: #121212;
+  padding: 1px;
+  width: fit-content;
+  height: fit-content;
+  margin: 0;
+}
+
+.dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  cursor: pointer;
+  position: relative;
+  transition: transform 0.15s;
+  box-sizing: border-box;
+}
+
+.dot:hover {
+  transform: scale(1.5);
+  z-index: 1;
+  outline: 1px solid #ffffff;
+}
+
+.dot.active {
+  outline: 2px solid #ff0000;
+  z-index: 2;
+}
+
+.dot.filtered {
+  opacity: 0.3;
+  pointer-events: none;
+}
+
+.hex-tooltip {
+  position: absolute;
+  bottom: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+  background-color: rgba(0, 0, 0, 0.9);
+  color: white;
+  padding: 6px 8px;
+  border-radius: 4px;
+  font-size: 12px;
+  font-family: "Lato", sans-serif;
+  white-space: nowrap;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.2s;
+  z-index: 3;
+}
+
+.dot:hover .hex-tooltip {
+  opacity: 1;
+}
+
+.hex-value {
+  font-weight: 500;
+  margin-bottom: 2px;
+  font-family: "Lato", sans-serif;
+}
+
+.lab-value,
+.hsb-value {
+  color: #999;
+  font-size: 11px;
+  font-family: "Lato", sans-serif;
+  font-weight: 400;
+}
