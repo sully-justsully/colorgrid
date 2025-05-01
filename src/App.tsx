@@ -3,26 +3,35 @@ import ColorGrid from "./components/ColorGrid";
 import ColorSwatch from "./components/ColorSwatch";
 import Toast from "./components/Toast";
 import { ColorSwatch as ColorSwatchType, Dot } from "./types";
-import { labToRgb, rgbToHex, calculateContrastRatio } from "./utils/colorUtils";
+import {
+  labToRgb,
+  rgbToHex,
+  calculateContrastRatio,
+  rgbToHsb,
+} from "./utils/colorUtils";
 import "./App.css";
 
 const initialLValues = [95, 85, 75, 65, 55, 45, 35, 25, 15, 5];
 
-const guideSvg = `<svg width="2776" height="2776" viewBox="0 0 2776 2776" fill="none" xmlns="http://www.w3.org/2000/svg">
-  <path d="M2775 2775C2775 2775 2775 707 2422 354C2069 1.00061 1.00098 1.00059 1.00098 1.00059" stroke="#545454" stroke-width="2"/>
-  <path d="M2775 2775C2775 2775 2422 1062 2068 708C1714 354 1.00098 1.00049 1.00098 1.00049" stroke="#545454" stroke-width="2"/>
-  <path d="M2775 2775C2775 2775 2068 1415 1715 1062C1362 709 1.00098 1.00049 1.00098 1.00049" stroke="#545454" stroke-width="2"/>
-  <path d="M1 1L2775 2775" stroke="#545454" stroke-width="2"/>
-  <path d="M1.00366 1.0022C1.00366 1.0022 708.003 1361 1061 1714C1414 2067 2775 2775 2775 2775" stroke="#545454" stroke-width="2"/>
-  <path d="M1.00366 1.0022C1.00366 1.0022 354.003 1714 708.003 2068C1062 2422 2775 2775 2775 2775" stroke="#545454" stroke-width="2"/>
-  <path d="M1.00162 1.00016C1.00162 1.00016 1.00242 2069 354.002 2422C707.001 2775 2775 2775 2775 2775" stroke="#545454" stroke-width="2"/>
+const guideSvg = `<svg width="1110" height="1110" viewBox="0 0 1110 1110" preserveAspectRatio="none" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <path d="M1110 1110C1110 1110 1110 282 968 142C826 0.4 0.4 0.4 0.4 0.4" stroke="white" stroke-width="1"/>
+  <path d="M1110 1110C1110 1110 968 424 826 282C684 142 0.4 0.4 0.4 0.4" stroke="white" stroke-width="1"/>
+  <path d="M1110 1110C1110 1110 826 566 684 424C542 282 0.4 0.4 0.4 0.4" stroke="white" stroke-width="1"/>
+  <path d="M0.4 0.4L1110 1110" stroke="white" stroke-width="1"/>
+  <path d="M0.4 0.4C0.4 0.4 282 542 424 684C566 826 1110 1110 1110 1110" stroke="white" stroke-width="1"/>
+  <path d="M0.4 0.4C0.4 0.4 142 684 282 826C424 968 1110 1110 1110 1110" stroke="white" stroke-width="1"/>
+  <path d="M0.4 0.4C0.4 0.4 0.4 826 142 968C282 1110 1110 1110 1110 1110" stroke="white" stroke-width="1"/>
 </svg>`;
 
 const App: React.FC = () => {
+  const [keyHexCode, setKeyHexCode] = useState("0080FF");
+  const [inputHexCode, setInputHexCode] = useState("0080FF");
   const [hue, setHue] = useState(210);
   const [isFiltering, setIsFiltering] = useState(false);
-  const [isATextContrast, setIsATextContrast] = useState(false);
-  const [isAATextContrast, setIsAATextContrast] = useState(false);
+  const [showGuides, setShowGuides] = useState(false);
+  const [wcagLevel, setWcagLevel] = useState<"none" | "A" | "AA" | "AAA">(
+    "none"
+  );
   const [isPickingColor, setIsPickingColor] = useState(false);
   const [activeSwatchId, setActiveSwatchId] = useState<number | null>(null);
   const [activeDots, setActiveDots] = useState<Set<string>>(new Set());
@@ -40,8 +49,9 @@ const App: React.FC = () => {
       };
     })
   );
-  const [showGuides, setShowGuides] = useState(false);
   const [showToast, setShowToast] = useState(false);
+  const [isHexValid, setIsHexValid] = useState(true);
+  const [isHexDirty, setIsHexDirty] = useState(false);
 
   const dropdownRef = useRef<HTMLDivElement>(null);
 
@@ -61,28 +71,40 @@ const App: React.FC = () => {
     };
   }, []);
 
-  const handleHueChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setHue(parseInt(e.target.value) || 0);
+  const handleHexCodeChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const newHexCode = e.target.value
+      .replace(/[^0-9A-Fa-f]/g, "")
+      .slice(0, 6)
+      .toUpperCase();
+    setInputHexCode(newHexCode);
+    setIsHexValid(/^[0-9A-Fa-f]{6}$/.test(newHexCode));
+    setIsHexDirty(newHexCode !== keyHexCode);
+  };
+
+  const updateHexCode = () => {
+    if (isHexValid && isHexDirty) {
+      setKeyHexCode(inputHexCode);
+      const r = parseInt(inputHexCode.slice(0, 2), 16);
+      const g = parseInt(inputHexCode.slice(2, 4), 16);
+      const b = parseInt(inputHexCode.slice(4, 6), 16);
+      const [h] = rgbToHsb(r, g, b);
+      setHue(h);
+      setIsHexDirty(false);
+    }
+  };
+
+  const handleKeyPress = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === "Enter") {
+      updateHexCode();
+    }
   };
 
   const handleFilterToggle = (e: React.ChangeEvent<HTMLInputElement>) => {
     setIsFiltering(e.target.checked);
   };
 
-  const handleTextContrastChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setIsATextContrast(e.target.checked);
-    if (e.target.checked) {
-      setIsAATextContrast(false);
-    }
-  };
-
-  const handleAATextContrastChange = (
-    e: React.ChangeEvent<HTMLInputElement>
-  ) => {
-    setIsAATextContrast(e.target.checked);
-    if (e.target.checked) {
-      setIsATextContrast(false);
-    }
+  const handleWcagChange = (level: "none" | "A" | "AA" | "AAA") => {
+    setWcagLevel(level);
   };
 
   const handleSwatchClick = (id: number) => {
@@ -181,27 +203,26 @@ const App: React.FC = () => {
 
   const handleExportColors = () => {
     const svgWidth = 300;
-    const swatchHeight = 40;
+    const swatchHeight = 80; // Increased height for more spacing
     const totalHeight = swatches.length * swatchHeight;
+    const padding = 16;
 
     let svgContent = `
       <svg width="${svgWidth}" height="${totalHeight}" xmlns="http://www.w3.org/2000/svg">
         <style>
-          .swatch-text { 
+          .text {
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
             font-size: 14px;
-            fill: #333;
           }
-          .contrast-text {
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-            font-size: 14px;
-            fill: #333;
-            text-anchor: end;
-          }
-          .l-value {
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-            font-size: 14px;
-            fill: #333;
+          .color-name { font-size: 16px; }
+          .hex-code { font-size: 14px; }
+          .l-value { font-size: 14px; }
+          .contrast-text { font-size: 14px; }
+          .dot {
+            height: 8px;
+            width: 8px;
+            rx: 4px;
+            ry: 4px;
           }
         </style>
     `;
@@ -209,6 +230,7 @@ const App: React.FC = () => {
     swatches.forEach((swatch, index) => {
       const y = index * swatchHeight;
       const colorName = `Color-${index * 50}`;
+      const textColor = swatch.lValue > 50 ? "#333" : "#fff";
 
       // Add swatch rectangle
       svgContent += `
@@ -216,25 +238,46 @@ const App: React.FC = () => {
         swatch.hexColor
       }" />
         
-        <!-- Color name and hex -->
-        <text x="10" y="${y + 15}" class="swatch-text" fill="${
-        swatch.lValue > 50 ? "#333" : "#fff"
-      }">${colorName}</text>
-        <text x="10" y="${y + 30}" class="swatch-text" fill="${
-        swatch.lValue > 50 ? "#333" : "#fff"
-      }">${swatch.hexColor}</text>
+        <!-- Color name and number -->
+        <text x="${padding}" y="${
+        y + 20
+      }" class="text color-name" fill="${textColor}">
+          <tspan>Color</tspan><tspan dx="2">-${index * 50}</tspan>
+        </text>
+
+        <!-- Hex code -->
+        <text x="${padding}" y="${
+        y + 40
+      }" class="text hex-code" fill="${textColor}">
+          ${swatch.hexColor}
+        </text>
         
         <!-- L value -->
-        <text x="10" y="${y + 45}" class="l-value" fill="${
-        swatch.lValue > 50 ? "#333" : "#fff"
-      }">L*=${swatch.lValue}</text>
+        <text x="${padding}" y="${
+        y + 65
+      }" class="text l-value" fill="${textColor}">
+          L*=${swatch.lValue}
+        </text>
         
-        <!-- Contrast ratio -->
-        <text x="${svgWidth - 10}" y="${y + 25}" class="contrast-text" fill="${
-        swatch.lValue > 50 ? "#333" : "#fff"
-      }">
+        <!-- White contrast ratio with dot -->
+        <text x="${svgWidth - padding - 60}" y="${
+        y + 20
+      }" class="text contrast-text" fill="${textColor}">
+          ${swatch.whiteContrast.toFixed(1)}:1
+        </text>
+        <rect class="dot" x="${svgWidth - padding - 12}" y="${
+        y + 12
+      }" fill="#FFFFFF" />
+
+        <!-- Black contrast ratio with dot -->
+        <text x="${svgWidth - padding - 60}" y="${
+        y + 65
+      }" class="text contrast-text" fill="${textColor}">
           ${swatch.blackContrast.toFixed(1)}:1
         </text>
+        <rect class="dot" x="${svgWidth - padding - 12}" y="${
+        y + 57
+      }" fill="#000000" />
       `;
     });
 
@@ -252,6 +295,35 @@ const App: React.FC = () => {
     URL.revokeObjectURL(url);
   };
 
+  const getContrastFilter = () => {
+    switch (wcagLevel) {
+      case "A":
+        return {
+          isATextContrast: true,
+          isAATextContrast: false,
+          isAAATextContrast: false,
+        };
+      case "AA":
+        return {
+          isATextContrast: false,
+          isAATextContrast: true,
+          isAAATextContrast: false,
+        };
+      case "AAA":
+        return {
+          isATextContrast: false,
+          isAATextContrast: false,
+          isAAATextContrast: true,
+        };
+      default:
+        return {
+          isATextContrast: false,
+          isAATextContrast: false,
+          isAAATextContrast: false,
+        };
+    }
+  };
+
   return (
     <div className="app">
       <header className="app-header">
@@ -266,52 +338,52 @@ const App: React.FC = () => {
             </button>
             {showFiltersDropdown && (
               <div className="dropdown-menu">
-                <label>
+                <label className="filter-option">
                   <input
-                    type="radio"
-                    name="contrast"
-                    checked={
-                      !isATextContrast && !isAATextContrast && !showGuides
-                    }
-                    onChange={() => {
-                      setIsATextContrast(false);
-                      setIsAATextContrast(false);
-                      setShowGuides(false);
-                    }}
-                  />
-                  No Filter
-                </label>
-                <label>
-                  <input
-                    type="radio"
-                    name="contrast"
-                    checked={isATextContrast}
-                    onChange={handleTextContrastChange}
-                  />
-                  3:1 Text
-                </label>
-                <label>
-                  <input
-                    type="radio"
-                    name="contrast"
-                    checked={isAATextContrast}
-                    onChange={handleAATextContrastChange}
-                  />
-                  4.5:1 Text
-                </label>
-                <label>
-                  <input
-                    type="radio"
-                    name="contrast"
+                    type="checkbox"
                     checked={showGuides}
-                    onChange={() => {
-                      setShowGuides(true);
-                      setIsATextContrast(false);
-                      setIsAATextContrast(false);
-                    }}
+                    onChange={(e) => setShowGuides(e.target.checked)}
                   />
                   Simple Guides
                 </label>
+                <div className="wcag-filters">
+                  <label className="filter-option">
+                    <input
+                      type="radio"
+                      name="wcag-level"
+                      checked={wcagLevel === "none"}
+                      onChange={() => handleWcagChange("none")}
+                    />
+                    No WCAG Filter
+                  </label>
+                  <label className="filter-option">
+                    <input
+                      type="radio"
+                      name="wcag-level"
+                      checked={wcagLevel === "A"}
+                      onChange={() => handleWcagChange("A")}
+                    />
+                    WCAG A (3:1)
+                  </label>
+                  <label className="filter-option">
+                    <input
+                      type="radio"
+                      name="wcag-level"
+                      checked={wcagLevel === "AA"}
+                      onChange={() => handleWcagChange("AA")}
+                    />
+                    WCAG AA (4.5:1)
+                  </label>
+                  <label className="filter-option">
+                    <input
+                      type="radio"
+                      name="wcag-level"
+                      checked={wcagLevel === "AAA"}
+                      onChange={() => handleWcagChange("AAA")}
+                    />
+                    WCAG AAA (7:1)
+                  </label>
+                </div>
               </div>
             )}
           </div>
@@ -322,18 +394,26 @@ const App: React.FC = () => {
         <div className="left-drawer">
           <div className="drawer-content">
             <div className="drawer-section">
-              <h3>Input Hue (0-359)</h3>
-              <div className="hue-control">
-                <div className="hue-input-group">
+              <h3>Key Hex Code</h3>
+              <div className="hex-control">
+                <div className="hex-input-group">
                   <input
-                    type="number"
-                    value={hue}
-                    onChange={handleHueChange}
-                    min="0"
-                    max="359"
+                    type="text"
+                    value={inputHexCode}
+                    onChange={handleHexCodeChange}
+                    onKeyPress={handleKeyPress}
+                    placeholder="000000"
                   />
+                  <button
+                    onClick={updateHexCode}
+                    className={isHexValid && isHexDirty ? "active" : "disabled"}
+                    disabled={!isHexValid || !isHexDirty}
+                  >
+                    <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                      <path d="M8.59 16.59L13.17 12 8.59 7.41 10 6l6 6-6 6-1.41-1.41z" />
+                    </svg>
+                  </button>
                 </div>
-                <button className="update-button">Update Hue</button>
               </div>
             </div>
 
@@ -385,11 +465,11 @@ const App: React.FC = () => {
             <ColorGrid
               hue={hue}
               isFiltering={isFiltering}
-              isATextContrast={isATextContrast}
-              isAATextContrast={isAATextContrast}
+              {...getContrastFilter()}
               lValues={swatches.map((swatch) => swatch.lValue)}
               onDotClick={handleDotClick}
               activeDots={activeDots}
+              keyHexCode={`#${keyHexCode}`}
             />
             {showGuides && (
               <div

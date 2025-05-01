@@ -5,6 +5,7 @@ import {
   rgbToHex,
   getRgbLabLightness,
   calculateContrastRatio,
+  colorDistance,
 } from "../utils/colorUtils";
 import "../styles/ColorGrid.css";
 
@@ -13,9 +14,11 @@ interface ColorGridProps {
   isFiltering: boolean;
   isATextContrast: boolean;
   isAATextContrast: boolean;
+  isAAATextContrast: boolean;
   lValues: number[];
   onDotClick: (dot: Dot) => void;
   activeDots: Set<string>;
+  keyHexCode: string;
 }
 
 const ColorGrid: React.FC<ColorGridProps> = ({
@@ -23,9 +26,11 @@ const ColorGrid: React.FC<ColorGridProps> = ({
   isFiltering,
   isATextContrast,
   isAATextContrast,
+  isAAATextContrast,
   lValues,
   onDotClick,
   activeDots,
+  keyHexCode,
 }) => {
   const [dots, setDots] = useState<Dot[]>([]);
   const [colorCache, setColorCache] = useState<ColorCache[][]>([]);
@@ -39,7 +44,7 @@ const ColorGrid: React.FC<ColorGridProps> = ({
     for (let brightness = 0; brightness <= 100; brightness++) {
       for (let saturation = 0; saturation <= 100; saturation++) {
         const [r, g, b] = hsbToRgb(hue, saturation, brightness);
-        const hexColor = rgbToHex(r, g, b);
+        const hexColor = rgbToHex(r, g, b).toUpperCase();
         const labLightness = Math.round(getRgbLabLightness(r, g, b));
         newColorCache[brightness][saturation] = {
           hexColor,
@@ -56,20 +61,36 @@ const ColorGrid: React.FC<ColorGridProps> = ({
   useEffect(() => {
     const newDots: Dot[] = [];
     const lValuesSet = new Set(lValues);
+    let closestDot: { distance: number; row: number; col: number } | null =
+      null;
+    let hasExactMatch = false;
 
+    // First pass: collect all dots and find closest match
     for (let row = 0; row < 101; row++) {
       for (let col = 0; col < 101; col++) {
         const brightness = 100 - row;
         const cached = colorCache[brightness]?.[col];
 
         if (cached) {
-          const dotKey = `${row}-${col}`;
-          const isActive = activeDots.has(dotKey);
+          const exactMatch =
+            cached.hexColor.toUpperCase() === keyHexCode.toUpperCase();
+          if (exactMatch) {
+            hasExactMatch = true;
+            closestDot = { distance: 0, row, col };
+          } else if (!hasExactMatch) {
+            const distance = colorDistance(cached.hexColor, keyHexCode);
+            if (!closestDot || distance < closestDot.distance) {
+              closestDot = { distance, row, col };
+            }
+          }
 
           let isFiltered = false;
           if (isFiltering) {
             isFiltered = !lValuesSet.has(cached.labLightness);
-            if (!isFiltered && (isATextContrast || isAATextContrast)) {
+            if (
+              !isFiltered &&
+              (isATextContrast || isAATextContrast || isAAATextContrast)
+            ) {
               const contrastRatio = calculateContrastRatio(
                 cached.hexColor,
                 "#000000"
@@ -78,9 +99,11 @@ const ColorGrid: React.FC<ColorGridProps> = ({
                 isFiltered = contrastRatio < 3;
               } else if (isAATextContrast) {
                 isFiltered = contrastRatio < 4.5;
+              } else if (isAAATextContrast) {
+                isFiltered = contrastRatio < 7;
               }
             }
-          } else if (isATextContrast || isAATextContrast) {
+          } else if (isATextContrast || isAATextContrast || isAAATextContrast) {
             const contrastRatio = calculateContrastRatio(
               cached.hexColor,
               "#000000"
@@ -89,19 +112,35 @@ const ColorGrid: React.FC<ColorGridProps> = ({
               isFiltered = contrastRatio < 3;
             } else if (isAATextContrast) {
               isFiltered = contrastRatio < 4.5;
+            } else if (isAAATextContrast) {
+              isFiltered = contrastRatio < 7;
             }
           }
 
+          const dotKey = `${row}-${col}`;
           newDots.push({
             row,
             col,
             hexColor: cached.hexColor,
             labLightness: cached.labLightness,
             hsbText: cached.hsbText,
-            isActive,
+            isActive: activeDots.has(dotKey),
             isFiltered,
           });
         }
+      }
+    }
+
+    // Second pass: update the single closest dot to be active
+    if (closestDot) {
+      const dotIndex = newDots.findIndex(
+        (dot) => dot.row === closestDot!.row && dot.col === closestDot!.col
+      );
+      if (dotIndex !== -1) {
+        newDots[dotIndex] = {
+          ...newDots[dotIndex],
+          isActive: true,
+        };
       }
     }
 
@@ -111,8 +150,10 @@ const ColorGrid: React.FC<ColorGridProps> = ({
     isFiltering,
     isATextContrast,
     isAATextContrast,
+    isAAATextContrast,
     lValues,
     activeDots,
+    keyHexCode,
   ]);
 
   const handleDotClick = useCallback(

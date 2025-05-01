@@ -18,21 +18,33 @@
   position: relative;
   transition: transform 0.15s;
   box-sizing: border-box;
+  z-index: 1;
+  isolation: isolate;
 }
 
 .dot:hover {
-  transform: scale(1.5);
-  z-index: 1;
+  transform: scale(1.25);
+  z-index: 1000;
   outline: 1px solid #ffffff;
 }
 
 .dot.active {
-  outline: 2px solid #ff0000;
-  z-index: 2;
+  z-index: 1000;
+  outline: none;
+  box-shadow: 0 0 0 1px white, 0 0 0 2px rgba(0, 0, 0, 0.8),
+    0 0 4px rgba(255, 255, 255, 0.4);
+}
+
+.dot.active .hex-tooltip {
+  transform: translateX(-50%) scale(2);
+}
+
+.dot.hover .hex-tooltip {
+  transform: translateX(-75%) scale(1.25);
 }
 
 .dot.filtered {
-  opacity: 0.3;
+  opacity: 0.25;
   pointer-events: none;
 }
 
@@ -41,17 +53,16 @@
   bottom: 100%;
   left: 50%;
   transform: translateX(-50%);
-  background-color: rgba(0, 0, 0, 0.9);
+  padding: 4px 8px;
+  background-color: rgba(0, 0, 0, 0.8);
   color: white;
-  padding: 6px 8px;
   border-radius: 4px;
   font-size: 12px;
-  font-family: "Lato", sans-serif;
   white-space: nowrap;
   pointer-events: none;
   opacity: 0;
-  transition: opacity 0.2s;
-  z-index: 3;
+  transition: opacity 0.2s, transform 0.2s;
+  z-index: 1001;
 }
 
 .dot:hover .hex-tooltip {
@@ -70,4 +81,23 @@
   font-size: 11px;
   font-family: "Lato", sans-serif;
   font-weight: 400;
+}
+
+.sticky-header {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 64px;
+  background-color: #2a2a2a;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0 16px;
+  z-index: 999;
+  border-bottom: 1px solid #1a1a1a;
+}
+
+.filters-dropdown .dropdown-menu {
+  z-index: 1000;
 }
