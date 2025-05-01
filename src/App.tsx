@@ -13,14 +13,14 @@ import "./App.css";
 
 const initialLValues = [95, 85, 75, 65, 55, 45, 35, 25, 15, 5];
 
-const guideSvg = `<svg width="100%" height="100%" viewBox="0 0 2776 2776" preserveAspectRatio="xMinYMin meet" fill="none" xmlns="http://www.w3.org/2000/svg">
-  <path d="M2775 2775C2775 2775 2775 707 2422 354C2069 1.00061 1.00098 1.00059 1.00098 1.00059" stroke="white" stroke-width="2"/>
-  <path d="M2775 2775C2775 2775 2422 1062 2068 708C1714 354 1.00098 1.00049 1.00098 1.00049" stroke="white" stroke-width="2"/>
-  <path d="M2775 2775C2775 2775 2068 1415 1715 1062C1362 709 1.00098 1.00049 1.00098 1.00049" stroke="white" stroke-width="2"/>
-  <path d="M1 1L2775 2775" stroke="white" stroke-width="2"/>
-  <path d="M1.00366 1.0022C1.00366 1.0022 708.003 1361 1061 1714C1414 2067 2775 2775 2775 2775" stroke="white" stroke-width="2"/>
-  <path d="M1.00366 1.0022C1.00366 1.0022 354.003 1714 708.003 2068C1062 2422 2775 2775 2775 2775" stroke="white" stroke-width="2"/>
-  <path d="M1.00162 1.00016C1.00162 1.00016 1.00242 2069 354.002 2422C707.001 2775 2775 2775 2775 2775" stroke="white" stroke-width="2"/>
+const guideSvg = `<svg width="1110" height="1110" viewBox="0 0 1110 1110" preserveAspectRatio="none" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <path d="M1110 1110C1110 1110 1110 282 968 142C826 0.4 0.4 0.4 0.4 0.4" stroke="white" stroke-width="1"/>
+  <path d="M1110 1110C1110 1110 968 424 826 282C684 142 0.4 0.4 0.4 0.4" stroke="white" stroke-width="1"/>
+  <path d="M1110 1110C1110 1110 826 566 684 424C542 282 0.4 0.4 0.4 0.4" stroke="white" stroke-width="1"/>
+  <path d="M0.4 0.4L1110 1110" stroke="white" stroke-width="1"/>
+  <path d="M0.4 0.4C0.4 0.4 282 542 424 684C566 826 1110 1110 1110 1110" stroke="white" stroke-width="1"/>
+  <path d="M0.4 0.4C0.4 0.4 142 684 282 826C424 968 1110 1110 1110 1110" stroke="white" stroke-width="1"/>
+  <path d="M0.4 0.4C0.4 0.4 0.4 826 142 968C282 1110 1110 1110 1110 1110" stroke="white" stroke-width="1"/>
 </svg>`;
 
 const App: React.FC = () => {
@@ -104,7 +104,7 @@ const App: React.FC = () => {
   };
 
   const handleWcagChange = (level: "none" | "A" | "AA" | "AAA") => {
-    setWcagLevel(wcagLevel === level ? "none" : level);
+    setWcagLevel(level);
   };
 
   const handleSwatchClick = (id: number) => {
@@ -350,7 +350,16 @@ const App: React.FC = () => {
                   <label className="filter-option">
                     <input
                       type="radio"
-                      name="wcag"
+                      name="wcag-level"
+                      checked={wcagLevel === "none"}
+                      onChange={() => handleWcagChange("none")}
+                    />
+                    No WCAG Filter
+                  </label>
+                  <label className="filter-option">
+                    <input
+                      type="radio"
+                      name="wcag-level"
                       checked={wcagLevel === "A"}
                       onChange={() => handleWcagChange("A")}
                     />
@@ -359,7 +368,7 @@ const App: React.FC = () => {
                   <label className="filter-option">
                     <input
                       type="radio"
-                      name="wcag"
+                      name="wcag-level"
                       checked={wcagLevel === "AA"}
                       onChange={() => handleWcagChange("AA")}
                     />
@@ -368,7 +377,7 @@ const App: React.FC = () => {
                   <label className="filter-option">
                     <input
                       type="radio"
-                      name="wcag"
+                      name="wcag-level"
                       checked={wcagLevel === "AAA"}
                       onChange={() => handleWcagChange("AAA")}
                     />
@@ -385,7 +394,7 @@ const App: React.FC = () => {
         <div className="left-drawer">
           <div className="drawer-content">
             <div className="drawer-section">
-              <h2>Key Hex Code</h2>
+              <h3>Key Hex Code</h3>
               <div className="hex-control">
                 <div className="hex-input-group">
                   <input
@@ -410,7 +419,7 @@ const App: React.FC = () => {
 
             <div className="drawer-section">
               <div className="section-header">
-                <h2>Filter by Color Ramp</h2>
+                <h3>Filter by Color Ramp</h3>
                 <label className="filter-toggle">
                   <input
                     type="checkbox"
