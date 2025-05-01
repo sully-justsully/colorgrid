@@ -1,0 +1,43 @@
+.hex-tooltip {
+  position: absolute;
+  top: calc(100% + 4px);
+  left: calc(100% + 4px);
+  transform: none;
+  padding: 6px 8px;
+  background-color: rgba(0, 0, 0, 0.9);
+  color: white;
+  border-radius: 4px;
+  font-size: 10px;
+  white-space: nowrap;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.2s;
+  z-index: 1001;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+  min-height: fit-content;
+  height: auto;
+}
+
+.dot:hover .hex-tooltip {
+  opacity: 1;
+}
+
+.hex-value {
+  font-weight: 500;
+  font-family: "Lato", sans-serif;
+  display: block;
+  line-height: 1.2;
+}
+
+.lab-value,
+.hsb-value {
+  color: #999;
+  font-size: 9px;
+  font-family: "Lato", sans-serif;
+  font-weight: 400;
+  display: block;
+  line-height: 1.2;
+}

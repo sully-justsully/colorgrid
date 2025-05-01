@@ -10,6 +10,11 @@ import {
   rgbToHsb,
 } from "./utils/colorUtils";
 import "./App.css";
+import "./styles/Dot.css";
+import "./styles/HexTooltip.css";
+
+const STORAGE_KEY = "colorGridSwatches";
+const HEX_STORAGE_KEY = "colorGridHexCode";
 
 const initialLValues = [95, 85, 75, 65, 55, 45, 35, 25, 15, 5];
 
@@ -23,10 +28,33 @@ const guideSvg = `<svg width="1110" height="1110" viewBox="0 0 1110 1110" preser
   <path d="M0.4 0.4C0.4 0.4 0.4 826 142 968C282 1110 1110 1110 1110 1110" stroke="white" stroke-width="1"/>
 </svg>`;
 
+const createInitialSwatches = () => {
+  return initialLValues.map((lValue, index) => {
+    const [r, g, b] = labToRgb(lValue);
+    const hexColor = rgbToHex(r, g, b);
+    return {
+      id: index + 1,
+      lValue,
+      hexColor,
+      whiteContrast: calculateContrastRatio(hexColor),
+      blackContrast: calculateContrastRatio(hexColor, "#000000"),
+    };
+  });
+};
+
 const App: React.FC = () => {
-  const [keyHexCode, setKeyHexCode] = useState("0080FF");
-  const [inputHexCode, setInputHexCode] = useState("0080FF");
-  const [hue, setHue] = useState(210);
+  const [keyHexCode, setKeyHexCode] = useState(() => {
+    const savedHexCode = localStorage.getItem(HEX_STORAGE_KEY);
+    return savedHexCode || "0080FF";
+  });
+  const [inputHexCode, setInputHexCode] = useState(keyHexCode);
+  const [hue, setHue] = useState(() => {
+    const r = parseInt(keyHexCode.slice(0, 2), 16);
+    const g = parseInt(keyHexCode.slice(2, 4), 16);
+    const b = parseInt(keyHexCode.slice(4, 6), 16);
+    const [h] = rgbToHsb(r, g, b);
+    return h;
+  });
   const [isFiltering, setIsFiltering] = useState(false);
   const [showGuides, setShowGuides] = useState(false);
   const [wcagLevel, setWcagLevel] = useState<"none" | "A" | "AA" | "AAA">(
@@ -36,19 +64,18 @@ const App: React.FC = () => {
   const [activeSwatchId, setActiveSwatchId] = useState<number | null>(null);
   const [activeDots, setActiveDots] = useState<Set<string>>(new Set());
   const [showFiltersDropdown, setShowFiltersDropdown] = useState(false);
-  const [swatches, setSwatches] = useState<ColorSwatchType[]>(
-    initialLValues.map((lValue, index) => {
-      const [r, g, b] = labToRgb(lValue);
-      const hexColor = rgbToHex(r, g, b);
-      return {
-        id: index + 1,
-        lValue,
-        hexColor,
-        whiteContrast: calculateContrastRatio(hexColor),
-        blackContrast: calculateContrastRatio(hexColor, "#000000"),
-      };
-    })
-  );
+  const [swatches, setSwatches] = useState<ColorSwatchType[]>(() => {
+    const savedSwatches = localStorage.getItem(STORAGE_KEY);
+    if (savedSwatches) {
+      try {
+        return JSON.parse(savedSwatches);
+      } catch (e) {
+        console.error("Failed to parse saved swatches:", e);
+        return createInitialSwatches();
+      }
+    }
+    return createInitialSwatches();
+  });
   const [showToast, setShowToast] = useState(false);
   const [isHexValid, setIsHexValid] = useState(true);
   const [isHexDirty, setIsHexDirty] = useState(false);
@@ -70,6 +97,14 @@ const App: React.FC = () => {
       document.removeEventListener("mousedown", handleClickOutside);
     };
   }, []);
+
+  useEffect(() => {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(swatches));
+  }, [swatches]);
+
+  useEffect(() => {
+    localStorage.setItem(HEX_STORAGE_KEY, keyHexCode);
+  }, [keyHexCode]);
 
   const handleHexCodeChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const newHexCode = e.target.value
@@ -177,7 +212,7 @@ const App: React.FC = () => {
   const handleAddRamp = () => {
     setSwatches((prevSwatches) => {
       const lastSwatch = prevSwatches[prevSwatches.length - 1];
-      const newLValue = Math.max(0, lastSwatch.lValue - 1); // Decrease by 1 from last swatch
+      const newLValue = Math.max(0, lastSwatch.lValue - 1);
       const [r, g, b] = labToRgb(newLValue);
       const hexColor = rgbToHex(r, g, b);
 
@@ -196,9 +231,13 @@ const App: React.FC = () => {
 
   const handleRemoveRamp = () => {
     setSwatches((prevSwatches) => {
-      if (prevSwatches.length <= 1) return prevSwatches; // Don't remove if only one swatch remains
-      return prevSwatches.slice(0, -1); // Remove last swatch
+      if (prevSwatches.length <= 1) return prevSwatches;
+      return prevSwatches.slice(0, -1);
     });
+  };
+
+  const handleResetRamps = () => {
+    setSwatches(createInitialSwatches());
   };
 
   const handleExportColors = () => {
@@ -398,6 +437,26 @@ const App: React.FC = () => {
               <div className="hex-control">
                 <div className="hex-input-group">
                   <input
+                    type="color"
+                    value={`#${inputHexCode}`}
+                    onChange={(e) => {
+                      const newHex = e.target.value.slice(1).toUpperCase();
+                      setInputHexCode(newHex);
+                      setIsHexValid(true);
+                      setIsHexDirty(newHex !== keyHexCode);
+                      if (newHex !== keyHexCode) {
+                        setKeyHexCode(newHex);
+                        const r = parseInt(newHex.slice(0, 2), 16);
+                        const g = parseInt(newHex.slice(2, 4), 16);
+                        const b = parseInt(newHex.slice(4, 6), 16);
+                        const [h] = rgbToHsb(r, g, b);
+                        setHue(h);
+                      }
+                    }}
+                    className="color-picker"
+                    title="Pick a color"
+                  />
+                  <input
                     type="text"
                     value={inputHexCode}
                     onChange={handleHexCodeChange}
@@ -454,6 +513,13 @@ const App: React.FC = () => {
                   onClick={handleRemoveRamp}
                 >
                   Remove Ramp
+                </button>
+                <button
+                  className="update-button reset-button"
+                  onClick={handleResetRamps}
+                  title="Reset to default ramps"
+                >
+                  Reset Ramps
                 </button>
               </div>
             </div>

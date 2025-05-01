@@ -1,0 +1,37 @@
+.dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  cursor: pointer;
+  position: relative;
+  transition: transform 0.2s ease;
+  border: 1px solid transparent;
+}
+
+.dot:hover {
+  transform: scale(1.5);
+  z-index: 2;
+}
+
+.dot.active {
+  border-color: white;
+  box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.2);
+  z-index: 3;
+}
+
+.dot.hover {
+  z-index: 2;
+}
+
+.dot.selected {
+  border: 1px solid white;
+  box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.2);
+}
+
+.dot.selected.active {
+  border-width: 1px;
+}
+
+.dot.selected.hover {
+  z-index: 2;
+}

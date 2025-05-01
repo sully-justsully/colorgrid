@@ -35,14 +35,6 @@
     0 0 4px rgba(255, 255, 255, 0.4);
 }
 
-.dot.active .hex-tooltip {
-  transform: translateX(-50%) scale(2);
-}
-
-.dot.hover .hex-tooltip {
-  transform: translateX(-75%) scale(1.25);
-}
-
 .dot.filtered {
   opacity: 0.25;
   pointer-events: none;
@@ -52,7 +44,6 @@
   position: absolute;
   bottom: 100%;
   left: 50%;
-  transform: translateX(-50%);
   padding: 4px 8px;
   background-color: rgba(0, 0, 0, 0.8);
   color: white;
