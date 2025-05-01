@@ -244,12 +244,58 @@ export const hexToRgb = (hex: string): [number, number, number] => {
   return [r, g, b];
 };
 
-// Calculate Euclidean distance between two colors in RGB space
+// Calculate distance between two colors in HSB space
 export const colorDistance = (hex1: string, hex2: string): number => {
   const [r1, g1, b1] = hexToRgb(hex1);
   const [r2, g2, b2] = hexToRgb(hex2);
 
+  // Convert both colors to HSB
+  const [h1, s1, b1_] = rgbToHsb(r1, g1, b1);
+  const [h2, s2, b2_] = rgbToHsb(r2, g2, b2);
+
+  // Calculate weighted distance in HSB space
+  // Since we're already using the same hue for the grid, we only need to compare saturation and brightness
+  const sWeight = 1.0;
+  const bWeight = 1.0;
+
   return Math.sqrt(
-    Math.pow(r1 - r2, 2) + Math.pow(g1 - g2, 2) + Math.pow(b1 - b2, 2)
+    Math.pow((s1 - s2) * sWeight, 2) + Math.pow((b1_ - b2_) * bWeight, 2)
   );
 };
+
+export function hexToHsb(hex: string): { h: number; s: number; b: number } {
+  // Remove # if present
+  hex = hex.replace(/^#/, "");
+
+  // Convert hex to RGB
+  const r = parseInt(hex.substring(0, 2), 16) / 255;
+  const g = parseInt(hex.substring(2, 4), 16) / 255;
+  const b = parseInt(hex.substring(4, 6), 16) / 255;
+
+  const max = Math.max(r, g, b);
+  const min = Math.min(r, g, b);
+  const delta = max - min;
+
+  let h = 0;
+  let s = max === 0 ? 0 : delta / max;
+  let v = max;
+
+  if (delta !== 0) {
+    if (max === r) {
+      h = ((g - b) / delta) % 6;
+    } else if (max === g) {
+      h = (b - r) / delta + 2;
+    } else {
+      h = (r - g) / delta + 4;
+    }
+
+    h = Math.round(h * 60);
+    if (h < 0) h += 360;
+  }
+
+  // Convert to percentages
+  s = Math.round(s * 100);
+  v = Math.round(v * 100);
+
+  return { h, s, b: v };
+}

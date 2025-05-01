@@ -62,6 +62,7 @@ const App: React.FC = () => {
   );
   const [isPickingColor, setIsPickingColor] = useState(false);
   const [activeSwatchId, setActiveSwatchId] = useState<number | null>(null);
+  const [activeLValue, setActiveLValue] = useState<number | null>(null);
   const [activeDots, setActiveDots] = useState<Set<string>>(new Set());
   const [showFiltersDropdown, setShowFiltersDropdown] = useState(false);
   const [swatches, setSwatches] = useState<ColorSwatchType[]>(() => {
@@ -144,7 +145,14 @@ const App: React.FC = () => {
 
   const handleSwatchClick = (id: number) => {
     setIsPickingColor(!isPickingColor);
-    setActiveSwatchId(isPickingColor ? null : id);
+    if (!isPickingColor) {
+      const swatch = swatches.find((s) => s.id === id);
+      setActiveSwatchId(id);
+      setActiveLValue(swatch?.lValue || null);
+    } else {
+      setActiveSwatchId(null);
+      setActiveLValue(null);
+    }
   };
 
   const handleLValueChange = (id: number, value: number) => {
@@ -531,11 +539,15 @@ const App: React.FC = () => {
             <ColorGrid
               hue={hue}
               isFiltering={isFiltering}
-              {...getContrastFilter()}
-              lValues={swatches.map((swatch) => swatch.lValue)}
+              isATextContrast={wcagLevel === "A"}
+              isAATextContrast={wcagLevel === "AA"}
+              isAAATextContrast={wcagLevel === "AAA"}
+              lValues={swatches.map((s) => s.lValue)}
               onDotClick={handleDotClick}
               activeDots={activeDots}
-              keyHexCode={`#${keyHexCode}`}
+              keyHexCode={keyHexCode}
+              isPickingColor={isPickingColor}
+              activeLValue={activeLValue}
             />
             {showGuides && (
               <div

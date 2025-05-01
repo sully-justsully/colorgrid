@@ -6,6 +6,7 @@ import {
   getRgbLabLightness,
   calculateContrastRatio,
   colorDistance,
+  hexToHsb,
 } from "../utils/colorUtils";
 import "../styles/ColorGrid.css";
 
@@ -19,6 +20,8 @@ interface ColorGridProps {
   onDotClick: (dot: Dot) => void;
   activeDots: Set<string>;
   keyHexCode: string;
+  isPickingColor: boolean;
+  activeLValue: number | null;
 }
 
 const ColorGrid: React.FC<ColorGridProps> = ({
@@ -31,6 +34,8 @@ const ColorGrid: React.FC<ColorGridProps> = ({
   onDotClick,
   activeDots,
   keyHexCode,
+  isPickingColor,
+  activeLValue,
 }) => {
   const [dots, setDots] = useState<Dot[]>([]);
   const [colorCache, setColorCache] = useState<ColorCache[][]>([]);
@@ -61,86 +66,46 @@ const ColorGrid: React.FC<ColorGridProps> = ({
   useEffect(() => {
     const newDots: Dot[] = [];
     const lValuesSet = new Set(lValues);
-    let closestDot: { distance: number; row: number; col: number } | null =
-      null;
-    let hasExactMatch = false;
+    let matchingDot: { row: number; col: number } | null = null;
 
-    // First pass: collect all dots and find closest match
+    // Convert key hex code to HSB if it exists
+    let keyHsb: { h: number; s: number; b: number } | null = null;
+    if (keyHexCode) {
+      keyHsb = hexToHsb(keyHexCode);
+    }
+
+    // First pass: collect all dots and find matching dot
     for (let row = 0; row < 101; row++) {
       for (let col = 0; col < 101; col++) {
         const brightness = 100 - row;
+        const saturation = col;
         const cached = colorCache[brightness]?.[col];
 
         if (cached) {
-          const exactMatch =
-            cached.hexColor.toUpperCase() === keyHexCode.toUpperCase();
-          if (exactMatch) {
-            hasExactMatch = true;
-            closestDot = { distance: 0, row, col };
-          } else if (!hasExactMatch) {
-            const distance = colorDistance(cached.hexColor, keyHexCode);
-            if (!closestDot || distance < closestDot.distance) {
-              closestDot = { distance, row, col };
-            }
+          // Check if this dot matches the key HSB values
+          const isActive =
+            keyHsb !== null &&
+            Math.abs(keyHsb.h - hue) < 1 && // Allow small floating point differences
+            Math.abs(keyHsb.s - saturation) < 1 &&
+            Math.abs(keyHsb.b - brightness) < 1;
+
+          if (isActive) {
+            matchingDot = { row, col };
           }
 
           let isFiltered = false;
-          if (isFiltering) {
-            isFiltered = !lValuesSet.has(cached.labLightness);
-            if (
-              !isFiltered &&
-              (isATextContrast || isAATextContrast || isAAATextContrast)
-            ) {
-              const contrastRatio = calculateContrastRatio(
-                cached.hexColor,
-                "#000000"
-              );
-              if (isATextContrast) {
-                isFiltered = contrastRatio < 3;
-              } else if (isAATextContrast) {
-                isFiltered = contrastRatio < 4.5;
-              } else if (isAAATextContrast) {
-                isFiltered = contrastRatio < 7;
-              }
-            }
-          } else if (isATextContrast || isAATextContrast || isAAATextContrast) {
-            const contrastRatio = calculateContrastRatio(
-              cached.hexColor,
-              "#000000"
-            );
-            if (isATextContrast) {
-              isFiltered = contrastRatio < 3;
-            } else if (isAATextContrast) {
-              isFiltered = contrastRatio < 4.5;
-            } else if (isAAATextContrast) {
-              isFiltered = contrastRatio < 7;
-            }
-          }
-
           const dotKey = `${row}-${col}`;
+
           newDots.push({
             row,
             col,
             hexColor: cached.hexColor,
             labLightness: cached.labLightness,
             hsbText: cached.hsbText,
-            isActive: activeDots.has(dotKey),
+            isActive,
             isFiltered,
           });
         }
-      }
-    }
-
-    // Second pass: update the single closest dot to be active
-    if (closestDot) {
-      const dotIndex = newDots.findIndex(
-        (dot) => dot.row === closestDot!.row && dot.col === closestDot!.col
-      );
-      if (dotIndex !== -1) {
-        newDots[dotIndex] = {
-          ...newDots[dotIndex],
-          isActive: true,
-        };
       }
     }
 
@@ -154,6 +119,9 @@ const ColorGrid: React.FC<ColorGridProps> = ({
     lValues,
     activeDots,
     keyHexCode,
+    isPickingColor,
+    activeLValue,
+    hue, // Add hue to dependencies since we use it for comparison
   ]);
 
   const handleDotClick = useCallback(
