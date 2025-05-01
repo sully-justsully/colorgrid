@@ -385,7 +385,7 @@ const App: React.FC = () => {
         <div className="left-drawer">
           <div className="drawer-content">
             <div className="drawer-section">
-              <h3>Key Hex Code</h3>
+              <h2>Key Hex Code</h2>
               <div className="hex-control">
                 <div className="hex-input-group">
                   <input
@@ -410,7 +410,7 @@ const App: React.FC = () => {
 
             <div className="drawer-section">
               <div className="section-header">
-                <h3>Filter by Color Ramp</h3>
+                <h2>Filter by Color Ramp</h2>
                 <label className="filter-toggle">
                   <input
                     type="checkbox"
