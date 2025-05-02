@@ -349,56 +349,34 @@ const App: React.FC = () => {
   const handleExportColors = () => {
     const svgWidth = 400;
     const swatchHeight = 120;
+    const currentSwatches =
+      activeTab === "10"
+        ? swatches10
+        : activeTab === "14"
+        ? swatches14
+        : swatches18;
     const totalHeight = currentSwatches.length * swatchHeight;
-    const padding = 8;
 
     let svgContent = `
-      <svg class="export-svg" width="${svgWidth}" height="${totalHeight}" xmlns="http://www.w3.org/2000/svg">
+      <svg width="${svgWidth}" height="${totalHeight}" viewBox="0 0 ${svgWidth} ${totalHeight}" fill="none" xmlns="http://www.w3.org/2000/svg">
         <defs>
           <style>
-            /* Embed Lato font directly in the SVG */
             @font-face {
-              font-family: 'Lato';
+              font-family: 'Inter';
               font-style: normal;
               font-weight: 400;
-              src: local('Lato Regular'), local('Lato-Regular');
+              src: local('Inter Regular'), local('Inter-Regular');
             }
             @font-face {
-              font-family: 'Lato';
+              font-family: 'Inter';
               font-style: normal;
               font-weight: 500;
-              src: local('Lato Medium'), local('Lato-Medium');
-            }
-            @font-face {
-              font-family: 'Lato';
-              font-style: normal;
-              font-weight: 700;
-              src: local('Lato Bold'), local('Lato-Bold');
+              src: local('Inter Medium'), local('Inter-Medium');
             }
             .text {
-              font-family: 'Lato', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-            }
-            .color-name {
-              font-size: 16px;
-              font-weight: 700;
-            }
-            .hex-code {
-              font-size: 16px;
-              font-weight: 500;
-            }
-            .l-value {
-              font-size: 16px;
-              font-weight: 400;
-            }
-            .contrast-text {
-              font-size: 16px;
-              font-weight: 500;
-              text-align: right;
-            }
-            .dot {
-              width: 8px;
-              height: 8px;
-              border-radius: 50%;
+              font-family: 'Inter', sans-serif;
+              font-size: 14px;
+              fill: currentColor;
             }
           </style>
         </defs>
@@ -406,48 +384,48 @@ const App: React.FC = () => {
 
     currentSwatches.forEach((swatch, index) => {
       const y = index * swatchHeight;
-      const textColor = swatch.lValue > 50 ? "#333" : "#fff";
+      const textColor = swatch.lValue > 50 ? "#000000" : "#FFFFFF";
+      const colorNumber = index * 50;
+      const colorName = `Cool Gray-${
+        colorNumber < 10 ? "0" : ""
+      }${colorNumber}`;
 
       svgContent += `
-        <rect x="0" y="${y}" width="${svgWidth}" height="${swatchHeight}" fill="${
+        <rect width="${svgWidth}" height="${swatchHeight}" y="${y}" fill="${
         swatch.hexColor
-      }" />
+      }"/>
         
-        <text x="${padding}" y="${
-        y + 35
-      }" class="text color-name" fill="${textColor}">
-          Color-${index * 50}
+        <text x="18" y="${y + 33}" class="text" fill="${textColor}">
+          ${colorName}
         </text>
 
-        <text x="${padding}" y="${
-        y + 55
-      }" class="text hex-code" fill="${textColor}">
-          ${swatch.hexColor.toUpperCase()}
+        <text x="18" y="${y + 54}" class="text" fill="${textColor}">
+          #${swatch.hexColor.toUpperCase()}
         </text>
         
-        <text x="${padding}" y="${
-        y + swatchHeight - 8
-      }" class="text l-value" fill="${textColor}">
-          L*=${swatch.lValue}
+        <text x="18" y="${y + 108}" class="text" fill="${textColor}">
+          L*=${Math.round(swatch.lValue)}
         </text>
         
-        <text x="${svgWidth - padding}" y="${
-        y + 35
-      }" class="text contrast-text" fill="${textColor}" text-anchor="end">
+        <text x="330" y="${
+          y + 33
+        }" class="text" text-anchor="end" fill="${textColor}">
           ${swatch.whiteContrast.toFixed(1)}:1
         </text>
-        <rect class="dot" x="${svgWidth - padding + 12}" y="${
-        y + 31
-      }" width="8" height="8" rx="4" fill="#FFFFFF" />
+        <circle cx="376" cy="${y + 33}" r="8" fill="#FFFFFF"/>
+        <circle cx="376" cy="${
+          y + 33
+        }" r="8.25" stroke="${textColor}" stroke-opacity="0.16" stroke-width="0.5"/>
 
-        <text x="${svgWidth - padding}" y="${
-        y + swatchHeight - 8
-      }" class="text contrast-text" fill="${textColor}" text-anchor="end">
+        <text x="330" y="${
+          y + 108
+        }" class="text" text-anchor="end" fill="${textColor}">
           ${swatch.blackContrast.toFixed(1)}:1
         </text>
-        <rect class="dot" x="${svgWidth - padding + 12}" y="${
-        y + swatchHeight - 12
-      }" width="8" height="8" rx="4" fill="#000000" />
+        <circle cx="376" cy="${y + 81}" r="8" fill="#000000"/>
+        <circle cx="376" cy="${
+          y + 81
+        }" r="8.25" stroke="#FFFFFF" stroke-opacity="0.16" stroke-width="0.5"/>
       `;
     });
 
