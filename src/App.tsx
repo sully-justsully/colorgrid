@@ -512,7 +512,7 @@ const App: React.FC = () => {
       <header className="app-header">
         <h1>
           Color Grid Tool
-          <span className="version-number">v.1.5</span>
+          <span className="version-number">v.1.2</span>
         </h1>
         <div className="header-actions">
           <button onClick={handleExportColors}>Export All Colors</button>
