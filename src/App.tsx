@@ -17,12 +17,10 @@ import "./styles/ExportStyles.css";
 const STORAGE_KEY = "colorGridSwatches";
 const HEX_STORAGE_KEY = "colorGridHexCode";
 
-const initialLValues10 = [90, 80, 70, 60, 50, 40, 30, 20, 10, 0];
-const initialLValues14 = [
-  100, 95, 90, 85, 75, 65, 55, 45, 35, 25, 20, 15, 10, 5,
-];
+const initialLValues10 = [95, 85, 75, 65, 55, 45, 35, 25, 15, 5];
+const initialLValues14 = [97, 93, 88, 79, 70, 62, 54, 46, 38, 30, 21, 12, 7, 4];
 const initialLValues18 = [
-  100, 98, 96, 93, 90, 80, 71, 62, 54, 46, 38, 29, 20, 10, 7, 4, 2, 0,
+  100, 98, 96, 93, 90, 82, 73, 65, 55, 45, 35, 27, 18, 10, 7, 4, 2, 0,
 ];
 
 const guideSvg = `<svg width="1110" height="1110" viewBox="0 0 1110 1110" preserveAspectRatio="none" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -514,7 +512,7 @@ const App: React.FC = () => {
       <header className="app-header">
         <h1>
           Color Grid Tool
-          <span className="version-number">v.1.4</span>
+          <span className="version-number">v.1.5</span>
         </h1>
         <div className="header-actions">
           <button onClick={handleExportColors}>Export All Colors</button>
