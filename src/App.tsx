@@ -359,7 +359,7 @@ const App: React.FC = () => {
         ? swatches14
         : swatches18;
     const totalHeight = currentSwatches.length * swatchHeight;
-    const padding = 12;
+    const padding = 8;
 
     let svgContent = `
       <svg class="export-svg" width="${svgWidth}" height="${totalHeight}" xmlns="http://www.w3.org/2000/svg">
@@ -429,13 +429,13 @@ const App: React.FC = () => {
         </text>
 
         <text x="${padding}" y="${
-        y + 65
+        y + 55
       }" class="text hex-code" fill="${textColor}">
-          #${swatch.hexColor.toUpperCase()}
+          ${swatch.hexColor.toUpperCase()}
         </text>
         
         <text x="${padding}" y="${
-        y + 95
+        y + swatchHeight - 8
       }" class="text l-value" fill="${textColor}">
           L*=${swatch.lValue}
         </text>
@@ -450,12 +450,12 @@ const App: React.FC = () => {
       }" width="8" height="8" rx="4" fill="#FFFFFF" />
 
         <text x="${svgWidth - padding}" y="${
-        y + 95
+        y + swatchHeight - 8
       }" class="text contrast-text" fill="${textColor}" text-anchor="end">
           ${swatch.blackContrast.toFixed(1)}:1
         </text>
         <rect class="dot" x="${svgWidth - padding + 12}" y="${
-        y + 91
+        y + swatchHeight - 12
       }" width="8" height="8" rx="4" fill="#000000" />
       `;
     });
@@ -512,7 +512,7 @@ const App: React.FC = () => {
       <header className="app-header">
         <h1>
           Color Grid Tool
-          <span className="version-number">v.1.6</span>
+          <span className="version-number">v.1.7</span>
         </h1>
         <div className="header-actions">
           <button onClick={handleExportColors}>Export All Colors</button>
