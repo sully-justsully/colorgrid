@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 import { ColorSwatch as ColorSwatchType } from "../types";
 import "../styles/ColorSwatch.css";
 
@@ -15,9 +15,29 @@ const ColorSwatch: React.FC<ColorSwatchProps> = ({
   onLValueChange,
   onClick,
 }) => {
+  const [inputValue, setInputValue] = useState<string>(
+    swatch.lValue.toString()
+  );
+
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const value = parseInt(e.target.value) || 0;
+    const value = e.target.value;
+    setInputValue(value);
+  };
+
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === "Enter" || e.key === "Escape") {
+      const value =
+        inputValue === "" ? swatch.lValue : parseInt(inputValue) || 0;
+      onLValueChange(swatch.id, value);
+      setInputValue(value.toString());
+      e.currentTarget.blur();
+    }
+  };
+
+  const handleBlur = () => {
+    const value = inputValue === "" ? swatch.lValue : parseInt(inputValue) || 0;
     onLValueChange(swatch.id, value);
+    setInputValue(value.toString());
   };
 
   return (
@@ -30,8 +50,10 @@ const ColorSwatch: React.FC<ColorSwatchProps> = ({
               id={`l${swatch.id}`}
               min="0"
               max="100"
-              value={swatch.lValue}
+              value={inputValue}
               onChange={handleInputChange}
+              onKeyDown={handleKeyDown}
+              onBlur={handleBlur}
             />
           </div>
           <div
