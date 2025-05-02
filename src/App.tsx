@@ -1,4 +1,10 @@
-import React, { useState, useCallback, useEffect, useRef } from "react";
+import React, {
+  useState,
+  useCallback,
+  useEffect,
+  useRef,
+  useMemo,
+} from "react";
 import ColorGrid from "./components/ColorGrid";
 import ColorSwatch from "./components/ColorSwatch";
 import Toast from "./components/Toast";
@@ -173,9 +179,24 @@ const App: React.FC = () => {
     }
   };
 
-  const handleFilterToggle = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setIsFiltering(e.target.checked);
-  };
+  const handleFilterToggle = useCallback(
+    (e: React.ChangeEvent<HTMLInputElement>) => {
+      setIsFiltering(e.target.checked);
+    },
+    []
+  );
+
+  const currentSwatches = useMemo(() => {
+    return activeTab === "10"
+      ? swatches10
+      : activeTab === "14"
+      ? swatches14
+      : swatches18;
+  }, [activeTab, swatches10, swatches14, swatches18]);
+
+  const currentLValues = useMemo(() => {
+    return currentSwatches.map((s) => s.lValue);
+  }, [currentSwatches]);
 
   const handleWcagChange = (level: "none" | "A" | "AA" | "AAA") => {
     setWcagLevel(level);
@@ -199,12 +220,6 @@ const App: React.FC = () => {
   };
 
   const handleLValueChange = (id: number, value: number) => {
-    const currentSwatches =
-      activeTab === "10"
-        ? swatches10
-        : activeTab === "14"
-        ? swatches14
-        : swatches18;
     const setCurrentSwatches =
       activeTab === "10"
         ? setSwatches10
@@ -232,12 +247,6 @@ const App: React.FC = () => {
   const handleDotClick = useCallback(
     (dot: Dot) => {
       if (isPickingColor && activeSwatchId !== null) {
-        const currentSwatches =
-          activeTab === "10"
-            ? swatches10
-            : activeTab === "14"
-            ? swatches14
-            : swatches18;
         const setCurrentSwatches =
           activeTab === "10"
             ? setSwatches10
@@ -285,12 +294,6 @@ const App: React.FC = () => {
   };
 
   const handleAddRamp = () => {
-    const currentSwatches =
-      activeTab === "10"
-        ? swatches10
-        : activeTab === "14"
-        ? swatches14
-        : swatches18;
     const setCurrentSwatches =
       activeTab === "10"
         ? setSwatches10
@@ -317,12 +320,6 @@ const App: React.FC = () => {
   };
 
   const handleRemoveRamp = () => {
-    const currentSwatches =
-      activeTab === "10"
-        ? swatches10
-        : activeTab === "14"
-        ? swatches14
-        : swatches18;
     const setCurrentSwatches =
       activeTab === "10"
         ? setSwatches10
@@ -352,12 +349,6 @@ const App: React.FC = () => {
   const handleExportColors = () => {
     const svgWidth = 400;
     const swatchHeight = 120;
-    const currentSwatches =
-      activeTab === "10"
-        ? swatches10
-        : activeTab === "14"
-        ? swatches14
-        : swatches18;
     const totalHeight = currentSwatches.length * swatchHeight;
     const padding = 8;
 
@@ -512,7 +503,7 @@ const App: React.FC = () => {
       <header className="app-header">
         <h1>
           Color Grid Tool
-          <span className="version-number">v.1.7</span>
+          <span className="version-number">v.1.8</span>
         </h1>
         <div className="header-actions">
           <button onClick={handleExportColors}>Export All Colors</button>
@@ -716,13 +707,7 @@ const App: React.FC = () => {
               isATextContrast={wcagLevel === "A"}
               isAATextContrast={wcagLevel === "AA"}
               isAAATextContrast={wcagLevel === "AAA"}
-              lValues={
-                activeTab === "10"
-                  ? swatches10.map((s) => s.lValue)
-                  : activeTab === "14"
-                  ? swatches14.map((s) => s.lValue)
-                  : swatches18.map((s) => s.lValue)
-              }
+              lValues={currentLValues}
               onDotClick={handleDotClick}
               activeDots={activeDots}
               keyHexCode={keyHexCode}
