@@ -96,13 +96,26 @@ const ColorGrid: React.FC<ColorGridProps> = ({
           let isFiltered = false;
           const dotKey = `${row}-${col}`;
 
+          // Apply color ramp filtering
+          if (isFiltering && lValuesSet.size > 0) {
+            isFiltered = !lValuesSet.has(cached.labLightness);
+          }
+
+          // Apply color picking mode filtering
+          if (isPickingColor && activeLValue !== null) {
+            isFiltered = cached.labLightness !== activeLValue;
+          }
+
+          // Check if dot is in activeDots set
+          const isInActiveDots = activeDots.has(dotKey);
+
           newDots.push({
             row,
             col,
             hexColor: cached.hexColor,
             labLightness: cached.labLightness,
             hsbText: cached.hsbText,
-            isActive,
+            isActive: isActive || isInActiveDots,
             isFiltered,
           });
         }

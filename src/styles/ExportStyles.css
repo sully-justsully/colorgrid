@@ -1,0 +1,36 @@
+.export-svg {
+  width: 400px;
+}
+
+.export-svg .text {
+  font-family: "Lato", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  font-size: 16px;
+}
+
+.export-svg .color-name {
+  font-size: 16px;
+  font-weight: 700;
+}
+
+.export-svg .hex-code {
+  font-size: 16px;
+  font-weight: 500;
+}
+
+.export-svg .l-value {
+  font-size: 16px;
+  font-weight: 400;
+}
+
+.export-svg .contrast-text {
+  font-size: 16px;
+  font-weight: 500;
+  text-align: right;
+}
+
+.export-svg .dot {
+  height: 8px;
+  width: 8px;
+  rx: 4px;
+  ry: 4px;
+}

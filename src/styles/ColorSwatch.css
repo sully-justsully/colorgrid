@@ -53,11 +53,11 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 0 12px;
+  padding: 0 8px;
 }
 
 .color-swatch.active {
-  outline: 2px solid white;
+  outline: 2px solid #1773cf;
 }
 
 .hex-label {
@@ -66,7 +66,7 @@
   font-family: "Lato", sans-serif;
   opacity: 0.9;
   background-color: rgba(0, 0, 0, 0.3);
-  padding: 4px 8px;
+  padding: 4px 6px;
   border-radius: 4px;
 }
 
@@ -78,7 +78,7 @@
 .reference-dot {
   display: flex;
   align-items: center;
-  gap: 4px;
+  gap: 8px;
   font-size: 14px;
   font-family: "Lato", sans-serif;
 }

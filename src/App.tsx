@@ -12,11 +12,16 @@ import {
 import "./App.css";
 import "./styles/Dot.css";
 import "./styles/HexTooltip.css";
+import "./styles/ExportStyles.css";
 
 const STORAGE_KEY = "colorGridSwatches";
 const HEX_STORAGE_KEY = "colorGridHexCode";
 
-const initialLValues = [95, 85, 75, 65, 55, 45, 35, 25, 15, 5];
+const initialLValues10 = [95, 85, 75, 65, 55, 45, 35, 25, 15, 5];
+const initialLValues14 = [97, 93, 88, 79, 70, 62, 54, 46, 38, 30, 21, 12, 7, 4];
+const initialLValues18 = [
+  100, 98, 96, 93, 90, 82, 73, 65, 55, 45, 35, 27, 18, 10, 7, 4, 2, 0,
+];
 
 const guideSvg = `<svg width="1110" height="1110" viewBox="0 0 1110 1110" preserveAspectRatio="none" fill="none" xmlns="http://www.w3.org/2000/svg">
   <path d="M1110 1110C1110 1110 1110 282 968 142C826 0.4 0.4 0.4 0.4 0.4" stroke="white" stroke-width="1"/>
@@ -28,8 +33,8 @@ const guideSvg = `<svg width="1110" height="1110" viewBox="0 0 1110 1110" preser
   <path d="M0.4 0.4C0.4 0.4 0.4 826 142 968C282 1110 1110 1110 1110 1110" stroke="white" stroke-width="1"/>
 </svg>`;
 
-const createInitialSwatches = () => {
-  return initialLValues.map((lValue, index) => {
+const createInitialSwatches = (lValues: number[]) => {
+  return lValues.map((lValue, index) => {
     const [r, g, b] = labToRgb(lValue);
     const hexColor = rgbToHex(r, g, b);
     return {
@@ -65,17 +70,42 @@ const App: React.FC = () => {
   const [activeLValue, setActiveLValue] = useState<number | null>(null);
   const [activeDots, setActiveDots] = useState<Set<string>>(new Set());
   const [showFiltersDropdown, setShowFiltersDropdown] = useState(false);
-  const [swatches, setSwatches] = useState<ColorSwatchType[]>(() => {
-    const savedSwatches = localStorage.getItem(STORAGE_KEY);
+  const [activeTab, setActiveTab] = useState<"10" | "14" | "18">("10");
+  const [swatches10, setSwatches10] = useState<ColorSwatchType[]>(() => {
+    const savedSwatches = localStorage.getItem(STORAGE_KEY + "_10");
     if (savedSwatches) {
       try {
         return JSON.parse(savedSwatches);
       } catch (e) {
         console.error("Failed to parse saved swatches:", e);
-        return createInitialSwatches();
+        return createInitialSwatches(initialLValues10);
       }
     }
-    return createInitialSwatches();
+    return createInitialSwatches(initialLValues10);
+  });
+  const [swatches14, setSwatches14] = useState<ColorSwatchType[]>(() => {
+    const savedSwatches = localStorage.getItem(STORAGE_KEY + "_14");
+    if (savedSwatches) {
+      try {
+        return JSON.parse(savedSwatches);
+      } catch (e) {
+        console.error("Failed to parse saved swatches:", e);
+        return createInitialSwatches(initialLValues14);
+      }
+    }
+    return createInitialSwatches(initialLValues14);
+  });
+  const [swatches18, setSwatches18] = useState<ColorSwatchType[]>(() => {
+    const savedSwatches = localStorage.getItem(STORAGE_KEY + "_18");
+    if (savedSwatches) {
+      try {
+        return JSON.parse(savedSwatches);
+      } catch (e) {
+        console.error("Failed to parse saved swatches:", e);
+        return createInitialSwatches(initialLValues18);
+      }
+    }
+    return createInitialSwatches(initialLValues18);
   });
   const [showToast, setShowToast] = useState(false);
   const [isHexValid, setIsHexValid] = useState(true);
@@ -100,8 +130,16 @@ const App: React.FC = () => {
   }, []);
 
   useEffect(() => {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(swatches));
-  }, [swatches]);
+    localStorage.setItem(STORAGE_KEY + "_10", JSON.stringify(swatches10));
+  }, [swatches10]);
+
+  useEffect(() => {
+    localStorage.setItem(STORAGE_KEY + "_14", JSON.stringify(swatches14));
+  }, [swatches14]);
+
+  useEffect(() => {
+    localStorage.setItem(STORAGE_KEY + "_18", JSON.stringify(swatches18));
+  }, [swatches18]);
 
   useEffect(() => {
     localStorage.setItem(HEX_STORAGE_KEY, keyHexCode);
@@ -146,9 +184,14 @@ const App: React.FC = () => {
   const handleSwatchClick = (id: number) => {
     setIsPickingColor(!isPickingColor);
     if (!isPickingColor) {
-      const swatch = swatches.find((s) => s.id === id);
+      const swatch =
+        activeTab === "10"
+          ? swatches10
+          : activeTab === "14"
+          ? swatches14
+          : swatches18;
       setActiveSwatchId(id);
-      setActiveLValue(swatch?.lValue || null);
+      setActiveLValue(swatch.find((s) => s.id === id)?.lValue || null);
     } else {
       setActiveSwatchId(null);
       setActiveLValue(null);
@@ -156,7 +199,19 @@ const App: React.FC = () => {
   };
 
   const handleLValueChange = (id: number, value: number) => {
-    setSwatches((prevSwatches) =>
+    const currentSwatches =
+      activeTab === "10"
+        ? swatches10
+        : activeTab === "14"
+        ? swatches14
+        : swatches18;
+    const setCurrentSwatches =
+      activeTab === "10"
+        ? setSwatches10
+        : activeTab === "14"
+        ? setSwatches14
+        : setSwatches18;
+    setCurrentSwatches((prevSwatches) =>
       prevSwatches.map((swatch) => {
         if (swatch.id === id) {
           const [r, g, b] = labToRgb(value);
@@ -177,7 +232,19 @@ const App: React.FC = () => {
   const handleDotClick = useCallback(
     (dot: Dot) => {
       if (isPickingColor && activeSwatchId !== null) {
-        setSwatches((prevSwatches) =>
+        const currentSwatches =
+          activeTab === "10"
+            ? swatches10
+            : activeTab === "14"
+            ? swatches14
+            : swatches18;
+        const setCurrentSwatches =
+          activeTab === "10"
+            ? setSwatches10
+            : activeTab === "14"
+            ? setSwatches14
+            : setSwatches18;
+        setCurrentSwatches((prevSwatches) =>
           prevSwatches.map((swatch) => {
             if (swatch.id === activeSwatchId) {
               return {
@@ -218,7 +285,19 @@ const App: React.FC = () => {
   };
 
   const handleAddRamp = () => {
-    setSwatches((prevSwatches) => {
+    const currentSwatches =
+      activeTab === "10"
+        ? swatches10
+        : activeTab === "14"
+        ? swatches14
+        : swatches18;
+    const setCurrentSwatches =
+      activeTab === "10"
+        ? setSwatches10
+        : activeTab === "14"
+        ? setSwatches14
+        : setSwatches18;
+    setCurrentSwatches((prevSwatches) => {
       const lastSwatch = prevSwatches[prevSwatches.length - 1];
       const newLValue = Math.max(0, lastSwatch.lValue - 1);
       const [r, g, b] = labToRgb(newLValue);
@@ -238,92 +317,140 @@ const App: React.FC = () => {
   };
 
   const handleRemoveRamp = () => {
-    setSwatches((prevSwatches) => {
+    const currentSwatches =
+      activeTab === "10"
+        ? swatches10
+        : activeTab === "14"
+        ? swatches14
+        : swatches18;
+    const setCurrentSwatches =
+      activeTab === "10"
+        ? setSwatches10
+        : activeTab === "14"
+        ? setSwatches14
+        : setSwatches18;
+    setCurrentSwatches((prevSwatches) => {
       if (prevSwatches.length <= 1) return prevSwatches;
       return prevSwatches.slice(0, -1);
     });
   };
 
   const handleResetRamps = () => {
-    setSwatches(createInitialSwatches());
+    switch (activeTab) {
+      case "10":
+        setSwatches10(createInitialSwatches(initialLValues10));
+        break;
+      case "14":
+        setSwatches14(createInitialSwatches(initialLValues14));
+        break;
+      case "18":
+        setSwatches18(createInitialSwatches(initialLValues18));
+        break;
+    }
   };
 
   const handleExportColors = () => {
-    const svgWidth = 300;
-    const swatchHeight = 80; // Increased height for more spacing
-    const totalHeight = swatches.length * swatchHeight;
-    const padding = 16;
+    const svgWidth = 400;
+    const swatchHeight = 120;
+    const currentSwatches =
+      activeTab === "10"
+        ? swatches10
+        : activeTab === "14"
+        ? swatches14
+        : swatches18;
+    const totalHeight = currentSwatches.length * swatchHeight;
+    const padding = 12;
 
     let svgContent = `
-      <svg width="${svgWidth}" height="${totalHeight}" xmlns="http://www.w3.org/2000/svg">
-        <style>
-          .text {
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-            font-size: 14px;
-          }
-          .color-name { font-size: 16px; }
-          .hex-code { font-size: 14px; }
-          .l-value { font-size: 14px; }
-          .contrast-text { font-size: 14px; }
-          .dot {
-            height: 8px;
-            width: 8px;
-            rx: 4px;
-            ry: 4px;
-          }
-        </style>
+      <svg class="export-svg" width="${svgWidth}" height="${totalHeight}" xmlns="http://www.w3.org/2000/svg">
+        <defs>
+          <style>
+            /* Embed Lato font directly in the SVG */
+            @font-face {
+              font-family: 'Lato';
+              font-style: normal;
+              font-weight: 400;
+              src: local('Lato Regular'), local('Lato-Regular');
+            }
+            @font-face {
+              font-family: 'Lato';
+              font-style: normal;
+              font-weight: 500;
+              src: local('Lato Medium'), local('Lato-Medium');
+            }
+            @font-face {
+              font-family: 'Lato';
+              font-style: normal;
+              font-weight: 700;
+              src: local('Lato Bold'), local('Lato-Bold');
+            }
+            .text {
+              font-family: 'Lato', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            }
+            .color-name {
+              font-size: 16px;
+              font-weight: 700;
+            }
+            .hex-code {
+              font-size: 16px;
+              font-weight: 500;
+            }
+            .l-value {
+              font-size: 16px;
+              font-weight: 400;
+            }
+            .contrast-text {
+              font-size: 16px;
+              font-weight: 500;
+              text-align: right;
+            }
+          </style>
+        </defs>
     `;
 
-    swatches.forEach((swatch, index) => {
+    currentSwatches.forEach((swatch, index) => {
       const y = index * swatchHeight;
-      const colorName = `Color-${index * 50}`;
       const textColor = swatch.lValue > 50 ? "#333" : "#fff";
 
-      // Add swatch rectangle
       svgContent += `
         <rect x="0" y="${y}" width="${svgWidth}" height="${swatchHeight}" fill="${
         swatch.hexColor
       }" />
         
-        <!-- Color name and number -->
         <text x="${padding}" y="${
-        y + 20
+        y + 35
       }" class="text color-name" fill="${textColor}">
-          <tspan>Color</tspan><tspan dx="2">-${index * 50}</tspan>
+          Color-${index * 50}
         </text>
 
-        <!-- Hex code -->
-        <text x="${padding}" y="${
-        y + 40
-      }" class="text hex-code" fill="${textColor}">
-          ${swatch.hexColor}
-        </text>
-        
-        <!-- L value -->
         <text x="${padding}" y="${
         y + 65
+      }" class="text hex-code" fill="${textColor}">
+          #${swatch.hexColor.toUpperCase()}
+        </text>
+        
+        <text x="${padding}" y="${
+        y + 95
       }" class="text l-value" fill="${textColor}">
           L*=${swatch.lValue}
         </text>
         
-        <!-- White contrast ratio with dot -->
-        <text x="${svgWidth - padding - 60}" y="${
-        y + 20
-      }" class="text contrast-text" fill="${textColor}">
+        <text x="${svgWidth - padding}" y="${
+        y + 35
+      }" class="text contrast-text" fill="${textColor}" text-anchor="end">
           ${swatch.whiteContrast.toFixed(1)}:1
         </text>
-        <rect class="dot" x="${svgWidth - padding - 12}" y="${
-        y + 12
+        <rect class="dot" x="${svgWidth - padding + 12}" y="${
+        y + 31
       }" fill="#FFFFFF" />
 
-        <!-- Black contrast ratio with dot -->
-        <text x="${svgWidth - padding - 60}" y="${
-        y + 65
-      }" class="text contrast-text" fill="${textColor}">
+        <text x="${svgWidth - padding}" y="${
+        y + 95
+      }" class="text contrast-text" fill="${textColor}" text-anchor="end">
           ${swatch.blackContrast.toFixed(1)}:1
         </text>
-        <rect class="dot" x="${svgWidth - padding - 12}" y="${
-        y + 57
+        <rect class="dot" x="${svgWidth - padding + 12}" y="${
+        y + 91
       }" fill="#000000" />
       `;
     });
@@ -335,7 +462,7 @@ const App: React.FC = () => {
 
     const a = document.createElement("a");
     a.href = url;
-    a.download = "color-ramps.svg";
+    a.download = `color-ramps-${activeTab}.svg`;
     document.body.appendChild(a);
     a.click();
     document.body.removeChild(a);
@@ -371,10 +498,17 @@ const App: React.FC = () => {
     }
   };
 
+  const handleTabChange = (tab: "10" | "14" | "18") => {
+    setActiveTab(tab);
+  };
+
   return (
     <div className="app">
       <header className="app-header">
-        <h1>Color Grid Tool</h1>
+        <h1>
+          Color Grid Tool
+          <span className="version-number">v.1.1</span>
+        </h1>
         <div className="header-actions">
           <button onClick={handleExportColors}>Export All Colors</button>
           <div className="filters-dropdown" ref={dropdownRef}>
@@ -496,21 +630,56 @@ const App: React.FC = () => {
                   <span className="toggle-slider"></span>
                 </label>
               </div>
-              <p>
-                Color ramps are determined by a perceptual lightness value. When
-                the filter is active, only colors with a L* value that matches
-                one of the ramps will be displayed.
-              </p>
+              <div className="ramp-tabs">
+                <button
+                  className={`tab-button ${activeTab === "10" ? "active" : ""}`}
+                  onClick={() => handleTabChange("10")}
+                >
+                  10 ramps
+                </button>
+                <button
+                  className={`tab-button ${activeTab === "14" ? "active" : ""}`}
+                  onClick={() => handleTabChange("14")}
+                >
+                  14 ramps
+                </button>
+                <button
+                  className={`tab-button ${activeTab === "18" ? "active" : ""}`}
+                  onClick={() => handleTabChange("18")}
+                >
+                  18 ramps
+                </button>
+              </div>
               <div className="color-ramps">
-                {swatches.map((swatch) => (
-                  <ColorSwatch
-                    key={swatch.id}
-                    swatch={swatch}
-                    isActive={swatch.id === activeSwatchId}
-                    onLValueChange={handleLValueChange}
-                    onClick={handleSwatchClick}
-                  />
-                ))}
+                {activeTab === "10"
+                  ? swatches10.map((swatch) => (
+                      <ColorSwatch
+                        key={swatch.id}
+                        swatch={swatch}
+                        isActive={swatch.id === activeSwatchId}
+                        onLValueChange={handleLValueChange}
+                        onClick={handleSwatchClick}
+                      />
+                    ))
+                  : activeTab === "14"
+                  ? swatches14.map((swatch) => (
+                      <ColorSwatch
+                        key={swatch.id}
+                        swatch={swatch}
+                        isActive={swatch.id === activeSwatchId}
+                        onLValueChange={handleLValueChange}
+                        onClick={handleSwatchClick}
+                      />
+                    ))
+                  : swatches18.map((swatch) => (
+                      <ColorSwatch
+                        key={swatch.id}
+                        swatch={swatch}
+                        isActive={swatch.id === activeSwatchId}
+                        onLValueChange={handleLValueChange}
+                        onClick={handleSwatchClick}
+                      />
+                    ))}
               </div>
               <div className="ramp-actions">
                 <button className="update-button" onClick={handleAddRamp}>
@@ -542,7 +711,13 @@ const App: React.FC = () => {
               isATextContrast={wcagLevel === "A"}
               isAATextContrast={wcagLevel === "AA"}
               isAAATextContrast={wcagLevel === "AAA"}
-              lValues={swatches.map((s) => s.lValue)}
+              lValues={
+                activeTab === "10"
+                  ? swatches10.map((s) => s.lValue)
+                  : activeTab === "14"
+                  ? swatches14.map((s) => s.lValue)
+                  : swatches18.map((s) => s.lValue)
+              }
               onDotClick={handleDotClick}
               activeDots={activeDots}
               keyHexCode={keyHexCode}

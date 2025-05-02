@@ -23,6 +23,7 @@
 
 .dot:hover .hex-tooltip {
   opacity: 1;
+  z-index: 1001;
 }
 
 .hex-value {
@@ -30,6 +31,7 @@
   font-family: "Lato", sans-serif;
   display: block;
   line-height: 1.2;
+  z-index: 1001;
 }
 
 .lab-value,
@@ -40,4 +42,5 @@
   font-weight: 400;
   display: block;
   line-height: 1.1;
+  z-index: 1001;
 }

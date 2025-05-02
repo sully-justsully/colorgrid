@@ -6,32 +6,35 @@
   position: relative;
   transition: transform 0.2s ease;
   border: 1px solid transparent;
+  z-index: 1;
 }
 
 .dot:hover {
   transform: scale(1.5);
-  z-index: 2;
+  z-index: 3;
 }
 
 .dot.active {
   border-color: white;
   box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.2);
-  z-index: 3;
-}
-
-.dot.hover {
   z-index: 2;
 }
 
+.dot.hover {
+  z-index: 3;
+}
+
 .dot.selected {
+  z-index: 4;
   border: 1px solid white;
   box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.2);
 }
 
 .dot.selected.active {
+  z-index: 5;
   border-width: 1px;
 }
 
 .dot.selected.hover {
-  z-index: 2;
+  z-index: 5;
 }
