@@ -347,8 +347,8 @@ const App: React.FC = () => {
   };
 
   const handleExportColors = () => {
-    const svgWidth = 400;
-    const swatchHeight = 120;
+    const svgWidth = 400; // Core swatch width
+    const swatchHeight = 120; // Core swatch height
     const currentSwatches =
       activeTab === "10"
         ? swatches10
@@ -386,45 +386,44 @@ const App: React.FC = () => {
       const y = index * swatchHeight;
       const textColor = swatch.lValue > 50 ? "#000000" : "#FFFFFF";
       const colorNumber = index * 50;
-      const colorName = `Cool Gray-${
-        colorNumber < 10 ? "0" : ""
-      }${colorNumber}`;
+      const colorName = `Color-${colorNumber < 10 ? "0" : ""}${colorNumber}`;
 
+      // Core swatch rectangle
       svgContent += `
         <rect width="${svgWidth}" height="${swatchHeight}" y="${y}" fill="${
         swatch.hexColor
       }"/>
         
+        <!-- Left side text -->
         <text x="18" y="${y + 33}" class="text" fill="${textColor}">
           ${colorName}
         </text>
-
         <text x="18" y="${y + 54}" class="text" fill="${textColor}">
           #${swatch.hexColor.toUpperCase()}
         </text>
-        
         <text x="18" y="${y + 108}" class="text" fill="${textColor}">
           L*=${Math.round(swatch.lValue)}
         </text>
         
+        <!-- Right side contrast ratios and dots -->
         <text x="330" y="${
-          y + 33
+          y + 81
         }" class="text" text-anchor="end" fill="${textColor}">
           ${swatch.whiteContrast.toFixed(1)}:1
         </text>
-        <circle cx="376" cy="${y + 33}" r="8" fill="#FFFFFF"/>
+        <circle cx="376" cy="${y + 81}" r="8" fill="#FFFFFF"/>
         <circle cx="376" cy="${
-          y + 33
+          y + 81
         }" r="8.25" stroke="${textColor}" stroke-opacity="0.16" stroke-width="0.5"/>
 
         <text x="330" y="${
-          y + 108
+          y + 103
         }" class="text" text-anchor="end" fill="${textColor}">
           ${swatch.blackContrast.toFixed(1)}:1
         </text>
-        <circle cx="376" cy="${y + 81}" r="8" fill="#000000"/>
+        <circle cx="376" cy="${y + 103}" r="8" fill="#000000"/>
         <circle cx="376" cy="${
-          y + 81
+          y + 103
         }" r="8.25" stroke="#FFFFFF" stroke-opacity="0.16" stroke-width="0.5"/>
       `;
     });
@@ -481,7 +480,7 @@ const App: React.FC = () => {
       <header className="app-header">
         <h1>
           Color Grid Tool
-          <span className="version-number">v.1.8</span>
+          <span className="version-number">v.1.9</span>
         </h1>
         <div className="header-actions">
           <button onClick={handleExportColors}>Export All Colors</button>
