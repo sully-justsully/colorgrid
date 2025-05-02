@@ -404,6 +404,11 @@ const App: React.FC = () => {
               font-weight: 500;
               text-align: right;
             }
+            .dot {
+              width: 8px;
+              height: 8px;
+              border-radius: 50%;
+            }
           </style>
         </defs>
     `;
@@ -442,7 +447,7 @@ const App: React.FC = () => {
         </text>
         <rect class="dot" x="${svgWidth - padding + 12}" y="${
         y + 31
-      }" fill="#FFFFFF" />
+      }" width="8" height="8" rx="4" fill="#FFFFFF" />
 
         <text x="${svgWidth - padding}" y="${
         y + 95
@@ -451,7 +456,7 @@ const App: React.FC = () => {
         </text>
         <rect class="dot" x="${svgWidth - padding + 12}" y="${
         y + 91
-      }" fill="#000000" />
+      }" width="8" height="8" rx="4" fill="#000000" />
       `;
     });
 
@@ -507,7 +512,7 @@ const App: React.FC = () => {
       <header className="app-header">
         <h1>
           Color Grid Tool
-          <span className="version-number">v.1.1</span>
+          <span className="version-number">v.1.2</span>
         </h1>
         <div className="header-actions">
           <button onClick={handleExportColors}>Export All Colors</button>
