@@ -1,6 +1,6 @@
 {
-  "short_name": "React App",
-  "name": "Create React App Sample",
+  "short_name": "Color Grid",
+  "name": "Color Grid Tool - Create Beautiful Color Palettes",
   "icons": [
     {
       "src": "favicon.ico",
@@ -20,6 +20,7 @@
   ],
   "start_url": ".",
   "display": "standalone",
-  "theme_color": "#000000",
-  "background_color": "#ffffff"
+  "theme_color": "#121212",
+  "background_color": "#121212",
+  "description": "Create beautiful color palettes and grids with our free Color Grid Tool. Perfect for designers, developers, and artists."
 }
