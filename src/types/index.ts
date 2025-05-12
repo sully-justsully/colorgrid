@@ -21,3 +21,18 @@ export interface ColorCache {
   labLightness: number;
   hsbText: string;
 }
+
+declare global {
+  interface Window {
+    gtag: (
+      command: string,
+      action: string,
+      params?: {
+        event_category?: string;
+        event_label?: string;
+        value?: number;
+        [key: string]: any;
+      }
+    ) => void;
+  }
+}

@@ -1,11 +1,10 @@
-import React, { useEffect, useState, useCallback } from "react";
+import React, { useEffect, useState, useCallback, useMemo } from "react";
 import { Dot, ColorCache } from "../types";
 import {
   hsbToRgb,
   rgbToHex,
   getRgbLabLightness,
   calculateContrastRatio,
-  colorDistance,
   hexToHsb,
 } from "../utils/colorUtils";
 import "../styles/ColorGrid.css";
@@ -37,11 +36,8 @@ const ColorGrid: React.FC<ColorGridProps> = ({
   isPickingColor,
   activeLValue,
 }) => {
-  const [dots, setDots] = useState<Dot[]>([]);
-  const [colorCache, setColorCache] = useState<ColorCache[][]>([]);
-
-  // Pre-calculate color cache
-  useEffect(() => {
+  // Memoize the color cache calculation
+  const colorCache = useMemo(() => {
     const newColorCache: ColorCache[][] = Array(101)
       .fill(null)
       .map(() => Array(101).fill(null));
@@ -59,14 +55,13 @@ const ColorGrid: React.FC<ColorGridProps> = ({
       }
     }
 
-    setColorCache(newColorCache);
+    return newColorCache;
   }, [hue]);
 
-  // Update dots when cache or filters change
-  useEffect(() => {
+  // Memoize the dots calculation
+  const dots = useMemo(() => {
     const newDots: Dot[] = [];
     const lValuesSet = new Set(lValues);
-    let matchingDot: { row: number; col: number } | null = null;
 
     // Convert key hex code to HSB if it exists
     let keyHsb: { h: number; s: number; b: number } | null = null;
@@ -89,10 +84,6 @@ const ColorGrid: React.FC<ColorGridProps> = ({
             Math.abs(keyHsb.s - saturation) < 1 &&
             Math.abs(keyHsb.b - brightness) < 1;
 
-          if (isActive) {
-            matchingDot = { row, col };
-          }
-
           let isFiltered = false;
           const dotKey = `${row}-${col}`;
 
@@ -101,9 +92,21 @@ const ColorGrid: React.FC<ColorGridProps> = ({
             isFiltered = !lValuesSet.has(cached.labLightness);
           }
 
+          // Apply WCAG contrast filtering
+          if (!isFiltered) {
+            const contrastRatio = calculateContrastRatio(cached.hexColor);
+            if (isATextContrast && contrastRatio < 3) {
+              isFiltered = true;
+            } else if (isAATextContrast && contrastRatio < 4.5) {
+              isFiltered = true;
+            } else if (isAAATextContrast && contrastRatio < 7) {
+              isFiltered = true;
+            }
+          }
+
           // Apply color picking mode filtering
           if (isPickingColor && activeLValue !== null) {
-            isFiltered = cached.labLightness !== activeLValue;
+            isFiltered = Math.abs(cached.labLightness - activeLValue) > 0.5;
           }
 
           // Check if dot is in activeDots set
@@ -122,7 +125,7 @@ const ColorGrid: React.FC<ColorGridProps> = ({
       }
     }
 
-    setDots(newDots);
+    return newDots;
   }, [
     colorCache,
     isFiltering,
@@ -134,36 +137,47 @@ const ColorGrid: React.FC<ColorGridProps> = ({
     keyHexCode,
     isPickingColor,
     activeLValue,
-    hue, // Add hue to dependencies since we use it for comparison
+    hue,
   ]);
 
   const handleDotClick = useCallback(
     (dot: Dot) => {
+      console.log("Dot clicked:", dot);
       onDotClick(dot);
     },
     [onDotClick]
   );
 
-  return (
-    <div className="color-grid">
-      {dots.map((dot) => (
-        <div
-          key={`${dot.row}-${dot.col}`}
-          className={`dot ${dot.isActive ? "active" : ""} ${
-            dot.isFiltered ? "filtered" : ""
-          }`}
-          style={{ backgroundColor: dot.hexColor }}
-          onClick={() => handleDotClick(dot)}
-        >
-          <div className="hex-tooltip">
-            <div className="hex-value">{dot.hexColor}</div>
-            <div className="lab-value">L*: {dot.labLightness}</div>
-            <div className="hsb-value">{dot.hsbText}</div>
-          </div>
+  // Memoize the rendered dots
+  const renderedDots = useMemo(() => {
+    return dots.map((dot) => (
+      <div
+        key={`${dot.row}-${dot.col}`}
+        data-testid="color-dot"
+        className={`dot ${dot.isActive ? "active" : ""} ${
+          dot.isFiltered ? "filtered" : ""
+        }`}
+        style={{ backgroundColor: dot.hexColor }}
+        onClick={() => handleDotClick(dot)}
+        onMouseEnter={() => console.log("Dot hovered:", dot)}
+        onMouseLeave={() => console.log("Dot mouse leave:", dot)}
+      >
+        <div className="hex-tooltip">
+          <div className="hex-value">{dot.hexColor}</div>
+          <div className="lab-value">L*: {dot.labLightness}</div>
+          <div className="hsb-value">{dot.hsbText}</div>
         </div>
-      ))}
+      </div>
+    ));
+  }, [dots, handleDotClick]);
+
+  return (
+    <div className="dot-grid-wrapper">
+      <div className="color-grid" data-testid="color-grid">
+        {renderedDots}
+      </div>
     </div>
   );
 };
 
-export default ColorGrid;
+export default React.memo(ColorGrid);

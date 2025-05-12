@@ -8,24 +8,32 @@ import React, {
 import ColorGrid from "./components/ColorGrid";
 import ColorSwatch from "./components/ColorSwatch";
 import Toast from "./components/Toast";
+import MobileLayout from "./components/MobileLayout";
 import { ColorSwatch as ColorSwatchType, Dot } from "./types";
 import {
   labToRgb,
   rgbToHex,
   calculateContrastRatio,
   rgbToHsb,
+  hexToHsb,
+  hsbToRgb,
+  getRgbLabLightness,
 } from "./utils/colorUtils";
 import "./App.css";
 import "./styles/Dot.css";
 import "./styles/HexTooltip.css";
 import "./styles/ExportStyles.css";
+import Modal from "./components/Modal";
+import "./styles/Modal.css";
+import packageJson from "../package.json";
+import { Routes, Route, useLocation } from "react-router-dom";
+import ContrastGrid from "./components/ContrastGrid";
 
 const STORAGE_KEY = "colorGridSwatches";
 const HEX_STORAGE_KEY = "colorGridHexCode";
 
-const initialLValues10 = [95, 85, 75, 65, 55, 45, 35, 25, 15, 5];
-const initialLValues14 = [97, 93, 88, 79, 70, 62, 54, 46, 38, 30, 21, 12, 7, 4];
-const initialLValues18 = [
+const initialLValuesSimple = [100, 95, 85, 75, 65, 55, 45, 35, 25, 15, 5, 0];
+const initialLValuesAdvanced = [
   100, 98, 96, 93, 90, 82, 73, 65, 55, 45, 35, 27, 18, 10, 7, 4, 2, 0,
 ];
 
@@ -39,7 +47,23 @@ const guideSvg = `<svg width="1110" height="1110" viewBox="0 0 1110 1110" preser
   <path d="M0.4 0.4C0.4 0.4 0.4 826 142 968C282 1110 1110 1110 1110 1110" stroke="white" stroke-width="1"/>
 </svg>`;
 
-const createInitialSwatches = (lValues: number[]) => {
+const createInitialSwatches = (lValues: number[], hexCode?: string) => {
+  if (hexCode) {
+    // For Custom mode, create a single swatch with the L* value from the hex code
+    const r = parseInt(hexCode.slice(0, 2), 16);
+    const g = parseInt(hexCode.slice(2, 4), 16);
+    const b = parseInt(hexCode.slice(4, 6), 16);
+    const lValue = Math.round(getRgbLabLightness(r, g, b));
+    return [
+      {
+        id: 1,
+        lValue,
+        hexColor: `#${hexCode}`,
+        whiteContrast: calculateContrastRatio(`#${hexCode}`),
+        blackContrast: calculateContrastRatio(`#${hexCode}`, "#000000"),
+      },
+    ];
+  }
   return lValues.map((lValue, index) => {
     const [r, g, b] = labToRgb(lValue);
     const hexColor = rgbToHex(r, g, b);
@@ -59,6 +83,10 @@ const App: React.FC = () => {
     return savedHexCode || "0080FF";
   });
   const [inputHexCode, setInputHexCode] = useState(keyHexCode);
+  const [hslValues, setHslValues] = useState(() => {
+    const { h, s, b } = hexToHsb(keyHexCode);
+    return { h, s, b };
+  });
   const [hue, setHue] = useState(() => {
     const r = parseInt(keyHexCode.slice(0, 2), 16);
     const g = parseInt(keyHexCode.slice(2, 4), 16);
@@ -76,48 +104,54 @@ const App: React.FC = () => {
   const [activeLValue, setActiveLValue] = useState<number | null>(null);
   const [activeDots, setActiveDots] = useState<Set<string>>(new Set());
   const [showFiltersDropdown, setShowFiltersDropdown] = useState(false);
-  const [activeTab, setActiveTab] = useState<"10" | "14" | "18">("10");
-  const [swatches10, setSwatches10] = useState<ColorSwatchType[]>(() => {
-    const savedSwatches = localStorage.getItem(STORAGE_KEY + "_10");
-    if (savedSwatches) {
-      try {
-        return JSON.parse(savedSwatches);
-      } catch (e) {
-        console.error("Failed to parse saved swatches:", e);
-        return createInitialSwatches(initialLValues10);
+  const [activeTab, setActiveTab] = useState<"simple" | "custom" | "advanced">(
+    "simple"
+  );
+  const [swatchesSimple, setSwatchesSimple] = useState<ColorSwatchType[]>(
+    () => {
+      const savedSwatches = localStorage.getItem(STORAGE_KEY + "_simple");
+      if (savedSwatches) {
+        try {
+          return JSON.parse(savedSwatches);
+        } catch (e) {
+          console.error("Failed to parse saved swatches:", e);
+          return createInitialSwatches(initialLValuesSimple);
+        }
       }
+      return createInitialSwatches(initialLValuesSimple);
     }
-    return createInitialSwatches(initialLValues10);
-  });
-  const [swatches14, setSwatches14] = useState<ColorSwatchType[]>(() => {
-    const savedSwatches = localStorage.getItem(STORAGE_KEY + "_14");
-    if (savedSwatches) {
-      try {
-        return JSON.parse(savedSwatches);
-      } catch (e) {
-        console.error("Failed to parse saved swatches:", e);
-        return createInitialSwatches(initialLValues14);
+  );
+  const [swatchesCustom, setSwatchesCustom] = useState<ColorSwatchType[]>(
+    () => {
+      return createInitialSwatches([100], keyHexCode);
+    }
+  );
+  const [swatchesAdvanced, setSwatchesAdvanced] = useState<ColorSwatchType[]>(
+    () => {
+      const savedSwatches = localStorage.getItem(STORAGE_KEY + "_advanced");
+      if (savedSwatches) {
+        try {
+          return JSON.parse(savedSwatches);
+        } catch (e) {
+          console.error("Failed to parse saved swatches:", e);
+          return createInitialSwatches(initialLValuesAdvanced);
+        }
       }
+      return createInitialSwatches(initialLValuesAdvanced);
     }
-    return createInitialSwatches(initialLValues14);
-  });
-  const [swatches18, setSwatches18] = useState<ColorSwatchType[]>(() => {
-    const savedSwatches = localStorage.getItem(STORAGE_KEY + "_18");
-    if (savedSwatches) {
-      try {
-        return JSON.parse(savedSwatches);
-      } catch (e) {
-        console.error("Failed to parse saved swatches:", e);
-        return createInitialSwatches(initialLValues18);
-      }
-    }
-    return createInitialSwatches(initialLValues18);
-  });
+  );
   const [showToast, setShowToast] = useState(false);
+  const [toastHexCode, setToastHexCode] = useState("#333");
   const [isHexValid, setIsHexValid] = useState(true);
   const [isHexDirty, setIsHexDirty] = useState(false);
+  const [showColorPickModal, setShowColorPickModal] = useState(() => {
+    return !localStorage.getItem("colorPickModalShown");
+  });
+  const [modalPage, setModalPage] = useState(0);
+  const [rampTabClicked, setRampTabClicked] = useState(false);
 
   const dropdownRef = useRef<HTMLDivElement>(null);
+  const location = useLocation();
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -136,20 +170,76 @@ const App: React.FC = () => {
   }, []);
 
   useEffect(() => {
-    localStorage.setItem(STORAGE_KEY + "_10", JSON.stringify(swatches10));
-  }, [swatches10]);
+    localStorage.setItem(
+      STORAGE_KEY + "_simple",
+      JSON.stringify(swatchesSimple)
+    );
+  }, [swatchesSimple]);
 
   useEffect(() => {
-    localStorage.setItem(STORAGE_KEY + "_14", JSON.stringify(swatches14));
-  }, [swatches14]);
-
-  useEffect(() => {
-    localStorage.setItem(STORAGE_KEY + "_18", JSON.stringify(swatches18));
-  }, [swatches18]);
+    localStorage.setItem(
+      STORAGE_KEY + "_advanced",
+      JSON.stringify(swatchesAdvanced)
+    );
+  }, [swatchesAdvanced]);
 
   useEffect(() => {
     localStorage.setItem(HEX_STORAGE_KEY, keyHexCode);
+    // Update Custom mode swatches when key hex code changes
+    if (activeTab === "custom") {
+      const r = parseInt(keyHexCode.slice(0, 2), 16);
+      const g = parseInt(keyHexCode.slice(2, 4), 16);
+      const b = parseInt(keyHexCode.slice(4, 6), 16);
+      const lValue = Math.round(getRgbLabLightness(r, g, b));
+
+      setSwatchesCustom((prevSwatches) => {
+        // Update only the swatch with ID 1 (key hex code swatch)
+        return prevSwatches.map((swatch) =>
+          swatch.id === 1
+            ? {
+                ...swatch,
+                lValue,
+                hexColor: `#${keyHexCode}`,
+                whiteContrast: calculateContrastRatio(`#${keyHexCode}`),
+                blackContrast: calculateContrastRatio(
+                  `#${keyHexCode}`,
+                  "#000000"
+                ),
+              }
+            : swatch
+        );
+      });
+    }
   }, [keyHexCode]);
+
+  useEffect(() => {
+    if (showColorPickModal) {
+      localStorage.setItem("colorPickModalShown", "true");
+    }
+  }, [showColorPickModal]);
+
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape" && isPickingColor) {
+        setIsPickingColor(false);
+        setActiveSwatchId(null);
+        setActiveLValue(null);
+      }
+    };
+
+    document.addEventListener("keydown", handleKeyDown);
+    return () => {
+      document.removeEventListener("keydown", handleKeyDown);
+    };
+  }, [isPickingColor]);
+
+  // Turn on filter after 320ms
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setIsFiltering(true);
+    }, 320);
+    return () => clearTimeout(timer);
+  }, []);
 
   const handleHexCodeChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const newHexCode = e.target.value
@@ -164,10 +254,8 @@ const App: React.FC = () => {
   const updateHexCode = () => {
     if (isHexValid && isHexDirty) {
       setKeyHexCode(inputHexCode);
-      const r = parseInt(inputHexCode.slice(0, 2), 16);
-      const g = parseInt(inputHexCode.slice(2, 4), 16);
-      const b = parseInt(inputHexCode.slice(4, 6), 16);
-      const [h] = rgbToHsb(r, g, b);
+      const { h, s, b } = hexToHsb(inputHexCode);
+      setHslValues({ h, s, b });
       setHue(h);
       setIsHexDirty(false);
     }
@@ -187,12 +275,12 @@ const App: React.FC = () => {
   );
 
   const currentSwatches = useMemo(() => {
-    return activeTab === "10"
-      ? swatches10
-      : activeTab === "14"
-      ? swatches14
-      : swatches18;
-  }, [activeTab, swatches10, swatches14, swatches18]);
+    return activeTab === "simple"
+      ? swatchesSimple
+      : activeTab === "custom"
+      ? swatchesCustom
+      : swatchesAdvanced;
+  }, [activeTab, swatchesSimple, swatchesCustom, swatchesAdvanced]);
 
   const currentLValues = useMemo(() => {
     return currentSwatches.map((s) => s.lValue);
@@ -203,76 +291,129 @@ const App: React.FC = () => {
   };
 
   const handleSwatchClick = (id: number) => {
-    setIsPickingColor(!isPickingColor);
-    if (!isPickingColor) {
-      const swatch =
-        activeTab === "10"
-          ? swatches10
-          : activeTab === "14"
-          ? swatches14
-          : swatches18;
-      setActiveSwatchId(id);
-      setActiveLValue(swatch.find((s) => s.id === id)?.lValue || null);
-    } else {
+    // For all tabs, toggle the active state
+    if (isPickingColor && activeSwatchId === id) {
+      // If clicking the same swatch while picking, deactivate it
+      setIsPickingColor(false);
       setActiveSwatchId(null);
       setActiveLValue(null);
+    } else {
+      // If clicking a different swatch or not picking, activate it
+      setIsPickingColor(true);
+      setActiveSwatchId(id);
+
+      // Get the correct swatch array based on active tab
+      const swatchArray =
+        activeTab === "simple"
+          ? swatchesSimple
+          : activeTab === "advanced"
+          ? swatchesAdvanced
+          : swatchesCustom;
+
+      // Find the swatch with the matching ID
+      const selectedSwatch = swatchArray.find((s) => s.id === id);
+      if (selectedSwatch) {
+        setActiveLValue(selectedSwatch.lValue);
+
+        // Track color picker activation
+        if (typeof window.gtag !== "undefined") {
+          window.gtag("event", "color_picker_activate", {
+            grid_size: activeTab,
+            swatch_id: id,
+            l_value: selectedSwatch.lValue,
+            hex_color: selectedSwatch.hexColor,
+          });
+        }
+      }
     }
   };
 
   const handleLValueChange = (id: number, value: number) => {
     const setCurrentSwatches =
-      activeTab === "10"
-        ? setSwatches10
-        : activeTab === "14"
-        ? setSwatches14
-        : setSwatches18;
+      activeTab === "simple"
+        ? setSwatchesSimple
+        : activeTab === "advanced"
+        ? setSwatchesAdvanced
+        : setSwatchesCustom;
     setCurrentSwatches((prevSwatches) =>
-      prevSwatches.map((swatch) => {
-        if (swatch.id === id) {
-          const [r, g, b] = labToRgb(value);
-          const hexColor = rgbToHex(r, g, b);
-          return {
-            ...swatch,
-            lValue: value,
-            hexColor,
-            whiteContrast: calculateContrastRatio(hexColor),
-            blackContrast: calculateContrastRatio(hexColor, "#000000"),
-          };
-        }
-        return swatch;
-      })
+      prevSwatches
+        .map((swatch) => {
+          if (swatch.id === id) {
+            const [r, g, b] = labToRgb(value);
+            const hexColor = rgbToHex(r, g, b);
+            return {
+              ...swatch,
+              lValue: value,
+              hexColor,
+              whiteContrast: calculateContrastRatio(hexColor),
+              blackContrast: calculateContrastRatio(hexColor, "#000000"),
+            };
+          }
+          return swatch;
+        })
+        .sort((a, b) => b.lValue - a.lValue)
     );
+    // Update activeLValue if this is the active swatch
+    if (id === activeSwatchId) {
+      setActiveLValue(value);
+    }
   };
 
   const handleDotClick = useCallback(
     (dot: Dot) => {
       if (isPickingColor && activeSwatchId !== null) {
         const setCurrentSwatches =
-          activeTab === "10"
-            ? setSwatches10
-            : activeTab === "14"
-            ? setSwatches14
-            : setSwatches18;
+          activeTab === "simple"
+            ? setSwatchesSimple
+            : activeTab === "advanced"
+            ? setSwatchesAdvanced
+            : setSwatchesCustom;
+
         setCurrentSwatches((prevSwatches) =>
-          prevSwatches.map((swatch) => {
-            if (swatch.id === activeSwatchId) {
-              return {
-                ...swatch,
-                hexColor: dot.hexColor,
-                whiteContrast: calculateContrastRatio(dot.hexColor),
-                blackContrast: calculateContrastRatio(dot.hexColor, "#000000"),
-              };
-            }
-            return swatch;
-          })
+          prevSwatches.map((swatch) =>
+            swatch.id === activeSwatchId
+              ? {
+                  ...swatch,
+                  hexColor: dot.hexColor,
+                  whiteContrast: calculateContrastRatio(dot.hexColor),
+                  blackContrast: calculateContrastRatio(
+                    dot.hexColor,
+                    "#000000"
+                  ),
+                }
+              : swatch
+          )
         );
+
+        // Track color selection
+        if (typeof window.gtag !== "undefined") {
+          window.gtag("event", "color_selected", {
+            grid_size: activeTab,
+            swatch_id: activeSwatchId,
+            selected_hex: dot.hexColor,
+            l_value: dot.labLightness,
+            hsb_text: dot.hsbText,
+          });
+        }
+
         setIsPickingColor(false);
         setActiveSwatchId(null);
       }
 
       // Copy hex code to clipboard
       navigator.clipboard.writeText(dot.hexColor).then(() => {
+        setToastHexCode(dot.hexColor);
         setShowToast(true);
+        setTimeout(() => setShowToast(false), 2000);
+
+        // Track color copy
+        if (typeof window.gtag !== "undefined") {
+          window.gtag("event", "color_copied", {
+            hex_color: dot.hexColor,
+            l_value: dot.labLightness,
+            hsb_text: dot.hsbText,
+          });
+        }
       });
 
       const dotKey = `${dot.row}-${dot.col}`;
@@ -286,23 +427,22 @@ const App: React.FC = () => {
         return newSet;
       });
     },
-    [isPickingColor, activeSwatchId]
+    [isPickingColor, activeSwatchId, activeTab]
   );
-
-  const handleClearSelection = () => {
-    setActiveDots(new Set());
-  };
 
   const handleAddRamp = () => {
     const setCurrentSwatches =
-      activeTab === "10"
-        ? setSwatches10
-        : activeTab === "14"
-        ? setSwatches14
-        : setSwatches18;
+      activeTab === "simple"
+        ? setSwatchesSimple
+        : activeTab === "advanced"
+        ? setSwatchesAdvanced
+        : setSwatchesCustom;
     setCurrentSwatches((prevSwatches) => {
-      const lastSwatch = prevSwatches[prevSwatches.length - 1];
-      const newLValue = Math.max(0, lastSwatch.lValue - 1);
+      // Find the lowest L* value in the current swatches
+      const lowestLValue = Math.min(
+        ...prevSwatches.map((swatch) => swatch.lValue)
+      );
+      const newLValue = Math.max(0, lowestLValue - 1);
       const [r, g, b] = labToRgb(newLValue);
       const hexColor = rgbToHex(r, g, b);
 
@@ -321,11 +461,11 @@ const App: React.FC = () => {
 
   const handleRemoveRamp = () => {
     const setCurrentSwatches =
-      activeTab === "10"
-        ? setSwatches10
-        : activeTab === "14"
-        ? setSwatches14
-        : setSwatches18;
+      activeTab === "simple"
+        ? setSwatchesSimple
+        : activeTab === "advanced"
+        ? setSwatchesAdvanced
+        : setSwatchesCustom;
     setCurrentSwatches((prevSwatches) => {
       if (prevSwatches.length <= 1) return prevSwatches;
       return prevSwatches.slice(0, -1);
@@ -334,27 +474,45 @@ const App: React.FC = () => {
 
   const handleResetRamps = () => {
     switch (activeTab) {
-      case "10":
-        setSwatches10(createInitialSwatches(initialLValues10));
+      case "simple":
+        setSwatchesSimple(createInitialSwatches(initialLValuesSimple));
         break;
-      case "14":
-        setSwatches14(createInitialSwatches(initialLValues14));
+      case "custom":
+        // Reset to only show the key hex code ramp
+        const r = parseInt(keyHexCode.slice(0, 2), 16);
+        const g = parseInt(keyHexCode.slice(2, 4), 16);
+        const b = parseInt(keyHexCode.slice(4, 6), 16);
+        const lValue = Math.round(getRgbLabLightness(r, g, b));
+        setSwatchesCustom([
+          {
+            id: 1,
+            lValue,
+            hexColor: `#${keyHexCode}`,
+            whiteContrast: calculateContrastRatio(`#${keyHexCode}`),
+            blackContrast: calculateContrastRatio(`#${keyHexCode}`, "#000000"),
+          },
+        ]);
         break;
-      case "18":
-        setSwatches18(createInitialSwatches(initialLValues18));
+      case "advanced":
+        setSwatchesAdvanced(createInitialSwatches(initialLValuesAdvanced));
         break;
     }
+    setActiveDots(new Set());
   };
 
   const handleExportColors = () => {
+    // Track the export event
+    if (typeof window.gtag !== "undefined") {
+      window.gtag("event", "export_svg", {
+        method: "SVG",
+        grid_size: activeTab,
+        color_count: currentSwatches.length,
+        wcag_level: wcagLevel,
+      });
+    }
+
     const svgWidth = 400; // Core swatch width
     const swatchHeight = 120; // Core swatch height
-    const currentSwatches =
-      activeTab === "10"
-        ? swatches10
-        : activeTab === "14"
-        ? swatches14
-        : swatches18;
     const totalHeight = currentSwatches.length * swatchHeight;
 
     let svgContent = `
@@ -384,7 +542,7 @@ const App: React.FC = () => {
 
     currentSwatches.forEach((swatch, index) => {
       const y = index * swatchHeight;
-      const textColor = swatch.lValue > 50 ? "#000000" : "#FFFFFF";
+      const textColor = swatch.lValue >= 50 ? "#000000" : "#FFFFFF";
       const colorNumber = index * 50;
       const colorName = `Color-${colorNumber < 10 ? "0" : ""}${colorNumber}`;
 
@@ -395,35 +553,35 @@ const App: React.FC = () => {
       }"/>
         
         <!-- Left side text -->
-        <text x="18" y="${y + 33}" class="text" fill="${textColor}">
+        <text x="16" y="${y + 28}" class="text" fill="${textColor}">
           ${colorName}
         </text>
-        <text x="18" y="${y + 54}" class="text" fill="${textColor}">
-          #${swatch.hexColor.toUpperCase()}
+        <text x="16" y="${y + 47}" class="text" fill="${textColor}">
+          ${swatch.hexColor.toUpperCase()}
         </text>
-        <text x="18" y="${y + 108}" class="text" fill="${textColor}">
+        <text x="16" y="${y + 101}" class="text" fill="${textColor}">
           L*=${Math.round(swatch.lValue)}
         </text>
         
         <!-- Right side contrast ratios and dots -->
-        <text x="330" y="${
-          y + 81
+        <text x="360" y="${
+          y + 77
         }" class="text" text-anchor="end" fill="${textColor}">
           ${swatch.whiteContrast.toFixed(1)}:1
         </text>
-        <circle cx="376" cy="${y + 81}" r="8" fill="#FFFFFF"/>
+        <circle cx="376" cy="${y + 72}" r="8" fill="#FFFFFF"/>
         <circle cx="376" cy="${
-          y + 81
+          y + 72
         }" r="8.25" stroke="${textColor}" stroke-opacity="0.16" stroke-width="0.5"/>
 
-        <text x="330" y="${
-          y + 103
+        <text x="360" y="${
+          y + 101
         }" class="text" text-anchor="end" fill="${textColor}">
           ${swatch.blackContrast.toFixed(1)}:1
         </text>
-        <circle cx="376" cy="${y + 103}" r="8" fill="#000000"/>
+        <circle cx="376" cy="${y + 96}" r="8" fill="#000000"/>
         <circle cx="376" cy="${
-          y + 103
+          y + 96
         }" r="8.25" stroke="#FFFFFF" stroke-opacity="0.16" stroke-width="0.5"/>
       `;
     });
@@ -442,270 +600,816 @@ const App: React.FC = () => {
     URL.revokeObjectURL(url);
   };
 
-  const getContrastFilter = () => {
-    switch (wcagLevel) {
-      case "A":
-        return {
-          isATextContrast: true,
-          isAATextContrast: false,
-          isAAATextContrast: false,
-        };
-      case "AA":
-        return {
-          isATextContrast: false,
-          isAATextContrast: true,
-          isAAATextContrast: false,
-        };
-      case "AAA":
-        return {
-          isATextContrast: false,
-          isAATextContrast: false,
-          isAAATextContrast: true,
-        };
-      default:
-        return {
-          isATextContrast: false,
-          isAATextContrast: false,
-          isAAATextContrast: false,
-        };
-    }
+  const handleTabChange = (tab: "simple" | "custom" | "advanced") => {
+    setActiveTab(tab);
   };
 
-  const handleTabChange = (tab: "10" | "14" | "18") => {
-    setActiveTab(tab);
+  // Add new function to handle HSL changes
+  const handleHslChange = (type: "h" | "s" | "b", value: number) => {
+    const newHslValues = { ...hslValues, [type]: value };
+    setHslValues(newHslValues);
+
+    // Convert HSL back to hex
+    const h = newHslValues.h;
+    const s = newHslValues.s / 100;
+    const v = newHslValues.b / 100;
+
+    const c = v * s;
+    const x = c * (1 - Math.abs(((h / 60) % 2) - 1));
+    const m = v - c;
+
+    let r = 0,
+      g = 0,
+      b = 0;
+
+    if (h >= 0 && h < 60) {
+      [r, g, b] = [c, x, 0];
+    } else if (h >= 60 && h < 120) {
+      [r, g, b] = [x, c, 0];
+    } else if (h >= 120 && h < 180) {
+      [r, g, b] = [0, c, x];
+    } else if (h >= 180 && h < 240) {
+      [r, g, b] = [0, x, c];
+    } else if (h >= 240 && h < 300) {
+      [r, g, b] = [x, 0, c];
+    } else {
+      [r, g, b] = [c, 0, x];
+    }
+
+    const newHex = rgbToHex(
+      Math.round((r + m) * 255),
+      Math.round((g + m) * 255),
+      Math.round((b + m) * 255)
+    )
+      .slice(1)
+      .toUpperCase();
+
+    setInputHexCode(newHex);
+    setKeyHexCode(newHex);
+    setHue(h);
+    setIsHexValid(true);
+    setIsHexDirty(false);
+  };
+
+  const handleHslKeyDown = (
+    e: React.KeyboardEvent<HTMLInputElement>,
+    type: "h" | "s" | "b"
+  ) => {
+    if (e.key === "ArrowUp" || e.key === "ArrowDown") {
+      e.preventDefault();
+      const increment = e.shiftKey ? 10 : 1;
+      const currentValue = hslValues[type];
+      const max = type === "h" ? 360 : 100;
+      const min = 0;
+
+      let newValue = currentValue;
+      if (e.key === "ArrowUp") {
+        newValue = Math.min(max, currentValue + increment);
+      } else {
+        newValue = Math.max(min, currentValue - increment);
+      }
+
+      handleHslChange(type, newValue);
+    }
   };
 
   return (
     <div className="app">
-      <header className="app-header">
-        <h1>
-          Color Grid Tool
-          <span className="version-number">v.1.9</span>
-        </h1>
-        <div className="header-actions">
-          <button onClick={handleExportColors}>Export All Colors</button>
-          <div className="filters-dropdown" ref={dropdownRef}>
-            <button
-              onClick={() => setShowFiltersDropdown(!showFiltersDropdown)}
-            >
-              View Filters
-            </button>
-            {showFiltersDropdown && (
-              <div className="dropdown-menu">
-                <label className="filter-option">
-                  <input
-                    type="checkbox"
-                    checked={showGuides}
-                    onChange={(e) => setShowGuides(e.target.checked)}
-                  />
-                  Simple Guides
-                </label>
-                <div className="wcag-filters">
-                  <label className="filter-option">
-                    <input
-                      type="radio"
-                      name="wcag-level"
-                      checked={wcagLevel === "none"}
-                      onChange={() => handleWcagChange("none")}
-                    />
-                    No WCAG Filter
-                  </label>
-                  <label className="filter-option">
-                    <input
-                      type="radio"
-                      name="wcag-level"
-                      checked={wcagLevel === "A"}
-                      onChange={() => handleWcagChange("A")}
-                    />
-                    WCAG A (3:1)
-                  </label>
-                  <label className="filter-option">
-                    <input
-                      type="radio"
-                      name="wcag-level"
-                      checked={wcagLevel === "AA"}
-                      onChange={() => handleWcagChange("AA")}
-                    />
-                    WCAG AA (4.5:1)
-                  </label>
-                  <label className="filter-option">
-                    <input
-                      type="radio"
-                      name="wcag-level"
-                      checked={wcagLevel === "AAA"}
-                      onChange={() => handleWcagChange("AAA")}
-                    />
-                    WCAG AAA (7:1)
-                  </label>
-                </div>
-              </div>
-            )}
-          </div>
-        </div>
-      </header>
-
-      <div className="main-container">
-        <div className="left-drawer">
-          <div className="drawer-content">
-            <div className="drawer-section">
-              <h3>Key Hex Code</h3>
-              <div className="hex-control">
-                <div className="hex-input-group">
-                  <input
-                    type="color"
-                    value={`#${inputHexCode}`}
-                    onChange={(e) => {
-                      const newHex = e.target.value.slice(1).toUpperCase();
-                      setInputHexCode(newHex);
-                      setIsHexValid(true);
-                      setIsHexDirty(newHex !== keyHexCode);
-                      if (newHex !== keyHexCode) {
-                        setKeyHexCode(newHex);
-                        const r = parseInt(newHex.slice(0, 2), 16);
-                        const g = parseInt(newHex.slice(2, 4), 16);
-                        const b = parseInt(newHex.slice(4, 6), 16);
-                        const [h] = rgbToHsb(r, g, b);
-                        setHue(h);
-                      }
-                    }}
-                    className="color-picker"
-                    title="Pick a color"
-                  />
-                  <input
-                    type="text"
-                    value={inputHexCode}
-                    onChange={handleHexCodeChange}
-                    onKeyPress={handleKeyPress}
-                    placeholder="000000"
-                  />
+      <MobileLayout />
+      <Routes>
+        <Route
+          path="/"
+          element={
+            <>
+              <header className="app-header">
+                <h1>
+                  Color Grid Tool
+                  <span className="version-number">
+                    v.{packageJson.version}
+                  </span>
+                </h1>
+                <div className="header-actions">
                   <button
-                    onClick={updateHexCode}
-                    className={isHexValid && isHexDirty ? "active" : "disabled"}
-                    disabled={!isHexValid || !isHexDirty}
+                    onClick={() => {
+                      // Track contrast grid view
+                      if (typeof window.gtag !== "undefined") {
+                        window.gtag("event", "view_contrast_grid", {
+                          grid_size: activeTab,
+                          color_count: currentSwatches.length,
+                        });
+                      }
+                      window.open(
+                        `/contrast-grid?tab=${
+                          activeTab === "simple"
+                            ? "simple"
+                            : activeTab === "advanced"
+                            ? "advanced"
+                            : "custom"
+                        }&swatches=${encodeURIComponent(
+                          JSON.stringify(currentSwatches)
+                        )}`,
+                        "_blank"
+                      );
+                    }}
                   >
-                    <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                      <path d="M8.59 16.59L13.17 12 8.59 7.41 10 6l6 6-6 6-1.41-1.41z" />
-                    </svg>
+                    View Contrast Grid
                   </button>
+                  <button onClick={handleExportColors}>Export as SVG</button>
+                  <div className="filters-dropdown" ref={dropdownRef}>
+                    <button
+                      onClick={() =>
+                        setShowFiltersDropdown(!showFiltersDropdown)
+                      }
+                    >
+                      WCAG Filters
+                    </button>
+                    {showFiltersDropdown && (
+                      <div className="dropdown-menu">
+                        <div
+                          className="wcag-filters"
+                          style={{
+                            display: "flex",
+                            flexDirection: "column",
+                            gap: 8,
+                          }}
+                        >
+                          <label className="filter-option">
+                            <input
+                              type="checkbox"
+                              checked={wcagLevel === "A"}
+                              onChange={() =>
+                                handleWcagChange(
+                                  wcagLevel === "A" ? "none" : "A"
+                                )
+                              }
+                            />
+                            WCAG A (3:1)
+                          </label>
+                          <label className="filter-option">
+                            <input
+                              type="checkbox"
+                              checked={wcagLevel === "AA"}
+                              onChange={() =>
+                                handleWcagChange(
+                                  wcagLevel === "AA" ? "none" : "AA"
+                                )
+                              }
+                            />
+                            WCAG AA (4.5:1)
+                          </label>
+                          <label className="filter-option">
+                            <input
+                              type="checkbox"
+                              checked={wcagLevel === "AAA"}
+                              onChange={() =>
+                                handleWcagChange(
+                                  wcagLevel === "AAA" ? "none" : "AAA"
+                                )
+                              }
+                            />
+                            WCAG AAA (7:1)
+                          </label>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </header>
+
+              <div className="main-container">
+                <div className="left-drawer">
+                  <div className="drawer-content">
+                    <div className="drawer-section">
+                      <h3>Key Hex Code</h3>
+                      <div className="hex-control">
+                        <div
+                          className="hex-input-group"
+                          style={{
+                            display: "flex",
+                            alignItems: "center",
+                            gap: 12,
+                          }}
+                        >
+                          <input
+                            type="color"
+                            value={`#${inputHexCode}`}
+                            onChange={(e) => {
+                              const newHex = e.target.value
+                                .slice(1)
+                                .toUpperCase();
+                              setInputHexCode(newHex);
+                              setIsHexValid(true);
+                              setIsHexDirty(newHex !== keyHexCode);
+                              if (newHex !== keyHexCode) {
+                                setKeyHexCode(newHex);
+                                const { h, s, b } = hexToHsb(newHex);
+                                setHslValues({ h, s, b });
+                                setHue(h);
+                              }
+                            }}
+                            className="color-picker"
+                            title="Pick a color"
+                            style={{
+                              width: 48,
+                              height: 48,
+                              padding: 0,
+                              border: "none",
+                            }}
+                          />
+                          <input
+                            type="text"
+                            value={inputHexCode}
+                            onChange={handleHexCodeChange}
+                            onKeyPress={handleKeyPress}
+                            placeholder="000000"
+                            style={{ height: 48, flex: 1 }}
+                          />
+                          <button
+                            onClick={updateHexCode}
+                            className={
+                              isHexValid && isHexDirty ? "active" : "disabled"
+                            }
+                            disabled={!isHexValid || !isHexDirty}
+                            style={{
+                              width: 48,
+                              height: 48,
+                              display: "flex",
+                              alignItems: "center",
+                              justifyContent: "center",
+                            }}
+                          >
+                            <svg
+                              viewBox="0 0 24 24"
+                              xmlns="http://www.w3.org/2000/svg"
+                            >
+                              <path d="M8.59 16.59L13.17 12 8.59 7.41 10 6l6 6-6 6-1.41-1.41z" />
+                            </svg>
+                          </button>
+                        </div>
+                        <div style={{ marginTop: 16, display: "flex", gap: 8 }}>
+                          <input
+                            type="number"
+                            value={hslValues.h}
+                            onChange={(e) =>
+                              handleHslChange(
+                                "h",
+                                parseInt(e.target.value) || 0
+                              )
+                            }
+                            onKeyDown={(e) => handleHslKeyDown(e, "h")}
+                            min="0"
+                            max="360"
+                            style={{
+                              width: "33%",
+                              height: 32,
+                              background: "#1a1a1a",
+                              border: "1px solid #333",
+                              borderRadius: 4,
+                              color: "#999",
+                              fontSize: 13,
+                              fontFamily: "Lato, sans-serif",
+                              padding: "0 8px",
+                            }}
+                          />
+                          <input
+                            type="number"
+                            value={hslValues.s}
+                            onChange={(e) =>
+                              handleHslChange(
+                                "s",
+                                parseInt(e.target.value) || 0
+                              )
+                            }
+                            onKeyDown={(e) => handleHslKeyDown(e, "s")}
+                            min="0"
+                            max="100"
+                            style={{
+                              width: "33%",
+                              height: 32,
+                              background: "#1a1a1a",
+                              border: "1px solid #333",
+                              borderRadius: 4,
+                              color: "#999",
+                              fontSize: 13,
+                              fontFamily: "Lato, sans-serif",
+                              padding: "0 8px",
+                            }}
+                          />
+                          <input
+                            type="number"
+                            value={hslValues.b}
+                            onChange={(e) =>
+                              handleHslChange(
+                                "b",
+                                parseInt(e.target.value) || 0
+                              )
+                            }
+                            onKeyDown={(e) => handleHslKeyDown(e, "b")}
+                            min="0"
+                            max="100"
+                            style={{
+                              width: "33%",
+                              height: 32,
+                              background: "#1a1a1a",
+                              border: "1px solid #333",
+                              borderRadius: 4,
+                              color: "#999",
+                              fontSize: 13,
+                              fontFamily: "Lato, sans-serif",
+                              padding: "0 8px",
+                            }}
+                          />
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="drawer-section">
+                      <div className="section-header">
+                        <h3>Filter by Color Ramp</h3>
+                        <label className="filter-toggle">
+                          <input
+                            type="checkbox"
+                            checked={isFiltering}
+                            onChange={handleFilterToggle}
+                            aria-label="Filter by Color Ramp"
+                          />
+                          <span className="toggle-slider" />
+                        </label>
+                      </div>
+                      <div className="ramp-tabs">
+                        <button
+                          className={`tab-button ${
+                            activeTab === "simple" ? "active" : ""
+                          }`}
+                          onClick={() => handleTabChange("simple")}
+                          style={{ minHeight: 36 }}
+                        >
+                          Simple
+                        </button>
+                        <button
+                          className={`tab-button ${
+                            activeTab === "advanced" ? "active" : ""
+                          }`}
+                          onClick={() => handleTabChange("advanced")}
+                          style={{ minHeight: 36 }}
+                        >
+                          Advanced
+                        </button>
+                        <button
+                          className={`tab-button ${
+                            activeTab === "custom" ? "active" : ""
+                          }`}
+                          onClick={() => handleTabChange("custom")}
+                          style={{ minHeight: 36 }}
+                        >
+                          Custom
+                        </button>
+                      </div>
+                      <div className="color-ramps">
+                        {activeTab === "simple"
+                          ? swatchesSimple.map((swatch) => (
+                              <ColorSwatch
+                                key={swatch.id}
+                                swatch={swatch}
+                                isActive={swatch.id === activeSwatchId}
+                                onLValueChange={handleLValueChange}
+                                onClick={handleSwatchClick}
+                              />
+                            ))
+                          : activeTab === "custom"
+                          ? swatchesCustom.map((swatch) => {
+                              const r = parseInt(keyHexCode.slice(0, 2), 16);
+                              const g = parseInt(keyHexCode.slice(2, 4), 16);
+                              const b = parseInt(keyHexCode.slice(4, 6), 16);
+                              const keyLValue = Math.round(
+                                getRgbLabLightness(r, g, b)
+                              );
+                              return (
+                                <ColorSwatch
+                                  key={swatch.id}
+                                  swatch={swatch}
+                                  isActive={swatch.id === activeSwatchId}
+                                  onLValueChange={handleLValueChange}
+                                  onClick={handleSwatchClick}
+                                  isKeyHexCode={swatch.id === 1}
+                                />
+                              );
+                            })
+                          : swatchesAdvanced.map((swatch) => (
+                              <ColorSwatch
+                                key={swatch.id}
+                                swatch={swatch}
+                                isActive={swatch.id === activeSwatchId}
+                                onLValueChange={handleLValueChange}
+                                onClick={handleSwatchClick}
+                              />
+                            ))}
+                      </div>
+                      <div className="ramp-actions">
+                        {activeTab === "custom" && (
+                          <>
+                            <button
+                              className="update-button"
+                              onClick={handleAddRamp}
+                            >
+                              Add Ramp
+                            </button>
+                            <button
+                              className="update-button remove-button"
+                              onClick={handleRemoveRamp}
+                            >
+                              Remove Ramp
+                            </button>
+                          </>
+                        )}
+                        <button
+                          className="update-button reset-button"
+                          onClick={handleResetRamps}
+                          title="Reset to default ramps"
+                        >
+                          Reset Ramps
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="main-content">
+                  <div className="grid-container">
+                    <ColorGrid
+                      hue={hue}
+                      isFiltering={isFiltering}
+                      isATextContrast={wcagLevel === "A"}
+                      isAATextContrast={wcagLevel === "AA"}
+                      isAAATextContrast={wcagLevel === "AAA"}
+                      lValues={currentLValues}
+                      onDotClick={handleDotClick}
+                      activeDots={activeDots}
+                      keyHexCode={keyHexCode}
+                      isPickingColor={isPickingColor}
+                      activeLValue={activeLValue}
+                    />
+                    {isFiltering && (
+                      <div
+                        className="guide-overlay"
+                        dangerouslySetInnerHTML={{ __html: guideSvg }}
+                      />
+                    )}
+                    <button
+                      className="fab-help"
+                      onClick={() => {
+                        setModalPage(0);
+                        setRampTabClicked(false);
+                        setShowColorPickModal(true);
+                      }}
+                      aria-label="Need Help?"
+                    >
+                      Need Help?
+                    </button>
+                  </div>
                 </div>
               </div>
-            </div>
-
-            <div className="drawer-section">
-              <div className="section-header">
-                <h3>Filter by Color Ramp</h3>
-                <label className="filter-toggle">
-                  <input
-                    type="checkbox"
-                    checked={isFiltering}
-                    onChange={handleFilterToggle}
-                  />
-                  <span className="toggle-slider"></span>
-                </label>
-              </div>
-              <div className="ramp-tabs">
-                <button
-                  className={`tab-button ${activeTab === "10" ? "active" : ""}`}
-                  onClick={() => handleTabChange("10")}
-                >
-                  10 ramps
-                </button>
-                <button
-                  className={`tab-button ${activeTab === "14" ? "active" : ""}`}
-                  onClick={() => handleTabChange("14")}
-                >
-                  14 ramps
-                </button>
-                <button
-                  className={`tab-button ${activeTab === "18" ? "active" : ""}`}
-                  onClick={() => handleTabChange("18")}
-                >
-                  18 ramps
-                </button>
-              </div>
-              <div className="color-ramps">
-                {activeTab === "10"
-                  ? swatches10.map((swatch) => (
-                      <ColorSwatch
-                        key={swatch.id}
-                        swatch={swatch}
-                        isActive={swatch.id === activeSwatchId}
-                        onLValueChange={handleLValueChange}
-                        onClick={handleSwatchClick}
-                      />
-                    ))
-                  : activeTab === "14"
-                  ? swatches14.map((swatch) => (
-                      <ColorSwatch
-                        key={swatch.id}
-                        swatch={swatch}
-                        isActive={swatch.id === activeSwatchId}
-                        onLValueChange={handleLValueChange}
-                        onClick={handleSwatchClick}
-                      />
-                    ))
-                  : swatches18.map((swatch) => (
-                      <ColorSwatch
-                        key={swatch.id}
-                        swatch={swatch}
-                        isActive={swatch.id === activeSwatchId}
-                        onLValueChange={handleLValueChange}
-                        onClick={handleSwatchClick}
-                      />
-                    ))}
-              </div>
-              <div className="ramp-actions">
-                <button className="update-button" onClick={handleAddRamp}>
-                  Add Ramp
-                </button>
-                <button
-                  className="update-button remove-button"
-                  onClick={handleRemoveRamp}
-                >
-                  Remove Ramp
-                </button>
-                <button
-                  className="update-button reset-button"
-                  onClick={handleResetRamps}
-                  title="Reset to default ramps"
-                >
-                  Reset Ramps
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <div className="main-content">
-          <div className="grid-container">
-            <ColorGrid
-              hue={hue}
-              isFiltering={isFiltering}
-              isATextContrast={wcagLevel === "A"}
-              isAATextContrast={wcagLevel === "AA"}
-              isAAATextContrast={wcagLevel === "AAA"}
-              lValues={currentLValues}
-              onDotClick={handleDotClick}
-              activeDots={activeDots}
-              keyHexCode={keyHexCode}
-              isPickingColor={isPickingColor}
-              activeLValue={activeLValue}
-            />
-            {showGuides && (
-              <div
-                className="guide-overlay"
-                dangerouslySetInnerHTML={{ __html: guideSvg }}
-              />
-            )}
-          </div>
-        </div>
-      </div>
-      {showToast && (
-        <Toast
-          message="Hex code copied to clipboard!"
-          onClose={() => setShowToast(false)}
+              {showToast && (
+                <Toast
+                  message="Hex code copied to clipboard!"
+                  onClose={() => setShowToast(false)}
+                  backgroundColor={toastHexCode}
+                />
+              )}
+              {showColorPickModal && (
+                <Modal onClose={() => setShowColorPickModal(false)}>
+                  <div
+                    style={{
+                      width: 560,
+                      minHeight: 200,
+                      maxWidth: "100vw",
+                      height: "auto",
+                      display: "flex",
+                      flexDirection: "column",
+                      alignItems: "center",
+                      position: "relative",
+                    }}
+                  >
+                    {modalPage === 0 && (
+                      <>
+                        <h2
+                          style={{
+                            fontSize: 20,
+                            fontWeight: 400,
+                            margin: "0 0 16px 0",
+                            textAlign: "left",
+                            width: "100%",
+                          }}
+                        >
+                          Step 1: Pick a Hue or Hex Code
+                        </h2>
+                        <div
+                          style={{
+                            color: "#fff",
+                            fontSize: 18,
+                            fontWeight: 500,
+                            marginBottom: 8,
+                            textAlign: "left",
+                            width: "100%",
+                          }}
+                        ></div>
+                        <div style={{ width: "100%", marginBottom: 16 }}>
+                          <div className="hex-control">
+                            <div
+                              className="hex-input-group"
+                              style={{
+                                display: "flex",
+                                alignItems: "center",
+                                gap: 12,
+                              }}
+                            >
+                              <input
+                                type="color"
+                                value={`#${inputHexCode}`}
+                                onChange={(e) => {
+                                  const newHex = e.target.value
+                                    .slice(1)
+                                    .toUpperCase();
+                                  setInputHexCode(newHex);
+                                  setIsHexValid(true);
+                                  setIsHexDirty(newHex !== keyHexCode);
+                                  if (newHex !== keyHexCode) {
+                                    setKeyHexCode(newHex);
+                                    const { h, s, b } = hexToHsb(newHex);
+                                    setHslValues({ h, s, b });
+                                    setHue(h);
+                                  }
+                                }}
+                                className="color-picker"
+                                title="Pick a color"
+                                style={{
+                                  width: 48,
+                                  height: 48,
+                                  padding: 0,
+                                  border: "none",
+                                }}
+                              />
+                              <input
+                                type="text"
+                                value={inputHexCode}
+                                onChange={handleHexCodeChange}
+                                onKeyPress={handleKeyPress}
+                                placeholder="000000"
+                                style={{ height: 48, flex: 1 }}
+                              />
+                              <button
+                                onClick={updateHexCode}
+                                className={
+                                  isHexValid && isHexDirty
+                                    ? "active"
+                                    : "disabled"
+                                }
+                                disabled={!isHexValid || !isHexDirty}
+                                style={{
+                                  width: 48,
+                                  height: 48,
+                                  display: "flex",
+                                  alignItems: "center",
+                                  justifyContent: "center",
+                                }}
+                              >
+                                <svg
+                                  viewBox="0 0 24 24"
+                                  xmlns="http://www.w3.org/2000/svg"
+                                >
+                                  <path d="M8.59 16.59L13.17 12 8.59 7.41 10 6l6 6-6 6-1.41-1.41z" />
+                                </svg>
+                              </button>
+                            </div>
+                          </div>
+                        </div>
+                        <div
+                          style={{
+                            fontSize: 16,
+                            color: "#999999",
+                            textAlign: "left",
+                            width: "100%",
+                          }}
+                        >
+                          Input your brand's HEX code or use the color picker to
+                          pick the hue of the color family you want to create.
+                          The grid will update automatically and highlight your
+                          key HEX code on the grid itself.
+                        </div>
+                      </>
+                    )}
+                    {modalPage === 1 && (
+                      <>
+                        <h2
+                          style={{
+                            fontSize: 20,
+                            fontWeight: 400,
+                            margin: "0 0 16px 0",
+                            textAlign: "left",
+                            width: "100%",
+                          }}
+                        >
+                          Step 2: Pick the Amount of Color Ramps
+                        </h2>
+                        <div style={{ width: "100%", marginBottom: 16 }}>
+                          <div className="modal-ramp-tabs">
+                            <button
+                              className={`modal-ramp-tab${
+                                activeTab === "custom" && rampTabClicked
+                                  ? " active"
+                                  : ""
+                              }`}
+                              onClick={() => {
+                                handleTabChange("custom");
+                                setRampTabClicked(true);
+                              }}
+                            >
+                              Simple
+                            </button>
+                            <button
+                              className={`modal-ramp-tab${
+                                activeTab === "advanced" && rampTabClicked
+                                  ? " active"
+                                  : ""
+                              }`}
+                              onClick={() => {
+                                handleTabChange("advanced");
+                                setRampTabClicked(true);
+                              }}
+                            >
+                              Advanced
+                            </button>
+                            <button
+                              className={`modal-ramp-tab${
+                                activeTab === "simple" && rampTabClicked
+                                  ? " active"
+                                  : ""
+                              }`}
+                              onClick={() => {
+                                handleTabChange("simple");
+                                setRampTabClicked(true);
+                              }}
+                            >
+                              Custom
+                            </button>
+                          </div>
+                        </div>
+                        <div
+                          style={{
+                            fontSize: 16,
+                            color: "#999999",
+                            textAlign: "left",
+                            width: "100%",
+                          }}
+                        >
+                          Based on how robust of a color system you want, choose
+                          between Simple, Advanced, or Custom color ramps. You
+                          can also add, remove, and change the ramps for better
+                          customization.
+                          <br />
+                          <br />
+                          <span style={{ fontWeight: 800 }}>Hint:</span> I
+                          recommend having an even amount of color ramps that
+                          are above and below 50. This will ensure you have
+                          enough colors to work with in both light and dark
+                          mode.
+                        </div>
+                      </>
+                    )}
+                    {modalPage === 2 && (
+                      <>
+                        <h2
+                          style={{
+                            fontSize: 20,
+                            fontWeight: 400,
+                            margin: "0 0 16px 0",
+                            textAlign: "left",
+                            width: "100%",
+                          }}
+                        >
+                          Step 3: Create Your Palette
+                        </h2>
+                        <div
+                          style={{
+                            fontSize: 16,
+                            color: "#999999",
+                            textAlign: "left",
+                            width: "100%",
+                            marginBottom: 16,
+                          }}
+                        >
+                          Click on any swatch in the left drawer to begin
+                          creating your new palette. Follow the guide lines if
+                          you want help creating palettes of differing
+                          saturation levels. When you're done, click on 'Export
+                          as SVG' to save your palette.
+                        </div>
+                        {/* Sample ColorSwatch UI */}
+                        <div style={{ width: "100%", marginBottom: 16 }}>
+                          <div
+                            className="lightness-controls"
+                            style={{ width: "100%" }}
+                          >
+                            <div className="input-group">
+                              <div className="input-row">
+                                <div className="input-container">
+                                  <input
+                                    type="number"
+                                    min="0"
+                                    max="100"
+                                    value={"75"}
+                                    readOnly
+                                    style={{
+                                      background: "none",
+                                      border: "none",
+                                      color: "white",
+                                      fontSize: 16,
+                                      fontFamily: "Lato, sans-serif",
+                                      width: "100%",
+                                    }}
+                                  />
+                                </div>
+                                <div
+                                  className="color-swatch"
+                                  style={{
+                                    backgroundColor: "#4F8FFF",
+                                    cursor: "default",
+                                  }}
+                                >
+                                  <div className="hex-label">#4F8FFF</div>
+                                  <div className="reference-dots">
+                                    <div className="reference-dot white-dot">
+                                      4.5:1
+                                    </div>
+                                    <div className="reference-dot black-dot">
+                                      12.2:1
+                                    </div>
+                                  </div>
+                                </div>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      </>
+                    )}
+                    {/* Carousel arrows at bottom left */}
+                    <div
+                      style={{
+                        width: "100%",
+                        display: "flex",
+                        gap: 8,
+                        justifyContent: "flex-start",
+                        marginTop: 24,
+                      }}
+                    >
+                      <button
+                        onClick={() => setModalPage((p) => Math.max(0, p - 1))}
+                        disabled={modalPage === 0}
+                        style={{ minWidth: 40 }}
+                        aria-label="Previous"
+                      >
+                        &#8592;
+                      </button>
+                      <button
+                        onClick={() => setModalPage((p) => Math.min(2, p + 1))}
+                        disabled={modalPage === 2}
+                        style={{ minWidth: 40 }}
+                        aria-label="Next"
+                      >
+                        &#8594;
+                      </button>
+                    </div>
+                  </div>
+                </Modal>
+              )}
+            </>
+          }
         />
-      )}
+        <Route
+          path="/contrast-grid"
+          element={
+            <ContrastGrid
+              swatches={(() => {
+                const params = new URLSearchParams(location.search);
+                const tab = params.get("tab");
+                const swatchesParam = params.get("swatches");
+                if (swatchesParam) {
+                  try {
+                    return JSON.parse(decodeURIComponent(swatchesParam));
+                  } catch (e) {
+                    console.error("Failed to parse swatches:", e);
+                  }
+                }
+                if (tab === "custom") return swatchesCustom;
+                if (tab === "simple") return swatchesSimple;
+                if (tab === "advanced") return swatchesAdvanced;
+                return swatchesSimple;
+              })()}
+              title="Contrast Grid"
+            />
+          }
+        />
+      </Routes>
     </div>
   );
 };

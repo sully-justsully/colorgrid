@@ -1,0 +1,157 @@
+.modal-backdrop {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background: rgba(0, 0, 0, 0.6);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 2000;
+}
+
+.modal-content {
+  background: #222;
+  color: #fff;
+  padding: 32px 24px 24px 24px;
+  border-radius: 8px;
+  box-shadow: 0 4px 32px rgba(0, 0, 0, 0.3);
+  min-width: 320px;
+  max-width: 90vw;
+  position: relative;
+  font-family: "Lato", sans-serif;
+  line-height: 1.525;
+}
+
+.modal-close {
+  position: absolute;
+  top: 12px;
+  right: 16px;
+  background: none;
+  border: none;
+  color: #fff;
+  font-size: 24px;
+  cursor: pointer;
+  width: 40px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  margin: 0;
+  border-radius: 4px;
+  transition: background-color 0.2s;
+  z-index: 10;
+  pointer-events: auto;
+}
+
+.modal-close:hover {
+  background-color: rgba(255, 255, 255, 0.1);
+}
+
+.modal-content h2 {
+  margin-top: 0;
+  font-size: 1.5rem;
+  margin-bottom: 16px;
+}
+
+.modal-content ul {
+  margin: 0 0 16px 0;
+  padding-left: 20px;
+}
+
+.modal-content button {
+  background: #1773cf;
+  color: #fff;
+  border: none;
+  border-radius: 4px;
+  padding: 8px 16px;
+  font-size: 1rem;
+  cursor: pointer;
+  width: fit-content;
+}
+
+.modal-content button:hover {
+  background: #125ea7;
+}
+
+.fab-help {
+  position: fixed;
+  right: 24px;
+  bottom: 24px;
+  z-index: 2100;
+  background: #1773cf;
+  color: #fff;
+  border: none;
+  border-radius: 999px;
+  padding: 8px 16px;
+  font-size: 14px;
+  font-family: "Lato", sans-serif;
+  font-weight: 400;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.18);
+  cursor: pointer;
+  transition: background 0.2s, box-shadow 0.2s;
+  outline: none;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: unset;
+  width: auto;
+  height: 40px;
+}
+
+.fab-help:hover,
+.fab-help:focus {
+  background: #125ea7;
+  box-shadow: 0 6px 24px rgba(0, 0, 0, 0.22);
+}
+
+.modal-ramp-tabs {
+  display: flex;
+  gap: 8px;
+  flex: 1;
+  background-color: #2a2a2a;
+  color: #999;
+  border: none;
+  padding: 8px 12px;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 12px;
+  font-weight: 500;
+  transition: all 0.2s;
+  font-family: "Lato", sans-serif;
+  min-height: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.modal-ramp-tab {
+  flex: 1;
+  background-color: #2a2a2a;
+  color: #999;
+  border: none;
+  padding: 8px 12px;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 12px;
+  font-weight: 500;
+  transition: all 0.2s;
+  font-family: "Lato", sans-serif;
+  min-height: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.modal-ramp-tab:hover {
+  background-color: #333;
+  color: #fff;
+}
+
+.modal-ramp-tab.active {
+  background-color: #1773cf;
+  color: #fff;
+  box-shadow: 0 0 0 1px rgba(23, 115, 207, 0.18);
+}

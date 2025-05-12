@@ -5,9 +5,8 @@
   gap: 1px;
   background-color: #121212;
   padding: 1px;
-  width: fit-content;
-  height: fit-content;
   margin: 0;
+  position: relative;
 }
 
 .dot {
@@ -16,16 +15,19 @@
   border-radius: 50%;
   cursor: pointer;
   position: relative;
-  transition: transform 0.15s;
+  opacity: 1;
+  transition: transform 0.24s cubic-bezier(0.83, 0.07, 0.21, 0.93),
+    opacity 0.24s cubic-bezier(0.83, 0.07, 0.21, 0.93);
   box-sizing: border-box;
   z-index: 1;
-  isolation: isolate;
 }
 
 .dot:hover {
   transform: scale(1.25);
   z-index: 1000;
   outline: 1px solid #ffffff;
+  transition: transform 0.24s cubic-bezier(0.83, 0.07, 0.21, 0.93),
+    opacity 0.24s cubic-bezier(0.83, 0.07, 0.21, 0.93);
 }
 
 .dot.active {
@@ -33,6 +35,29 @@
   outline: none;
   box-shadow: 0 0 0 1px white, 0 0 0 2px rgba(0, 0, 0, 0.8),
     0 0 4px rgba(255, 255, 255, 0.4);
+  transition: transform 0.24s cubic-bezier(0.83, 0.07, 0.21, 0.93),
+    opacity 0.24s cubic-bezier(0.83, 0.07, 0.21, 0.93);
+}
+
+.dot.selected {
+  z-index: 4;
+  border: 1px solid white;
+  box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.2);
+  transition: transform 0.8s cubic-bezier(0.83, 0.07, 0.21, 0.93),
+    opacity 0.8s cubic-bezier(0.83, 0.07, 0.21, 0.93);
+}
+
+.dot.selected.active {
+  z-index: 5;
+  border-width: 1px;
+  transition: transform 0.8s cubic-bezier(0.83, 0.07, 0.21, 0.93),
+    opacity 0.8s cubic-bezier(0.83, 0.07, 0.21, 0.93);
+}
+
+.dot.selected.hover {
+  z-index: 5;
+  transition: transform 0.8s cubic-bezier(0.83, 0.07, 0.21, 0.93),
+    opacity 0.8s cubic-bezier(0.83, 0.07, 0.21, 0.93);
 }
 
 .dot.filtered {
@@ -53,7 +78,7 @@
   white-space: nowrap;
   pointer-events: none;
   opacity: 0;
-  transition: opacity 0.2s, transform 0.2s;
+  transition: opacity 0.4s, transform 0.4s cubic-bezier(0.83, 0.07, 0.21, 0.93);
   z-index: 2000;
 }
 
@@ -93,4 +118,33 @@
 
 .filters-dropdown .dropdown-menu {
   z-index: 1000;
+}
+
+/* Dot grid wrapper and grid should never show scrollbars */
+.dot-grid-wrapper {
+  width: 100%;
+  min-width: 0;
+  min-height: 0;
+  max-width: none;
+  max-height: none;
+  background: none;
+  padding: 0;
+  margin: 0;
+  position: relative;
+}
+
+.guide-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 1110px;
+  height: 1110px;
+  pointer-events: none;
+  z-index: 0;
+}
+
+.guide-overlay svg {
+  width: 100%;
+  height: 100%;
+  opacity: 0.4;
 }

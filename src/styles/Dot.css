@@ -16,8 +16,9 @@
 
 .dot.active {
   border-color: white;
-  box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.2);
+  box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.3);
   z-index: 2;
+  animation: activePulse 2s ease-in-out infinite;
 }
 
 .dot.hover {
@@ -27,14 +28,58 @@
 .dot.selected {
   z-index: 4;
   border: 1px solid white;
-  box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.2);
+  box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.3);
+  animation: selectedPulse 1.5s ease-in-out infinite;
 }
 
 .dot.selected.active {
   z-index: 5;
   border-width: 1px;
+  animation: selectedActivePulse 1.5s ease-in-out infinite;
 }
 
 .dot.selected.hover {
   z-index: 5;
+}
+
+@keyframes activePulse {
+  0% {
+    box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.3);
+  }
+  50% {
+    box-shadow: 0 0 0 3px rgba(255, 255, 255, 0.5);
+  }
+  100% {
+    box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.3);
+  }
+}
+
+@keyframes selectedPulse {
+  0% {
+    transform: scale(1);
+    box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.3);
+  }
+  50% {
+    transform: scale(1.1);
+    box-shadow: 0 0 0 3px rgba(255, 255, 255, 0.5);
+  }
+  100% {
+    transform: scale(1);
+    box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.3);
+  }
+}
+
+@keyframes selectedActivePulse {
+  0% {
+    transform: scale(1);
+    box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.3);
+  }
+  50% {
+    transform: scale(1.15);
+    box-shadow: 0 0 0 4px rgba(255, 255, 255, 0.6);
+  }
+  100% {
+    transform: scale(1);
+    box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.3);
+  }
 }

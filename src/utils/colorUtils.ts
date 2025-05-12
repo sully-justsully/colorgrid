@@ -250,8 +250,8 @@ export const colorDistance = (hex1: string, hex2: string): number => {
   const [r2, g2, b2] = hexToRgb(hex2);
 
   // Convert both colors to HSB
-  const [h1, s1, b1_] = rgbToHsb(r1, g1, b1);
-  const [h2, s2, b2_] = rgbToHsb(r2, g2, b2);
+  const [, s1, b1_] = rgbToHsb(r1, g1, b1);
+  const [, s2, b2_] = rgbToHsb(r2, g2, b2);
 
   // Calculate weighted distance in HSB space
   // Since we're already using the same hue for the grid, we only need to compare saturation and brightness

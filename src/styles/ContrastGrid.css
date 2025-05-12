@@ -1,0 +1,70 @@
+.contrast-grid__wrapper {
+  padding: 40px;
+  background: transparent;
+  width: fit-content;
+}
+
+.contrast-grid {
+  display: grid;
+  gap: 1px;
+  background: transparent;
+}
+
+.contrast-grid__tile {
+  width: 80px;
+  height: 80px;
+  box-sizing: border-box;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 12px;
+  font-family: "Lato", sans-serif;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+  padding: 0;
+  background: #181818;
+  color: #fff;
+}
+
+.contrast-grid__tile--empty {
+  background: #181818;
+}
+
+.contrast-grid__tile--header {
+  /* background and color set inline */
+  font-weight: 700;
+  font-size: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.contrast-grid__tile--contrast {
+  flex-direction: column;
+  align-items: flex-start;
+  justify-content: flex-start;
+  font-weight: 500;
+  padding: 8px;
+  position: relative;
+  overflow: hidden;
+  font-size: 12px;
+}
+
+.contrast-grid__ratio {
+  font-weight: 700;
+  font-size: 12px;
+  margin-bottom: 20px;
+}
+
+.contrast-grid__row {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.contrast-grid__label {
+  color: #7c5cfa;
+  font-weight: 600;
+  font-size: 12px;
+  margin-left: 2px;
+}
