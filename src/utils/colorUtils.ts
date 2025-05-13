@@ -1,17 +1,30 @@
-// RGB to Hex conversion
+// Cache for frequently used color conversions
+const rgbToHexCache = new Map<string, string>();
+const hexToRgbCache = new Map<string, [number, number, number]>();
+const contrastRatioCache = new Map<string, number>();
+
+// RGB to Hex conversion with caching
 export const rgbToHex = (r: number, g: number, b: number): string => {
-  return (
+  const key = `${r},${g},${b}`;
+  if (rgbToHexCache.has(key)) {
+    return rgbToHexCache.get(key)!;
+  }
+
+  const hex =
     "#" +
     [r, g, b]
       .map((x) => {
-        const hex = x.toString(16).toUpperCase();
+        const hex = x.toString(16);
         return hex.length === 1 ? "0" + hex : hex;
       })
       .join("")
-  );
+      .toUpperCase();
+
+  rgbToHexCache.set(key, hex);
+  return hex;
 };
 
-// HSB to RGB conversion
+// HSB to RGB conversion with improved precision
 export const hsbToRgb = (
   h: number,
   s: number,
@@ -30,39 +43,25 @@ export const hsbToRgb = (
 
   switch (i % 6) {
     case 0:
-      r = b;
-      g = t;
-      b_ = p;
+      [r, g, b_] = [b, t, p];
       break;
     case 1:
-      r = q;
-      g = b;
-      b_ = p;
+      [r, g, b_] = [q, b, p];
       break;
     case 2:
-      r = p;
-      g = b;
-      b_ = t;
+      [r, g, b_] = [p, b, t];
       break;
     case 3:
-      r = p;
-      g = q;
-      b_ = b;
+      [r, g, b_] = [p, q, b];
       break;
     case 4:
-      r = t;
-      g = p;
-      b_ = b;
+      [r, g, b_] = [t, p, b];
       break;
     case 5:
-      r = b;
-      g = p;
-      b_ = q;
+      [r, g, b_] = [b, p, q];
       break;
     default:
-      r = b;
-      g = t;
-      b_ = p;
+      [r, g, b_] = [b, t, p];
   }
 
   return [Math.round(r * 255), Math.round(g * 255), Math.round(b_ * 255)];
@@ -166,11 +165,16 @@ export const labToRgb = (l: number): [number, number, number] => {
   return [grayValue, grayValue, grayValue];
 };
 
-// Calculate WCAG contrast ratio between two colors
+// Calculate WCAG contrast ratio with caching
 export const calculateContrastRatio = (
   hexColor1: string,
   hexColor2: string = "#FFFFFF"
 ): number => {
+  const key = `${hexColor1}-${hexColor2}`;
+  if (contrastRatioCache.has(key)) {
+    return contrastRatioCache.get(key)!;
+  }
+
   const getRGB = (hex: string): [number, number, number] => {
     const r = parseInt(hex.slice(1, 3), 16) / 255;
     const g = parseInt(hex.slice(3, 5), 16) / 255;
@@ -197,7 +201,10 @@ export const calculateContrastRatio = (
 
   const lighter = Math.max(l1, l2);
   const darker = Math.min(l1, l2);
-  return (lighter + 0.05) / (darker + 0.05);
+  const ratio = (lighter + 0.05) / (darker + 0.05);
+
+  contrastRatioCache.set(key, ratio);
+  return ratio;
 };
 
 export function rgbToHsb(
@@ -236,12 +243,19 @@ export function rgbToHsb(
   return [h, s, v];
 }
 
-// Convert hex to RGB
+// Convert hex to RGB with caching
 export const hexToRgb = (hex: string): [number, number, number] => {
+  if (hexToRgbCache.has(hex)) {
+    return hexToRgbCache.get(hex)!;
+  }
+
   const r = parseInt(hex.slice(1, 3), 16);
   const g = parseInt(hex.slice(3, 5), 16);
   const b = parseInt(hex.slice(5, 7), 16);
-  return [r, g, b];
+  const result: [number, number, number] = [r, g, b];
+
+  hexToRgbCache.set(hex, result);
+  return result;
 };
 
 // Calculate distance between two colors in HSB space

@@ -4,6 +4,14 @@ import "@testing-library/jest-dom";
 import ColorGrid from "./ColorGrid";
 import { Dot } from "../types";
 
+// Mock the useColorGrid hook
+jest.mock("../hooks/useColorGrid", () => ({
+  useColorGrid: () => ({
+    handleDotClick: jest.fn(),
+    isDotActive: jest.fn((dotKey) => false),
+  }),
+}));
+
 describe("ColorGrid Component", () => {
   const mockProps = {
     hue: 0,
@@ -57,5 +65,43 @@ describe("ColorGrid Component", () => {
       (dot) => !dot.classList.contains("filtered")
     );
     expect(filteredDots.length).toBeLessThan(10201);
+  });
+
+  it("uses color cache for repeated hue values", () => {
+    const { rerender } = render(<ColorGrid {...mockProps} />);
+    const firstRender = screen.getAllByTestId("color-dot");
+
+    // Rerender with the same hue
+    rerender(<ColorGrid {...mockProps} />);
+    const secondRender = screen.getAllByTestId("color-dot");
+
+    // The dots should be the same instances
+    expect(secondRender).toEqual(firstRender);
+  });
+
+  it("handles active dots correctly", () => {
+    const mockIsDotActive = jest.fn((dotKey) => dotKey === "0-0");
+    jest.requireMock("../hooks/useColorGrid").useColorGrid.mockReturnValue({
+      handleDotClick: jest.fn(),
+      isDotActive: mockIsDotActive,
+    });
+
+    render(<ColorGrid {...mockProps} />);
+    const colorDots = screen.getAllByTestId("color-dot");
+    const activeDot = colorDots[0];
+
+    expect(activeDot).toHaveClass("active");
+  });
+
+  it("updates when hue changes", () => {
+    const { rerender } = render(<ColorGrid {...mockProps} />);
+    const firstRender = screen.getAllByTestId("color-dot");
+
+    // Rerender with a different hue
+    rerender(<ColorGrid {...mockProps} hue={180} />);
+    const secondRender = screen.getAllByTestId("color-dot");
+
+    // The dots should be different
+    expect(secondRender).not.toEqual(firstRender);
   });
 });

@@ -4,42 +4,57 @@
   border-radius: 50%;
   cursor: pointer;
   position: relative;
-  transition: transform 0.2s ease;
-  border: 1px solid transparent;
+  opacity: 1;
+  transition: transform 0.24s cubic-bezier(0.83, 0.07, 0.21, 0.93),
+    opacity 0.24s cubic-bezier(0.83, 0.07, 0.21, 0.93);
+  box-sizing: border-box;
   z-index: 1;
 }
 
 .dot:hover {
-  transform: scale(1.5);
-  z-index: 3;
+  transform: scale(1.25);
+  z-index: 1000;
+  outline: 1px solid #ffffff;
+  transition: transform 0.24s cubic-bezier(0.83, 0.07, 0.21, 0.93),
+    opacity 0.24s cubic-bezier(0.83, 0.07, 0.21, 0.93);
 }
 
 .dot.active {
-  border-color: white;
-  box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.3);
-  z-index: 2;
+  z-index: 1;
+  outline: none;
+  box-shadow: 0 0 0 1px white, 0 0 0 2px rgba(0, 0, 0, 0.8),
+    0 0 4px rgba(255, 255, 255, 0.4);
+  transition: transform 0.24s cubic-bezier(0.83, 0.07, 0.21, 0.93),
+    opacity 0.24s cubic-bezier(0.83, 0.07, 0.21, 0.93);
   animation: activePulse 2s ease-in-out infinite;
-}
-
-.dot.hover {
-  z-index: 3;
 }
 
 .dot.selected {
   z-index: 4;
   border: 1px solid white;
-  box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.3);
+  box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.2);
+  transition: transform 0.8s cubic-bezier(0.83, 0.07, 0.21, 0.93),
+    opacity 0.8s cubic-bezier(0.83, 0.07, 0.21, 0.93);
   animation: selectedPulse 1.5s ease-in-out infinite;
 }
 
 .dot.selected.active {
   z-index: 5;
   border-width: 1px;
+  transition: transform 0.8s cubic-bezier(0.83, 0.07, 0.21, 0.93),
+    opacity 0.8s cubic-bezier(0.83, 0.07, 0.21, 0.93);
   animation: selectedActivePulse 1.5s ease-in-out infinite;
 }
 
-.dot.selected.hover {
+.dot.selected:hover {
   z-index: 5;
+  transition: transform 0.8s cubic-bezier(0.83, 0.07, 0.21, 0.93),
+    opacity 0.8s cubic-bezier(0.83, 0.07, 0.21, 0.93);
+}
+
+.dot.filtered {
+  opacity: 0.25;
+  pointer-events: none;
 }
 
 @keyframes activePulse {

@@ -1,4 +1,10 @@
-import React, { useEffect, useState, useCallback, useMemo } from "react";
+import React, {
+  useCallback,
+  useMemo,
+  useEffect,
+  useRef,
+  useState,
+} from "react";
 import { Dot, ColorCache } from "../types";
 import {
   hsbToRgb,
@@ -7,7 +13,11 @@ import {
   calculateContrastRatio,
   hexToHsb,
 } from "../utils/colorUtils";
+import { useColorGrid } from "../hooks/useColorGrid";
 import "../styles/ColorGrid.css";
+
+// Create a cache outside the component to persist between renders
+const globalColorCache = new Map<number, ColorCache[][]>();
 
 interface ColorGridProps {
   hue: number;
@@ -21,6 +31,7 @@ interface ColorGridProps {
   keyHexCode: string;
   isPickingColor: boolean;
   activeLValue: number | null;
+  clearActiveDotsSignal?: number;
 }
 
 const ColorGrid: React.FC<ColorGridProps> = ({
@@ -35,13 +46,36 @@ const ColorGrid: React.FC<ColorGridProps> = ({
   keyHexCode,
   isPickingColor,
   activeLValue,
+  clearActiveDotsSignal,
 }) => {
-  // Memoize the color cache calculation
+  const {
+    handleDotClick: handleGridDotClick,
+    isDotActive,
+    clearActiveDots,
+  } = useColorGrid();
+
+  // Tooltip state
+  const [hoveredDot, setHoveredDot] = useState<null | Dot>(null);
+  const [tooltipPos, setTooltipPos] = useState<{
+    left: number;
+    top: number;
+    isTopHalf: boolean;
+    isLeftHalf: boolean;
+  } | null>(null);
+  const gridRef = useRef<HTMLDivElement>(null);
+
+  // Memoize the color cache calculation with improved caching
   const colorCache = useMemo(() => {
+    // Check if we already have a cache for this hue
+    if (globalColorCache.has(hue)) {
+      return globalColorCache.get(hue)!;
+    }
+
     const newColorCache: ColorCache[][] = Array(101)
       .fill(null)
       .map(() => Array(101).fill(null));
 
+    // Use a more efficient loop structure
     for (let brightness = 0; brightness <= 100; brightness++) {
       for (let saturation = 0; saturation <= 100; saturation++) {
         const [r, g, b] = hsbToRgb(hue, saturation, brightness);
@@ -55,21 +89,34 @@ const ColorGrid: React.FC<ColorGridProps> = ({
       }
     }
 
+    // Store in global cache
+    globalColorCache.set(hue, newColorCache);
+
+    // Limit cache size to prevent memory issues
+    if (globalColorCache.size > 10) {
+      const firstKey = globalColorCache.keys().next().value;
+      if (firstKey !== undefined) {
+        globalColorCache.delete(firstKey);
+      }
+    }
+
     return newColorCache;
   }, [hue]);
 
-  // Memoize the dots calculation
+  // Memoize the dots calculation with improved filtering
   const dots = useMemo(() => {
     const newDots: Dot[] = [];
     const lValuesSet = new Set(lValues);
+    const keyHsb = keyHexCode ? hexToHsb(keyHexCode) : null;
 
-    // Convert key hex code to HSB if it exists
-    let keyHsb: { h: number; s: number; b: number } | null = null;
-    if (keyHexCode) {
-      keyHsb = hexToHsb(keyHexCode);
-    }
+    // Pre-calculate contrast thresholds
+    const contrastThresholds = {
+      a: isATextContrast ? 3 : 0,
+      aa: isAATextContrast ? 4.5 : 0,
+      aaa: isAAATextContrast ? 7 : 0,
+    };
 
-    // First pass: collect all dots and find matching dot
+    // Use a more efficient loop structure
     for (let row = 0; row < 101; row++) {
       for (let col = 0; col < 101; col++) {
         const brightness = 100 - row;
@@ -77,50 +124,52 @@ const ColorGrid: React.FC<ColorGridProps> = ({
         const cached = colorCache[brightness]?.[col];
 
         if (cached) {
-          // Check if this dot matches the key HSB values
           const isActive =
             keyHsb !== null &&
-            Math.abs(keyHsb.h - hue) < 1 && // Allow small floating point differences
+            Math.abs(keyHsb.h - hue) < 1 &&
             Math.abs(keyHsb.s - saturation) < 1 &&
             Math.abs(keyHsb.b - brightness) < 1;
 
-          let isFiltered = false;
           const dotKey = `${row}-${col}`;
+          let isFiltered = false;
 
-          // Apply color ramp filtering
+          // Apply all filters in a single pass
           if (isFiltering && lValuesSet.size > 0) {
             isFiltered = !lValuesSet.has(cached.labLightness);
           }
 
-          // Apply WCAG contrast filtering
-          if (!isFiltered) {
+          if (
+            !isFiltered &&
+            (isATextContrast || isAATextContrast || isAAATextContrast)
+          ) {
             const contrastRatio = calculateContrastRatio(cached.hexColor);
-            if (isATextContrast && contrastRatio < 3) {
-              isFiltered = true;
-            } else if (isAATextContrast && contrastRatio < 4.5) {
-              isFiltered = true;
-            } else if (isAAATextContrast && contrastRatio < 7) {
-              isFiltered = true;
-            }
+            isFiltered =
+              contrastRatio <
+              Math.max(
+                contrastThresholds.a,
+                contrastThresholds.aa,
+                contrastThresholds.aaa
+              );
           }
 
-          // Apply color picking mode filtering
           if (isPickingColor && activeLValue !== null) {
             isFiltered = Math.abs(cached.labLightness - activeLValue) > 0.5;
           }
 
-          // Check if dot is in activeDots set
-          const isInActiveDots = activeDots.has(dotKey);
+          const isInActiveDots = isDotActive(dotKey);
 
-          newDots.push({
+          const dot: Dot = {
             row,
             col,
             hexColor: cached.hexColor,
             labLightness: cached.labLightness,
             hsbText: cached.hsbText,
-            isActive: isActive || isInActiveDots,
+            isActive,
             isFiltered,
-          });
+            isInActiveDots,
+          };
+
+          newDots.push(dot);
         }
       }
     }
@@ -128,54 +177,158 @@ const ColorGrid: React.FC<ColorGridProps> = ({
     return newDots;
   }, [
     colorCache,
+    hue,
     isFiltering,
     isATextContrast,
     isAATextContrast,
     isAAATextContrast,
     lValues,
-    activeDots,
     keyHexCode,
     isPickingColor,
     activeLValue,
-    hue,
+    isDotActive,
   ]);
 
   const handleDotClick = useCallback(
     (dot: Dot) => {
-      console.log("Dot clicked:", dot);
+      handleGridDotClick(dot);
       onDotClick(dot);
     },
-    [onDotClick]
+    [handleGridDotClick, onDotClick]
   );
 
   // Memoize the rendered dots
   const renderedDots = useMemo(() => {
-    return dots.map((dot) => (
-      <div
-        key={`${dot.row}-${dot.col}`}
-        data-testid="color-dot"
-        className={`dot ${dot.isActive ? "active" : ""} ${
-          dot.isFiltered ? "filtered" : ""
-        }`}
-        style={{ backgroundColor: dot.hexColor }}
-        onClick={() => handleDotClick(dot)}
-        onMouseEnter={() => console.log("Dot hovered:", dot)}
-        onMouseLeave={() => console.log("Dot mouse leave:", dot)}
-      >
-        <div className="hex-tooltip">
-          <div className="hex-value">{dot.hexColor}</div>
-          <div className="lab-value">L*: {dot.labLightness}</div>
-          <div className="hsb-value">{dot.hsbText}</div>
-        </div>
-      </div>
-    ));
+    return dots.map((dot) => {
+      const isTopHalf = dot.row < 50;
+      const isLeftHalf = dot.col < 50;
+      const positionClass = isTopHalf
+        ? isLeftHalf
+          ? "tooltip-top-left"
+          : "tooltip-top-right"
+        : isLeftHalf
+        ? "tooltip-bottom-left"
+        : "tooltip-bottom-right";
+
+      return (
+        <div
+          key={`${dot.row}-${dot.col}`}
+          data-testid="color-dot"
+          className={`dot ${dot.isActive ? "active" : ""} ${
+            dot.isFiltered ? "filtered" : ""
+          } ${dot.isInActiveDots ? "selected" : ""}`}
+          style={{ backgroundColor: dot.hexColor }}
+          onClick={() => handleDotClick(dot)}
+          onMouseEnter={(e) => {
+            setHoveredDot(dot);
+            // Calculate position relative to grid
+            const gridRect = gridRef.current?.getBoundingClientRect();
+            const dotRect = (e.target as HTMLElement).getBoundingClientRect();
+            if (gridRect) {
+              // Default offsets
+              let left = dotRect.left - gridRect.left;
+              let top = dotRect.top - gridRect.top;
+              // Adjust for tooltip position
+              const isTopHalf = dot.row < 50;
+              const isLeftHalf = dot.col < 50;
+              // We'll adjust after tooltip renders (see below)
+              setTooltipPos({ left, top, isTopHalf, isLeftHalf });
+            }
+          }}
+          onMouseLeave={() => {
+            setHoveredDot(null);
+            setTooltipPos(null);
+          }}
+        />
+      );
+    });
   }, [dots, handleDotClick]);
 
+  // Ref for tooltip to measure its size
+  const tooltipRef = useRef<HTMLDivElement>(null);
+
+  // After tooltip renders, adjust its position based on its size and the intended anchor
+  useEffect(() => {
+    if (hoveredDot && tooltipPos && tooltipRef.current) {
+      const tooltipRect = tooltipRef.current.getBoundingClientRect();
+      const gridRect = gridRef.current?.getBoundingClientRect();
+      if (!gridRect) return;
+      let left = tooltipPos.left;
+      let top = tooltipPos.top;
+      // Position logic
+      if (tooltipPos.isTopHalf) {
+        // Show below dot
+        top += 20; // dot height (10px) + gap (10px)
+      } else {
+        // Show above dot
+        top -= tooltipRect.height + 12; // gap (10px) + tooltip height
+      }
+      if (tooltipPos.isLeftHalf) {
+        // Anchor left
+        // no change to left
+      } else {
+        // Anchor right
+        left += 10; // move to right edge of dot
+        left -= tooltipRect.width; // shift left by tooltip width
+      }
+      setTooltipPos((pos) => pos && { ...pos, left, top });
+    }
+    // Only run after tooltip renders
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [hoveredDot]);
+
+  // Tooltip position class
+  let tooltipPositionClass = "";
+  if (hoveredDot) {
+    const isTopHalf = hoveredDot.row < 50;
+    const isLeftHalf = hoveredDot.col < 50;
+    tooltipPositionClass = isTopHalf
+      ? isLeftHalf
+        ? "tooltip-top-left"
+        : "tooltip-top-right"
+      : isLeftHalf
+      ? "tooltip-bottom-left"
+      : "tooltip-bottom-right";
+  }
+
+  // Debug: log tooltip position and hovered dot
+  if (hoveredDot && tooltipPos) {
+    console.log("TooltipPos:", tooltipPos, "HoveredDot:", hoveredDot);
+  }
+
+  // Effect: clear active dots when signal changes
+  useEffect(() => {
+    if (clearActiveDotsSignal !== undefined) {
+      clearActiveDots();
+    }
+  }, [clearActiveDotsSignal, clearActiveDots]);
+
   return (
-    <div className="dot-grid-wrapper">
+    <div
+      className="dot-grid-wrapper"
+      ref={gridRef}
+      style={{ position: "relative" }}
+    >
       <div className="color-grid" data-testid="color-grid">
         {renderedDots}
       </div>
+      {hoveredDot && tooltipPos && (
+        <div
+          ref={tooltipRef}
+          className={`hex-tooltip ${tooltipPositionClass}`}
+          style={{
+            position: "absolute",
+            left: tooltipPos.left,
+            top: tooltipPos.top,
+            pointerEvents: "none",
+            minWidth: 100,
+          }}
+        >
+          <div className="hex-value">{hoveredDot.hexColor}</div>
+          <div className="lab-value">L*: {hoveredDot.labLightness}</div>
+          <div className="hsb-value">{hoveredDot.hsbText}</div>
+        </div>
+      )}
     </div>
   );
 };

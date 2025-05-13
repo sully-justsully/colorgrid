@@ -34,7 +34,7 @@ const HEX_STORAGE_KEY = "colorGridHexCode";
 
 const initialLValuesSimple = [100, 95, 85, 75, 65, 55, 45, 35, 25, 15, 5, 0];
 const initialLValuesAdvanced = [
-  100, 98, 96, 93, 90, 82, 73, 65, 55, 45, 35, 27, 18, 10, 7, 4, 2, 0,
+  100, 98, 96, 93, 90, 82, 73, 65, 56, 45, 35, 27, 18, 10, 7, 4, 2, 0,
 ];
 
 const guideSvg = `<svg width="1110" height="1110" viewBox="0 0 1110 1110" preserveAspectRatio="none" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -149,6 +149,7 @@ const App: React.FC = () => {
   });
   const [modalPage, setModalPage] = useState(0);
   const [rampTabClicked, setRampTabClicked] = useState(false);
+  const [clearActiveDotsSignal, setClearActiveDotsSignal] = useState(0);
 
   const dropdownRef = useRef<HTMLDivElement>(null);
   const location = useLocation();
@@ -498,6 +499,7 @@ const App: React.FC = () => {
         break;
     }
     setActiveDots(new Set());
+    setClearActiveDotsSignal((prev) => prev + 1);
   };
 
   const handleExportColors = () => {
@@ -1048,6 +1050,7 @@ const App: React.FC = () => {
                       keyHexCode={keyHexCode}
                       isPickingColor={isPickingColor}
                       activeLValue={activeLValue}
+                      clearActiveDotsSignal={clearActiveDotsSignal}
                     />
                     {isFiltering && (
                       <div
