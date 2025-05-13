@@ -34,7 +34,7 @@ const HEX_STORAGE_KEY = "colorGridHexCode";
 
 const initialLValuesSimple = [100, 95, 85, 75, 65, 55, 45, 35, 25, 15, 5, 0];
 const initialLValuesAdvanced = [
-  100, 98, 96, 93, 90, 82, 73, 65, 56, 45, 35, 27, 18, 10, 7, 4, 2, 0,
+  100, 98, 96, 93, 90, 82, 73, 65, 54, 45, 35, 27, 18, 10, 7, 4, 2, 0,
 ];
 
 const guideSvg = `<svg width="1110" height="1110" viewBox="0 0 1110 1110" preserveAspectRatio="none" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -548,43 +548,46 @@ const App: React.FC = () => {
       const colorNumber = index * 50;
       const colorName = `Color-${colorNumber < 10 ? "0" : ""}${colorNumber}`;
 
-      // Core swatch rectangle
+      // Wrap each swatch in a g tag with the color name
       svgContent += `
-        <rect width="${svgWidth}" height="${swatchHeight}" y="${y}" fill="${
+        <g id="${colorName}">
+          <!-- Core swatch rectangle -->
+          <rect width="${svgWidth}" height="${swatchHeight}" y="${y}" fill="${
         swatch.hexColor
       }"/>
-        
-        <!-- Left side text -->
-        <text x="16" y="${y + 28}" class="text" fill="${textColor}">
-          ${colorName}
-        </text>
-        <text x="16" y="${y + 47}" class="text" fill="${textColor}">
-          ${swatch.hexColor.toUpperCase()}
-        </text>
-        <text x="16" y="${y + 101}" class="text" fill="${textColor}">
-          L*=${Math.round(swatch.lValue)}
-        </text>
-        
-        <!-- Right side contrast ratios and dots -->
-        <text x="360" y="${
-          y + 77
-        }" class="text" text-anchor="end" fill="${textColor}">
-          ${swatch.whiteContrast.toFixed(1)}:1
-        </text>
-        <circle cx="376" cy="${y + 72}" r="8" fill="#FFFFFF"/>
-        <circle cx="376" cy="${
-          y + 72
-        }" r="8.25" stroke="${textColor}" stroke-opacity="0.16" stroke-width="0.5"/>
+          
+          <!-- Left side text -->
+          <text x="16" y="${y + 28}" class="text" fill="${textColor}">
+            ${colorName}
+          </text>
+          <text x="16" y="${y + 47}" class="text" fill="${textColor}">
+            ${swatch.hexColor.toUpperCase()}
+          </text>
+          <text x="16" y="${y + 101}" class="text" fill="${textColor}">
+            L*=${Math.round(swatch.lValue)}
+          </text>
+          
+          <!-- Right side contrast ratios and dots -->
+          <text x="360" y="${
+            y + 77
+          }" class="text" text-anchor="end" fill="${textColor}">
+            ${swatch.whiteContrast.toFixed(1)}:1
+          </text>
+          <circle cx="376" cy="${y + 72}" r="8" fill="#FFFFFF"/>
+          <circle cx="376" cy="${
+            y + 72
+          }" r="8.25" stroke="${textColor}" stroke-opacity="0.16" stroke-width="0.5"/>
 
-        <text x="360" y="${
-          y + 101
-        }" class="text" text-anchor="end" fill="${textColor}">
-          ${swatch.blackContrast.toFixed(1)}:1
-        </text>
-        <circle cx="376" cy="${y + 96}" r="8" fill="#000000"/>
-        <circle cx="376" cy="${
-          y + 96
-        }" r="8.25" stroke="#FFFFFF" stroke-opacity="0.16" stroke-width="0.5"/>
+          <text x="360" y="${
+            y + 101
+          }" class="text" text-anchor="end" fill="${textColor}">
+            ${swatch.blackContrast.toFixed(1)}:1
+          </text>
+          <circle cx="376" cy="${y + 96}" r="8" fill="#000000"/>
+          <circle cx="376" cy="${
+            y + 96
+          }" r="8.25" stroke="#FFFFFF" stroke-opacity="0.16" stroke-width="0.5"/>
+        </g>
       `;
     });
 
