@@ -23,11 +23,25 @@ import "./App.css";
 import "./styles/Dot.css";
 import "./styles/HexTooltip.css";
 import "./styles/ExportStyles.css";
+import "./styles/Header.css";
+import "./styles/RightDrawer.css";
 import Modal from "./components/Modal";
 import "./styles/Modal.css";
+import "./styles/Button.css";
+import "./styles/Input.css";
 import packageJson from "../package.json";
 import { Routes, Route, useLocation } from "react-router-dom";
 import ContrastGrid from "./components/ContrastGrid";
+import { ReactComponent as ColorIcon } from "./icons/color.svg";
+import { ReactComponent as EyeIcon } from "./icons/eye.svg";
+import { ReactComponent as GridIcon } from "./icons/grid.svg";
+import { ReactComponent as PencilIcon } from "./icons/pencil.svg";
+import { ReactComponent as RemoveIcon } from "./icons/remove.svg";
+import { ReactComponent as TrashIcon } from "./icons/trash.svg";
+import { ReactComponent as DownloadIcon } from "./icons/download.svg";
+import { ReactComponent as ChevronRightIcon } from "./icons/chevron-right.svg";
+import { ReactComponent as ChevronLeftIcon } from "./icons/chevron-left.svg";
+import { ReactComponent as CloseIcon } from "./icons/close.svg";
 
 const STORAGE_KEY = "colorGridSwatches";
 const HEX_STORAGE_KEY = "colorGridHexCode";
@@ -150,6 +164,43 @@ const App: React.FC = () => {
   const [modalPage, setModalPage] = useState(0);
   const [rampTabClicked, setRampTabClicked] = useState(false);
   const [clearActiveDotsSignal, setClearActiveDotsSignal] = useState(0);
+  const [isPaletteCreatorOpen, setIsPaletteCreatorOpen] = useState(false);
+  const [pulsingRectangle, setPulsingRectangle] = useState<string | null>(null);
+  const [savedSwatches, setSavedSwatches] = useState<{
+    [key: string]: ColorSwatchType[];
+  }>(() => {
+    // Check for palettes under the new key first
+    const savedPalettes = localStorage.getItem("paletteCreatorPalettes");
+    if (savedPalettes) {
+      try {
+        return JSON.parse(savedPalettes);
+      } catch (e) {
+        console.error("Failed to parse saved palettes:", e);
+        return {};
+      }
+    }
+
+    // If no palettes under new key, check for old key and migrate if found
+    const oldPalettes = localStorage.getItem("systemCreatorPalettes");
+    if (oldPalettes) {
+      try {
+        const parsedOldPalettes = JSON.parse(oldPalettes);
+        // Save to new key
+        localStorage.setItem("paletteCreatorPalettes", oldPalettes);
+        // Clean up old data
+        localStorage.removeItem("systemCreatorPalettes");
+        return parsedOldPalettes;
+      } catch (e) {
+        console.error("Failed to migrate old palettes:", e);
+        return {};
+      }
+    }
+
+    return {};
+  });
+  const [isSavingMode, setIsSavingMode] = useState(false);
+  const [showRemoveConfirmModal, setShowRemoveConfirmModal] = useState(false);
+  const [paletteToRemove, setPaletteToRemove] = useState<string | null>(null);
 
   const dropdownRef = useRef<HTMLDivElement>(null);
   const location = useLocation();
@@ -507,18 +558,25 @@ const App: React.FC = () => {
     if (typeof window.gtag !== "undefined") {
       window.gtag("event", "export_svg", {
         method: "SVG",
-        grid_size: activeTab,
-        color_count: currentSwatches.length,
-        wcag_level: wcagLevel,
+        palette_count: Object.keys(savedSwatches).length,
       });
     }
 
-    const svgWidth = 400; // Core swatch width
-    const swatchHeight = 120; // Core swatch height
-    const totalHeight = currentSwatches.length * swatchHeight;
+    const swatchWidth = 400; // Width of each column
+    const swatchHeight = 120; // Height of each swatch
+    const padding = 32; // Padding between columns
+    const titleHeight = 48; // Height for section title
+    const sections = Object.entries(savedSwatches);
+    const totalWidth = (swatchWidth + padding) * sections.length - padding;
+
+    // Calculate max height needed based on the longest palette
+    const maxSwatches = Math.max(
+      ...sections.map(([_, swatches]) => swatches.length)
+    );
+    const totalHeight = titleHeight + maxSwatches * swatchHeight;
 
     let svgContent = `
-      <svg width="${svgWidth}" height="${totalHeight}" viewBox="0 0 ${svgWidth} ${totalHeight}" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <svg width="${totalWidth}" height="${totalHeight}" viewBox="0 0 ${totalWidth} ${totalHeight}" fill="none" xmlns="http://www.w3.org/2000/svg">
         <defs>
           <style>
             @font-face {
@@ -538,67 +596,97 @@ const App: React.FC = () => {
               font-size: 14px;
               fill: currentColor;
             }
+            .title {
+              font-family: 'Inter', sans-serif;
+              font-size: 18px;
+              font-weight: 500;
+              fill: #000000;
+            }
           </style>
         </defs>
     `;
 
-    currentSwatches.forEach((swatch, index) => {
-      const y = index * swatchHeight;
-      const textColor = swatch.lValue >= 50 ? "#000000" : "#FFFFFF";
-      const colorNumber = index * 50;
-      const colorName = `Color-${colorNumber < 10 ? "0" : ""}${colorNumber}`;
+    // Add each palette section as a column
+    sections.forEach(([sectionKey, swatches], sectionIndex) => {
+      const sectionTitle = sectionKey
+        .split("-")
+        .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+        .join(" ");
 
-      // Wrap each swatch in a g tag with the color name
+      const columnX = sectionIndex * (swatchWidth + padding);
+
+      // Add section title
       svgContent += `
-        <g id="${colorName}">
-          <!-- Core swatch rectangle -->
-          <rect width="${svgWidth}" height="${swatchHeight}" y="${y}" fill="${
-        swatch.hexColor
-      }"/>
-          
-          <!-- Left side text -->
-          <text x="16" y="${y + 28}" class="text" fill="${textColor}">
-            ${colorName}
-          </text>
-          <text x="16" y="${y + 47}" class="text" fill="${textColor}">
-            ${swatch.hexColor.toUpperCase()}
-          </text>
-          <text x="16" y="${y + 101}" class="text" fill="${textColor}">
-            L*=${Math.round(swatch.lValue)}
-          </text>
-          
-          <!-- Right side contrast ratios and dots -->
-          <text x="360" y="${
-            y + 77
-          }" class="text" text-anchor="end" fill="${textColor}">
-            ${swatch.whiteContrast.toFixed(1)}:1
-          </text>
-          <circle cx="376" cy="${y + 72}" r="8" fill="#FFFFFF"/>
-          <circle cx="376" cy="${
-            y + 72
-          }" r="8.25" stroke="${textColor}" stroke-opacity="0.16" stroke-width="0.5"/>
-
-          <text x="360" y="${
-            y + 101
-          }" class="text" text-anchor="end" fill="${textColor}">
-            ${swatch.blackContrast.toFixed(1)}:1
-          </text>
-          <circle cx="376" cy="${y + 96}" r="8" fill="#000000"/>
-          <circle cx="376" cy="${
-            y + 96
-          }" r="8.25" stroke="#FFFFFF" stroke-opacity="0.16" stroke-width="0.5"/>
-        </g>
+        <text x="${columnX + 16}" y="32" class="title" fill="#000000">
+          ${sectionTitle}
+        </text>
       `;
+
+      // Add swatches for this section
+      swatches.forEach((swatch, index) => {
+        const y = titleHeight + index * swatchHeight;
+        const textColor = swatch.lValue >= 50 ? "#000000" : "#FFFFFF";
+        const colorNumber = index * 50;
+        const colorName = `Color-${colorNumber < 10 ? "0" : ""}${colorNumber}`;
+
+        svgContent += `
+          <g id="${sectionKey}-${colorName}">
+            <rect x="${columnX}" y="${y}" width="${swatchWidth}" height="${swatchHeight}" fill="${
+          swatch.hexColor
+        }"/>
+            
+            <text x="${columnX + 16}" y="${
+          y + 28
+        }" class="text" fill="${textColor}">
+              ${colorName}
+            </text>
+            <text x="${columnX + 16}" y="${
+          y + 47
+        }" class="text" fill="${textColor}">
+              ${swatch.hexColor.toUpperCase()}
+            </text>
+            <text x="${columnX + 16}" y="${
+          y + 101
+        }" class="text" fill="${textColor}">
+              L*=${Math.round(swatch.lValue)}
+            </text>
+            
+            <text x="${columnX + swatchWidth - 40}" y="${
+          y + 77
+        }" class="text" text-anchor="end" fill="${textColor}">
+              ${swatch.whiteContrast.toFixed(1)}:1
+            </text>
+            <circle cx="${columnX + swatchWidth - 24}" cy="${
+          y + 72
+        }" r="8" fill="#FFFFFF"/>
+            <circle cx="${columnX + swatchWidth - 24}" cy="${
+          y + 72
+        }" r="8.25" stroke="${textColor}" stroke-opacity="0.16" stroke-width="0.5"/>
+
+            <text x="${columnX + swatchWidth - 40}" y="${
+          y + 101
+        }" class="text" text-anchor="end" fill="${textColor}">
+              ${swatch.blackContrast.toFixed(1)}:1
+            </text>
+            <circle cx="${columnX + swatchWidth - 24}" cy="${
+          y + 96
+        }" r="8" fill="#000000"/>
+            <circle cx="${columnX + swatchWidth - 24}" cy="${
+          y + 96
+        }" r="8.25" stroke="#FFFFFF" stroke-opacity="0.16" stroke-width="0.5"/>
+          </g>
+        `;
+      });
     });
 
-    svgContent += "</svg>";
+    svgContent += `</svg>`;
 
     const blob = new Blob([svgContent], { type: "image/svg+xml" });
     const url = URL.createObjectURL(blob);
 
     const a = document.createElement("a");
     a.href = url;
-    a.download = `color-ramps-${activeTab}.svg`;
+    a.download = `color-palettes.svg`;
     document.body.appendChild(a);
     a.click();
     document.body.removeChild(a);
@@ -678,6 +766,53 @@ const App: React.FC = () => {
     }
   };
 
+  const handleSaveToPaletteCreator = () => {
+    setIsPaletteCreatorOpen(true);
+    setIsSavingMode(true);
+    setPulsingRectangle("all");
+  };
+
+  const handleRectangleClick = (sectionTitle: string) => {
+    if (!isSavingMode) return;
+
+    const sectionKey = sectionTitle.toLowerCase().replace(/\s+/g, "-");
+
+    // Save the current swatches to this section
+    setSavedSwatches((prev) => ({
+      ...prev,
+      [sectionKey]: [...currentSwatches],
+    }));
+
+    // Exit saving mode and stop pulsing
+    setIsSavingMode(false);
+    setPulsingRectangle(null);
+  };
+
+  const handleRemovePalette = (sectionTitle: string) => {
+    const sectionKey = sectionTitle.toLowerCase().replace(/\s+/g, "-");
+    setPaletteToRemove(sectionKey);
+    setShowRemoveConfirmModal(true);
+  };
+
+  const confirmRemovePalette = () => {
+    if (paletteToRemove) {
+      setSavedSwatches((prev) => {
+        const newSwatches = { ...prev };
+        delete newSwatches[paletteToRemove];
+        return newSwatches;
+      });
+      setShowRemoveConfirmModal(false);
+      setPaletteToRemove(null);
+    }
+  };
+
+  useEffect(() => {
+    localStorage.setItem(
+      "paletteCreatorPalettes",
+      JSON.stringify(savedSwatches)
+    );
+  }, [savedSwatches]);
+
   return (
     <div className="app">
       <MobileLayout />
@@ -716,16 +851,19 @@ const App: React.FC = () => {
                         "_blank"
                       );
                     }}
+                    className="btn btn-secondary"
                   >
+                    <GridIcon />
                     View Contrast Grid
                   </button>
-                  <button onClick={handleExportColors}>Export as SVG</button>
                   <div className="filters-dropdown" ref={dropdownRef}>
                     <button
                       onClick={() =>
                         setShowFiltersDropdown(!showFiltersDropdown)
                       }
+                      className="btn btn-secondary"
                     >
+                      <EyeIcon />
                       WCAG Filters
                     </button>
                     {showFiltersDropdown && (
@@ -778,263 +916,311 @@ const App: React.FC = () => {
                       </div>
                     )}
                   </div>
+                  <button
+                    className="btn"
+                    onClick={() =>
+                      setIsPaletteCreatorOpen(!isPaletteCreatorOpen)
+                    }
+                  >
+                    <ColorIcon />
+                    Palette Creator
+                  </button>
                 </div>
               </header>
 
-              <div className="main-container">
-                <div className="left-drawer">
-                  <div className="drawer-content">
-                    <div className="drawer-section">
-                      <h3>Key Hex Code</h3>
-                      <div className="hex-control">
+              <div
+                className={`right-drawer ${isPaletteCreatorOpen ? "open" : ""}`}
+              >
+                <div className="drawer-header">
+                  <span className="drawer-title">Palette Creator</span>
+                  <div className="drawer-actions">
+                    <button
+                      className="btn"
+                      onClick={handleExportColors}
+                      disabled={Object.keys(savedSwatches).length === 0}
+                    >
+                      <DownloadIcon />
+                      Download Palettes
+                    </button>
+                    <button
+                      className="btn btn-icon-only"
+                      onClick={() => setIsPaletteCreatorOpen(false)}
+                      aria-label="Close drawer"
+                    >
+                      ×
+                    </button>
+                  </div>
+                </div>
+                <div className="drawer-sections">
+                  {[
+                    {
+                      title: "Brand Primary",
+                      text: "This is your main brand color used for primary actions and highlights.",
+                    },
+                    {
+                      title: "Brand Secondary",
+                      text: "A secondary color to complement your primary brand color.",
+                    },
+                    {
+                      title: "Neutral",
+                      text: "Neutral colors are used for backgrounds, surfaces, and less prominent elements.",
+                    },
+                    {
+                      title: "Success",
+                      text: "Success colors indicate positive actions or states.",
+                    },
+                    {
+                      title: "Error",
+                      text: "Error colors are used for destructive actions or error states.",
+                    },
+                  ].map((section, idx) => (
+                    <div className="right-drawer-section" key={section.title}>
+                      <div className="section-title">{section.title}</div>
+                      <div className="section-desc">{section.text}</div>
+                      <div className="section-row">
                         <div
-                          className="hex-input-group"
-                          style={{
-                            display: "flex",
-                            alignItems: "center",
-                            gap: 12,
-                          }}
+                          className={
+                            savedSwatches[
+                              section.title.toLowerCase().replace(/\s+/g, "-")
+                            ]
+                              ? `filled-state${
+                                  isSavingMode ? " saving-mode" : ""
+                                }`
+                              : `empty-state${
+                                  pulsingRectangle === "all" ? " pulsing" : ""
+                                }${isSavingMode ? " saving-mode" : ""}`
+                          }
+                          onClick={() => handleRectangleClick(section.title)}
                         >
-                          <input
-                            type="color"
-                            value={`#${inputHexCode}`}
-                            onChange={(e) => {
-                              const newHex = e.target.value
-                                .slice(1)
-                                .toUpperCase();
-                              setInputHexCode(newHex);
-                              setIsHexValid(true);
-                              setIsHexDirty(newHex !== keyHexCode);
-                              if (newHex !== keyHexCode) {
-                                setKeyHexCode(newHex);
-                                const { h, s, b } = hexToHsb(newHex);
-                                setHslValues({ h, s, b });
-                                setHue(h);
-                              }
-                            }}
-                            className="color-picker"
-                            title="Pick a color"
-                            style={{
-                              width: 48,
-                              height: 48,
-                              padding: 0,
-                              border: "none",
-                            }}
-                          />
-                          <input
-                            type="text"
-                            value={inputHexCode}
-                            onChange={handleHexCodeChange}
-                            onKeyPress={handleKeyPress}
-                            placeholder="000000"
-                            style={{ height: 48, flex: 1 }}
-                          />
-                          <button
-                            onClick={updateHexCode}
-                            className={
-                              isHexValid && isHexDirty ? "active" : "disabled"
-                            }
-                            disabled={!isHexValid || !isHexDirty}
-                            style={{
-                              width: 48,
-                              height: 48,
-                              display: "flex",
-                              alignItems: "center",
-                              justifyContent: "center",
-                            }}
-                          >
-                            <svg
-                              viewBox="0 0 24 24"
-                              xmlns="http://www.w3.org/2000/svg"
-                            >
-                              <path d="M8.59 16.59L13.17 12 8.59 7.41 10 6l6 6-6 6-1.41-1.41z" />
-                            </svg>
-                          </button>
+                          {savedSwatches[
+                            section.title.toLowerCase().replace(/\s+/g, "-")
+                          ]?.map((swatch) => (
+                            <div
+                              key={swatch.id}
+                              className="color-swatch"
+                              style={{
+                                backgroundColor: swatch.hexColor,
+                                height: "100%",
+                                border: "1px solid #222",
+                              }}
+                            />
+                          ))}
                         </div>
-                        <div style={{ marginTop: 16, display: "flex", gap: 8 }}>
-                          <input
-                            type="number"
-                            value={hslValues.h}
-                            onChange={(e) =>
-                              handleHslChange(
-                                "h",
-                                parseInt(e.target.value) || 0
-                              )
-                            }
-                            onKeyDown={(e) => handleHslKeyDown(e, "h")}
-                            min="0"
-                            max="360"
-                            style={{
-                              width: "33%",
-                              height: 32,
-                              background: "#1a1a1a",
-                              border: "1px solid #333",
-                              borderRadius: 4,
-                              color: "#999",
-                              fontSize: 13,
-                              fontFamily: "Lato, sans-serif",
-                              padding: "0 8px",
-                            }}
-                          />
-                          <input
-                            type="number"
-                            value={hslValues.s}
-                            onChange={(e) =>
-                              handleHslChange(
-                                "s",
-                                parseInt(e.target.value) || 0
-                              )
-                            }
-                            onKeyDown={(e) => handleHslKeyDown(e, "s")}
-                            min="0"
-                            max="100"
-                            style={{
-                              width: "33%",
-                              height: 32,
-                              background: "#1a1a1a",
-                              border: "1px solid #333",
-                              borderRadius: 4,
-                              color: "#999",
-                              fontSize: 13,
-                              fontFamily: "Lato, sans-serif",
-                              padding: "0 8px",
-                            }}
-                          />
-                          <input
-                            type="number"
-                            value={hslValues.b}
-                            onChange={(e) =>
-                              handleHslChange(
-                                "b",
-                                parseInt(e.target.value) || 0
-                              )
-                            }
-                            onKeyDown={(e) => handleHslKeyDown(e, "b")}
-                            min="0"
-                            max="100"
-                            style={{
-                              width: "33%",
-                              height: 32,
-                              background: "#1a1a1a",
-                              border: "1px solid #333",
-                              borderRadius: 4,
-                              color: "#999",
-                              fontSize: 13,
-                              fontFamily: "Lato, sans-serif",
-                              padding: "0 8px",
-                            }}
-                          />
+                        <div style={{ display: "flex", gap: "4px" }}>
+                          <button
+                            className="btn btn-icon-only"
+                            aria-label="Edit"
+                          >
+                            <PencilIcon />
+                          </button>
+                          <button
+                            className="btn btn-destructive btn-icon-only"
+                            aria-label="Remove"
+                            onClick={() => handleRemovePalette(section.title)}
+                          >
+                            <TrashIcon />
+                          </button>
                         </div>
                       </div>
                     </div>
+                  ))}
+                </div>
+              </div>
 
-                    <div className="drawer-section">
-                      <div className="section-header">
-                        <h3>Filter by Color Ramp</h3>
-                        <label className="filter-toggle">
-                          <input
-                            type="checkbox"
-                            checked={isFiltering}
-                            onChange={handleFilterToggle}
-                            aria-label="Filter by Color Ramp"
-                          />
-                          <span className="toggle-slider" />
-                        </label>
+              <div className="main-container">
+                <div className="left-drawer">
+                  <div className="left-drawer-section">
+                    <h3>Key Hex Code</h3>
+                    <div className="hex-control">
+                      <div className="hex-input-group input-flex-center">
+                        <input
+                          type="color"
+                          value={`#${inputHexCode}`}
+                          onChange={(e) => {
+                            const newHex = e.target.value
+                              .slice(1)
+                              .toUpperCase();
+                            setInputHexCode(newHex);
+                            setIsHexValid(true);
+                            setIsHexDirty(newHex !== keyHexCode);
+                            if (newHex !== keyHexCode) {
+                              setKeyHexCode(newHex);
+                              const { h, s, b } = hexToHsb(newHex);
+                              setHslValues({ h, s, b });
+                              setHue(h);
+                            }
+                          }}
+                          className="color-picker color-picker-input"
+                          title="Pick a color"
+                        />
+                        <input
+                          type="text"
+                          value={inputHexCode}
+                          onChange={handleHexCodeChange}
+                          onKeyPress={handleKeyPress}
+                          placeholder="000000"
+                          className="standard-input"
+                        />
+                        <button
+                          onClick={updateHexCode}
+                          className={`btn btn-secondary btn-icon-only ${
+                            isHexValid && isHexDirty ? "active" : "disabled"
+                          }`}
+                          disabled={!isHexValid || !isHexDirty}
+                        >
+                          <ChevronRightIcon />
+                        </button>
                       </div>
-                      <div className="ramp-tabs">
-                        <button
-                          className={`tab-button ${
-                            activeTab === "simple" ? "active" : ""
-                          }`}
-                          onClick={() => handleTabChange("simple")}
-                          style={{ minHeight: 36 }}
-                        >
-                          Simple
-                        </button>
-                        <button
-                          className={`tab-button ${
-                            activeTab === "advanced" ? "active" : ""
-                          }`}
-                          onClick={() => handleTabChange("advanced")}
-                          style={{ minHeight: 36 }}
-                        >
-                          Advanced
-                        </button>
-                        <button
-                          className={`tab-button ${
-                            activeTab === "custom" ? "active" : ""
-                          }`}
-                          onClick={() => handleTabChange("custom")}
-                          style={{ minHeight: 36 }}
-                        >
-                          Custom
-                        </button>
+                      <div className="hsv-inputs">
+                        <input
+                          type="number"
+                          value={hslValues.h}
+                          onChange={(e) =>
+                            handleHslChange("h", parseInt(e.target.value) || 0)
+                          }
+                          onKeyDown={(e) => handleHslKeyDown(e, "h")}
+                          min="0"
+                          max="360"
+                          className="standard-input hsv-input"
+                        />
+                        <input
+                          type="number"
+                          value={hslValues.s}
+                          onChange={(e) =>
+                            handleHslChange("s", parseInt(e.target.value) || 0)
+                          }
+                          onKeyDown={(e) => handleHslKeyDown(e, "s")}
+                          min="0"
+                          max="100"
+                          className="standard-input hsv-input"
+                        />
+                        <input
+                          type="number"
+                          value={hslValues.b}
+                          onChange={(e) =>
+                            handleHslChange("b", parseInt(e.target.value) || 0)
+                          }
+                          onKeyDown={(e) => handleHslKeyDown(e, "b")}
+                          min="0"
+                          max="100"
+                          className="standard-input hsv-input"
+                        />
                       </div>
-                      <div className="color-ramps">
-                        {activeTab === "simple"
-                          ? swatchesSimple.map((swatch) => (
+                    </div>
+                  </div>
+
+                  <div className="left-drawer-section">
+                    <div className="section-header">
+                      <h3>Filter by Color Ramp</h3>
+                      <label className="filter-toggle">
+                        <input
+                          type="checkbox"
+                          checked={isFiltering}
+                          onChange={handleFilterToggle}
+                          aria-label="Filter by Color Ramp"
+                        />
+                        <span className="toggle-slider" />
+                      </label>
+                    </div>
+                    <div className="ramp-tabs">
+                      <button
+                        className={`btn btn-secondary ${
+                          activeTab === "simple" ? "active" : ""
+                        }`}
+                        onClick={() => handleTabChange("simple")}
+                      >
+                        Simple
+                      </button>
+                      <button
+                        className={`btn btn-secondary ${
+                          activeTab === "advanced" ? "active" : ""
+                        }`}
+                        onClick={() => handleTabChange("advanced")}
+                      >
+                        Advanced
+                      </button>
+                      <button
+                        className={`btn btn-secondary ${
+                          activeTab === "custom" ? "active" : ""
+                        }`}
+                        onClick={() => handleTabChange("custom")}
+                      >
+                        Custom
+                      </button>
+                    </div>
+                    <div className="color-ramps">
+                      {activeTab === "simple"
+                        ? swatchesSimple.map((swatch) => (
+                            <ColorSwatch
+                              key={swatch.id}
+                              swatch={swatch}
+                              isActive={swatch.id === activeSwatchId}
+                              onLValueChange={handleLValueChange}
+                              onClick={handleSwatchClick}
+                            />
+                          ))
+                        : activeTab === "custom"
+                        ? swatchesCustom.map((swatch) => {
+                            const r = parseInt(keyHexCode.slice(0, 2), 16);
+                            const g = parseInt(keyHexCode.slice(2, 4), 16);
+                            const b = parseInt(keyHexCode.slice(4, 6), 16);
+                            const keyLValue = Math.round(
+                              getRgbLabLightness(r, g, b)
+                            );
+                            return (
                               <ColorSwatch
                                 key={swatch.id}
                                 swatch={swatch}
                                 isActive={swatch.id === activeSwatchId}
                                 onLValueChange={handleLValueChange}
                                 onClick={handleSwatchClick}
+                                isKeyHexCode={swatch.id === 1}
                               />
-                            ))
-                          : activeTab === "custom"
-                          ? swatchesCustom.map((swatch) => {
-                              const r = parseInt(keyHexCode.slice(0, 2), 16);
-                              const g = parseInt(keyHexCode.slice(2, 4), 16);
-                              const b = parseInt(keyHexCode.slice(4, 6), 16);
-                              const keyLValue = Math.round(
-                                getRgbLabLightness(r, g, b)
-                              );
-                              return (
-                                <ColorSwatch
-                                  key={swatch.id}
-                                  swatch={swatch}
-                                  isActive={swatch.id === activeSwatchId}
-                                  onLValueChange={handleLValueChange}
-                                  onClick={handleSwatchClick}
-                                  isKeyHexCode={swatch.id === 1}
-                                />
-                              );
-                            })
-                          : swatchesAdvanced.map((swatch) => (
-                              <ColorSwatch
-                                key={swatch.id}
-                                swatch={swatch}
-                                isActive={swatch.id === activeSwatchId}
-                                onLValueChange={handleLValueChange}
-                                onClick={handleSwatchClick}
-                              />
-                            ))}
-                      </div>
-                      <div className="ramp-actions">
-                        {activeTab === "custom" && (
-                          <>
-                            <button
-                              className="update-button"
-                              onClick={handleAddRamp}
-                            >
-                              Add Ramp
-                            </button>
-                            <button
-                              className="update-button remove-button"
-                              onClick={handleRemoveRamp}
-                            >
-                              Remove Ramp
-                            </button>
-                          </>
-                        )}
-                        <button
-                          className="update-button reset-button"
-                          onClick={handleResetRamps}
-                          title="Reset to default ramps"
-                        >
-                          Reset Ramps
-                        </button>
-                      </div>
+                            );
+                          })
+                        : swatchesAdvanced.map((swatch) => (
+                            <ColorSwatch
+                              key={swatch.id}
+                              swatch={swatch}
+                              isActive={swatch.id === activeSwatchId}
+                              onLValueChange={handleLValueChange}
+                              onClick={handleSwatchClick}
+                            />
+                          ))}
+                    </div>
+                    <div className="ramp-actions">
+                      {activeTab === "custom" && (
+                        <>
+                          <button
+                            className="btn btn-secondary"
+                            onClick={handleAddRamp}
+                          >
+                            Add Ramp
+                          </button>
+                          <button
+                            className="btn btn-secondary"
+                            onClick={handleRemoveRamp}
+                          >
+                            Remove Ramp
+                          </button>
+                        </>
+                      )}
+                      <button
+                        className="btn btn-secondary"
+                        onClick={handleResetRamps}
+                        title="Reset to default ramps"
+                      >
+                        Reset Ramps
+                      </button>
+                    </div>
+                    <div className="ramp-actions save-actions">
+                      <button
+                        className="btn"
+                        onClick={handleSaveToPaletteCreator}
+                      >
+                        <ColorIcon />
+                        Save to Palette Creator
+                      </button>
                     </div>
                   </div>
                 </div>
@@ -1061,17 +1247,6 @@ const App: React.FC = () => {
                         dangerouslySetInnerHTML={{ __html: guideSvg }}
                       />
                     )}
-                    <button
-                      className="fab-help"
-                      onClick={() => {
-                        setModalPage(0);
-                        setRampTabClicked(false);
-                        setShowColorPickModal(true);
-                      }}
-                      aria-label="Need Help?"
-                    >
-                      Need Help?
-                    </button>
                   </div>
                 </div>
               </div>
@@ -1081,312 +1256,6 @@ const App: React.FC = () => {
                   onClose={() => setShowToast(false)}
                   backgroundColor={toastHexCode}
                 />
-              )}
-              {showColorPickModal && (
-                <Modal onClose={() => setShowColorPickModal(false)}>
-                  <div
-                    style={{
-                      width: 560,
-                      minHeight: 200,
-                      maxWidth: "100vw",
-                      height: "auto",
-                      display: "flex",
-                      flexDirection: "column",
-                      alignItems: "center",
-                      position: "relative",
-                    }}
-                  >
-                    {modalPage === 0 && (
-                      <>
-                        <h2
-                          style={{
-                            fontSize: 20,
-                            fontWeight: 400,
-                            margin: "0 0 16px 0",
-                            textAlign: "left",
-                            width: "100%",
-                          }}
-                        >
-                          Step 1: Pick a Hue or Hex Code
-                        </h2>
-                        <div
-                          style={{
-                            color: "#fff",
-                            fontSize: 18,
-                            fontWeight: 500,
-                            marginBottom: 8,
-                            textAlign: "left",
-                            width: "100%",
-                          }}
-                        ></div>
-                        <div style={{ width: "100%", marginBottom: 16 }}>
-                          <div className="hex-control">
-                            <div
-                              className="hex-input-group"
-                              style={{
-                                display: "flex",
-                                alignItems: "center",
-                                gap: 12,
-                              }}
-                            >
-                              <input
-                                type="color"
-                                value={`#${inputHexCode}`}
-                                onChange={(e) => {
-                                  const newHex = e.target.value
-                                    .slice(1)
-                                    .toUpperCase();
-                                  setInputHexCode(newHex);
-                                  setIsHexValid(true);
-                                  setIsHexDirty(newHex !== keyHexCode);
-                                  if (newHex !== keyHexCode) {
-                                    setKeyHexCode(newHex);
-                                    const { h, s, b } = hexToHsb(newHex);
-                                    setHslValues({ h, s, b });
-                                    setHue(h);
-                                  }
-                                }}
-                                className="color-picker"
-                                title="Pick a color"
-                                style={{
-                                  width: 48,
-                                  height: 48,
-                                  padding: 0,
-                                  border: "none",
-                                }}
-                              />
-                              <input
-                                type="text"
-                                value={inputHexCode}
-                                onChange={handleHexCodeChange}
-                                onKeyPress={handleKeyPress}
-                                placeholder="000000"
-                                style={{ height: 48, flex: 1 }}
-                              />
-                              <button
-                                onClick={updateHexCode}
-                                className={
-                                  isHexValid && isHexDirty
-                                    ? "active"
-                                    : "disabled"
-                                }
-                                disabled={!isHexValid || !isHexDirty}
-                                style={{
-                                  width: 48,
-                                  height: 48,
-                                  display: "flex",
-                                  alignItems: "center",
-                                  justifyContent: "center",
-                                }}
-                              >
-                                <svg
-                                  viewBox="0 0 24 24"
-                                  xmlns="http://www.w3.org/2000/svg"
-                                >
-                                  <path d="M8.59 16.59L13.17 12 8.59 7.41 10 6l6 6-6 6-1.41-1.41z" />
-                                </svg>
-                              </button>
-                            </div>
-                          </div>
-                        </div>
-                        <div
-                          style={{
-                            fontSize: 16,
-                            color: "#999999",
-                            textAlign: "left",
-                            width: "100%",
-                          }}
-                        >
-                          Input your brand's HEX code or use the color picker to
-                          pick the hue of the color family you want to create.
-                          The grid will update automatically and highlight your
-                          key HEX code on the grid itself.
-                        </div>
-                      </>
-                    )}
-                    {modalPage === 1 && (
-                      <>
-                        <h2
-                          style={{
-                            fontSize: 20,
-                            fontWeight: 400,
-                            margin: "0 0 16px 0",
-                            textAlign: "left",
-                            width: "100%",
-                          }}
-                        >
-                          Step 2: Pick the Amount of Color Ramps
-                        </h2>
-                        <div style={{ width: "100%", marginBottom: 16 }}>
-                          <div className="modal-ramp-tabs">
-                            <button
-                              className={`modal-ramp-tab${
-                                activeTab === "custom" && rampTabClicked
-                                  ? " active"
-                                  : ""
-                              }`}
-                              onClick={() => {
-                                handleTabChange("custom");
-                                setRampTabClicked(true);
-                              }}
-                            >
-                              Simple
-                            </button>
-                            <button
-                              className={`modal-ramp-tab${
-                                activeTab === "advanced" && rampTabClicked
-                                  ? " active"
-                                  : ""
-                              }`}
-                              onClick={() => {
-                                handleTabChange("advanced");
-                                setRampTabClicked(true);
-                              }}
-                            >
-                              Advanced
-                            </button>
-                            <button
-                              className={`modal-ramp-tab${
-                                activeTab === "simple" && rampTabClicked
-                                  ? " active"
-                                  : ""
-                              }`}
-                              onClick={() => {
-                                handleTabChange("simple");
-                                setRampTabClicked(true);
-                              }}
-                            >
-                              Custom
-                            </button>
-                          </div>
-                        </div>
-                        <div
-                          style={{
-                            fontSize: 16,
-                            color: "#999999",
-                            textAlign: "left",
-                            width: "100%",
-                          }}
-                        >
-                          Based on how robust of a color system you want, choose
-                          between Simple, Advanced, or Custom color ramps. You
-                          can also add, remove, and change the ramps for better
-                          customization.
-                          <br />
-                          <br />
-                          <span style={{ fontWeight: 800 }}>Hint:</span> I
-                          recommend having an even amount of color ramps that
-                          are above and below 50. This will ensure you have
-                          enough colors to work with in both light and dark
-                          mode.
-                        </div>
-                      </>
-                    )}
-                    {modalPage === 2 && (
-                      <>
-                        <h2
-                          style={{
-                            fontSize: 20,
-                            fontWeight: 400,
-                            margin: "0 0 16px 0",
-                            textAlign: "left",
-                            width: "100%",
-                          }}
-                        >
-                          Step 3: Create Your Palette
-                        </h2>
-                        <div
-                          style={{
-                            fontSize: 16,
-                            color: "#999999",
-                            textAlign: "left",
-                            width: "100%",
-                            marginBottom: 16,
-                          }}
-                        >
-                          Click on any swatch in the left drawer to begin
-                          creating your new palette. Follow the guide lines if
-                          you want help creating palettes of differing
-                          saturation levels. When you're done, click on 'Export
-                          as SVG' to save your palette.
-                        </div>
-                        {/* Sample ColorSwatch UI */}
-                        <div style={{ width: "100%", marginBottom: 16 }}>
-                          <div
-                            className="lightness-controls"
-                            style={{ width: "100%" }}
-                          >
-                            <div className="input-group">
-                              <div className="input-row">
-                                <div className="input-container">
-                                  <input
-                                    type="number"
-                                    min="0"
-                                    max="100"
-                                    value={"75"}
-                                    readOnly
-                                    style={{
-                                      background: "none",
-                                      border: "none",
-                                      color: "white",
-                                      fontSize: 16,
-                                      fontFamily: "Lato, sans-serif",
-                                      width: "100%",
-                                    }}
-                                  />
-                                </div>
-                                <div
-                                  className="color-swatch"
-                                  style={{
-                                    backgroundColor: "#4F8FFF",
-                                    cursor: "default",
-                                  }}
-                                >
-                                  <div className="hex-label">#4F8FFF</div>
-                                  <div className="reference-dots">
-                                    <div className="reference-dot white-dot">
-                                      4.5:1
-                                    </div>
-                                    <div className="reference-dot black-dot">
-                                      12.2:1
-                                    </div>
-                                  </div>
-                                </div>
-                              </div>
-                            </div>
-                          </div>
-                        </div>
-                      </>
-                    )}
-                    {/* Carousel arrows at bottom left */}
-                    <div
-                      style={{
-                        width: "100%",
-                        display: "flex",
-                        gap: 8,
-                        justifyContent: "flex-start",
-                        marginTop: 24,
-                      }}
-                    >
-                      <button
-                        onClick={() => setModalPage((p) => Math.max(0, p - 1))}
-                        disabled={modalPage === 0}
-                        style={{ minWidth: 40 }}
-                        aria-label="Previous"
-                      >
-                        &#8592;
-                      </button>
-                      <button
-                        onClick={() => setModalPage((p) => Math.min(2, p + 1))}
-                        disabled={modalPage === 2}
-                        style={{ minWidth: 40 }}
-                        aria-label="Next"
-                      >
-                        &#8594;
-                      </button>
-                    </div>
-                  </div>
-                </Modal>
               )}
             </>
           }

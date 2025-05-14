@@ -1,16 +1,15 @@
 .toast {
   position: fixed;
-  bottom: 16px;
-  left: 416px;
-  background-color: #333;
-  color: #757575;
-  padding: 12px;
+  bottom: 24px;
+  right: 24px;
+  padding: 12px 16px;
   border-radius: 4px;
-  font-family: "Lato", sans-serif;
+  background-color: #292d33;
+  color: #666a70;
   font-size: 14px;
   z-index: 1000;
-  animation: slideIn 0.3s ease-out;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+  animation: slideIn 0.3s ease-out;
 }
 
 @keyframes slideIn {

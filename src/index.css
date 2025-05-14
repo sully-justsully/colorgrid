@@ -7,7 +7,7 @@ body {
     sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
-  background-color: #121212;
+  background-color: #0c0e12;
   color: white;
 }
 
@@ -21,10 +21,7 @@ code {
   font-family: "Lato", sans-serif;
 }
 
-input[type="number"] {
-  -moz-appearance: textfield;
-  font-family: "Lato", sans-serif;
-}
+/* Removed global input[type="number"] style to allow custom styles for HSV inputs */
 
 input[type="number"]::-webkit-outer-spin-button,
 input[type="number"]::-webkit-inner-spin-button {

@@ -1,0 +1,396 @@
+/* =====================
+   Base input styles
+   (applies to all number inputs)
+   Used throughout app for numeric fields
+   ===================== */
+/* Removed global input[type="number"] rule to avoid conflicts. Only HSV inputs are custom styled below. */
+
+input[type="number"]::-webkit-outer-spin-button,
+input[type="number"]::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+/* =====================
+   Input group layouts
+   (.input-group, .input-row, .input-container)
+   Used for grouping and aligning input fields in forms
+   ===================== */
+.input-group {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.input-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.input-container {
+  flex: 1;
+  min-width: 0;
+  position: relative;
+}
+
+.input-container input {
+  width: 100%;
+  height: 32px;
+  background: none;
+  border: none;
+  color: white;
+  font-size: 16px;
+  font-family: "Lato", sans-serif;
+}
+
+.input-container input::-webkit-outer-spin-button,
+.input-container input::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+/* =====================
+   Hex input group
+   (.hex-input-group, .hex-input-group input, .hex-input-group button)
+   Used in Left Drawer for key hex code input and color picking
+   ===================== */
+.hex-input-group {
+  display: flex;
+  flex-direction: row;
+  gap: 8px;
+  width: 100%;
+  position: relative;
+}
+
+.hex-input-group input[type="text"] {
+  flex: 1;
+  height: 48px;
+  background-color: #292d33;
+  border: 1px solid #3d4047;
+  border-radius: 4px;
+  color: white;
+  font-size: 16px;
+  font-family: "Lato", sans-serif;
+  padding: 0 12px;
+  text-align: left;
+}
+
+.hex-input-group input:focus {
+  outline: none;
+  border-color: #4f5259;
+}
+
+.hex-input-group button {
+  width: 48px;
+  height: 48px;
+  border-radius: 4px;
+  background: #191c21;
+  border: 1px solid #292d33;
+  color: #7e8187;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.hex-input-group button.active {
+  background: #9e0676;
+  border-color: #9e0676;
+  color: white;
+}
+
+.hex-input-group button.disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.hex-input-group button svg {
+  width: 16px;
+  height: 16px;
+  stroke: currentColor;
+}
+
+/* =====================
+   Hue input group
+   (.hue-input-group, .hue-control input)
+   Used for hue slider and related controls
+   ===================== */
+.hue-input-group {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.hue-control {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.hue-control input {
+  width: 100%;
+  padding: 8px;
+  border: 1px solid #292d33;
+  border-radius: 4px;
+  background-color: #292d33;
+  color: white;
+  font-size: 14px;
+  font-family: "Lato", sans-serif;
+}
+
+/* =====================
+   HSV Inputs in Left Drawer
+   ===================== */
+.hsv-inputs {
+  display: flex;
+  gap: 8px;
+  margin-top: 16px;
+}
+
+/* =====================
+   HSV Inputs in Left Drawer (final fix)
+   ===================== */
+.hsv-inputs input[type="number"] {
+  width: 33%;
+  box-sizing: border-box;
+}
+
+/* =====================
+   Filter controls
+   (.filter-controls)
+   Used for WCAG and other filter checkboxes/radios
+   ===================== */
+.filter-controls {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.filter-controls label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: white;
+  cursor: pointer;
+  font-size: 13px;
+  font-family: "Lato", sans-serif;
+  font-weight: 400;
+}
+
+.filter-controls input[type="checkbox"],
+.filter-controls input[type="radio"] {
+  width: 16px;
+  height: 16px;
+  cursor: pointer;
+  margin: 0;
+}
+
+/* =====================
+   Dropdown menu inputs
+   (.dropdown-menu input)
+   Used for dropdown filter menus (e.g. WCAG filters)
+   ===================== */
+.dropdown-menu input[type="radio"],
+.dropdown-menu input[type="checkbox"] {
+  width: 16px;
+  height: 16px;
+  margin: 0;
+  cursor: pointer;
+  accent-color: #9e0676;
+}
+
+/* =====================
+   Filter toggle
+   (.filter-toggle input, .toggle-slider)
+   Used for toggle switches in filter controls
+   ===================== */
+.filter-toggle {
+  position: relative;
+  display: inline-block;
+  width: 40px;
+  height: 20px;
+}
+
+.filter-toggle input {
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+
+.toggle-slider {
+  position: absolute;
+  cursor: pointer;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: #2a2a2a;
+  transition: transform 0.8s cubic-bezier(0.83, 0.07, 0.21, 0.93);
+  border-radius: 20px;
+}
+
+.toggle-slider:before {
+  position: absolute;
+  content: "";
+  height: 16px;
+  width: 16px;
+  left: 2px;
+  bottom: 2px;
+  background-color: white;
+  transition: transform 0.8s cubic-bezier(0.83, 0.07, 0.21, 0.93);
+  border-radius: 50%;
+  transform: translateX(0);
+}
+
+input:checked + .toggle-slider {
+  background-color: #2196f3;
+}
+
+input:checked + .toggle-slider:before {
+  transform: translateX(20px);
+}
+
+/* =====================
+   Common input layouts and styles
+   Used to replace inline styles in App.tsx
+   ===================== */
+.input-flex-center {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.color-picker {
+  width: 48px;
+  height: 48px;
+  padding: 0;
+  border: 1px solid #3d4047;
+  border-radius: 4px;
+  background: none;
+  cursor: pointer;
+  flex-shrink: 0;
+  transition: border-color 0.2s ease;
+}
+
+.color-picker:hover {
+  border-color: #4f5259;
+}
+
+.color-picker:focus {
+  outline: none;
+  border-color: #4f5259;
+  box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.1);
+}
+
+.color-picker::-webkit-color-swatch-wrapper {
+  padding: 0;
+}
+
+.color-picker::-webkit-color-swatch {
+  border: none;
+  border-radius: 4px;
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.1);
+}
+
+.color-picker::-moz-color-swatch {
+  border: none;
+  border-radius: 4px;
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.1);
+}
+
+/* =====================
+   Standard Input Styles (for all main input fields)
+   ===================== */
+.standard-input {
+  -webkit-appearance: textfield;
+  -moz-appearance: textfield;
+  appearance: textfield;
+  background: #232326;
+  border: 1.5px solid #232326;
+  border-radius: 8px;
+  color: #fff;
+  font-size: 18px;
+  font-family: "Lato", sans-serif;
+  padding: 0 14px;
+  height: 48px;
+  box-sizing: border-box;
+  transition: border-color 0.2s;
+  width: 100%;
+}
+
+.standard-input:focus {
+  outline: none;
+  border-color: #2196f3;
+}
+
+.standard-input::placeholder {
+  color: #7e8187;
+  opacity: 1;
+}
+
+.standard-input:hover {
+  border-color: #7d025c;
+}
+
+/* Remove redundant rules for .l-value-input and .hsv-inputs input[type='number'] */
+.l-value-input {
+  box-sizing: border-box;
+}
+
+/* Moved from App.css: Dropdown and filter styles */
+.filters-dropdown {
+  position: relative;
+}
+
+.filters-dropdown button {
+  /* Remove custom button styles and use btn btn-secondary */
+}
+
+.dropdown-menu {
+  position: absolute;
+  top: 100%;
+  right: 0;
+  margin-top: 4px;
+  background-color: #292d33;
+  border: 1px solid #292d33;
+  border-radius: 4px;
+  padding: 8px;
+  min-width: 180px;
+  z-index: 1000;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+}
+
+.wcag-filters {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.dropdown-menu label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px;
+  color: white;
+  cursor: pointer;
+  font-size: 13px;
+  font-family: "Lato", sans-serif;
+  font-weight: 400;
+  transition: background-color 0.2s;
+  border-radius: 4px;
+}
+
+.dropdown-menu label:hover {
+  background-color: #3d4047;
+}
+
+.dropdown-menu input[type="radio"],
+.dropdown-menu input[type="checkbox"] {
+  width: 16px;
+  height: 16px;
+  margin: 0;
+  cursor: pointer;
+  accent-color: #1773cf;
+}

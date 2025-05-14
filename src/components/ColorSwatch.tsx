@@ -80,15 +80,8 @@ const ColorSwatch: React.FC<ColorSwatchProps> = ({
                 onKeyDown={handleKeyDown}
                 onBlur={handleBlur}
                 disabled={isKeyHexCode}
-                style={{
-                  background: "none",
-                  border: "none",
-                  color: "white",
-                  fontSize: 16,
-                  fontFamily: "Lato, sans-serif",
-                  width: "100%",
-                  opacity: isKeyHexCode ? 0.5 : 1,
-                }}
+                className="standard-input"
+                style={{ opacity: isKeyHexCode ? 0.5 : 1 }}
               />
               {isKeyHexCode && (
                 <svg

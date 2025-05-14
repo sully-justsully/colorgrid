@@ -6,7 +6,7 @@
   padding: 24px;
   text-align: center;
   height: 100vh;
-  background-color: #121212;
+  background-color: #0c0e12;
 }
 
 .mobile-headline {
@@ -19,31 +19,17 @@
 
 .mobile-body {
   font-size: 16px;
-  color: #999;
+  color: #7e8187;
   margin-bottom: 32px;
   line-height: 1.5;
   font-family: "Lato", sans-serif;
   max-width: 320px;
 }
 
-.mobile-share-button {
-  background-color: #1773cf;
-  color: white;
-  border: none;
-  padding: 12px 24px;
-  border-radius: 8px;
-  font-size: 16px;
-  font-weight: 500;
-  cursor: pointer;
-  font-family: "Lato", sans-serif;
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  transition: background-color 0.2s;
-}
-
-.mobile-share-button:hover {
-  background-color: #125ea7;
+.mobile-header {
+  padding: 16px;
+  color: #7e8187;
+  text-align: center;
 }
 
 @media (max-width: 768px) {

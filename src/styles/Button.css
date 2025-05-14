@@ -1,0 +1,203 @@
+/* Base button styles */
+.btn,
+.btn-secondary,
+.btn-icon-only,
+.btn-destructive,
+.btn-tertiary,
+.btn-fab {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 8px 16px;
+  border-radius: 4px;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
+  min-height: 48px;
+  min-width: 40px;
+  text-decoration: none;
+  font-family: "Lato", sans-serif;
+}
+
+/* Primary button styles */
+.btn {
+  background: #9e0676;
+  color: #fff;
+  border: none;
+}
+
+.btn:hover {
+  background: #7d025c;
+}
+
+.btn.active {
+  background: #590142;
+}
+
+/* Secondary button styles */
+.btn-secondary {
+  background: #12151a;
+  color: #fff;
+  border: 1px solid #191c21;
+}
+
+.btn-secondary:hover {
+  background: #0c0e12;
+}
+
+.btn-secondary.active {
+  background: #06070a;
+}
+
+/* Icon-only button styles */
+.btn-icon-only {
+  padding: 12px;
+  width: 48px;
+  height: 48px;
+  background: #12151a;
+  border-radius: 999px;
+  color: #fff;
+}
+
+.btn-icon-only:hover {
+  background: #0c0e12;
+}
+
+.btn-icon-only.active {
+  background: #06070a;
+}
+
+.btn-icon-only svg {
+  width: 16px;
+  height: 16px;
+  stroke: #fff;
+  fill: #fff;
+}
+
+/* Destructive button styles */
+.btn-destructive {
+  background: #d60b3e;
+  color: #fff;
+  border: none;
+}
+
+.btn-destructive:hover {
+  background: #a8032d;
+}
+
+.btn-destructive.active {
+  background: #850122;
+}
+
+/* Tertiary button styles */
+.btn-tertiary {
+  background: transparent;
+  color: #fff;
+  border: 1px solid #191c21;
+}
+
+.btn-tertiary:hover {
+  background: #1a1d23;
+}
+
+.btn-tertiary.active {
+  background: #1e2128;
+}
+
+/* FAB button styles */
+.btn-fab {
+  position: fixed;
+  right: 24px;
+  bottom: 24px;
+  z-index: 2100;
+  background: #9e0676;
+  color: #fff;
+  border: none;
+  border-radius: 999px;
+  padding: 8px 16px;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.18);
+  min-width: unset;
+  width: auto;
+  height: 48px;
+}
+
+.btn-fab:hover {
+  background: #7d025c;
+  box-shadow: 0 6px 24px rgba(0, 0, 0, 0.22);
+}
+
+.btn-fab.active {
+  background: #590142;
+}
+
+/* General button styles */
+.btn svg {
+  width: 16px;
+  height: 16px;
+  fill: currentColor;
+}
+
+.btn-full {
+  width: 100%;
+}
+
+/* Disabled states */
+.btn:disabled,
+.btn-secondary:disabled,
+.btn-icon-only:disabled,
+.btn-destructive:disabled,
+.btn-tertiary:disabled,
+.btn-fab:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  pointer-events: none;
+}
+
+/* Moved from App.css: Button and button group styles */
+.ramp-actions {
+  display: flex;
+  flex-direction: row;
+  gap: 8px;
+}
+
+.ramp-actions .btn {
+  flex: 1;
+}
+
+.ramp-tabs {
+  display: flex;
+  gap: 2px;
+  margin-bottom: 16px;
+}
+
+.ramp-tabs .btn {
+  flex: 1;
+  font-size: 12px;
+  min-height: 40px;
+}
+
+.ramp-tabs .btn.active {
+  font-weight: 800;
+}
+
+.hex-input-group button {
+  width: 48px;
+  height: 48px;
+}
+
+.hex-input-group button.active {
+  /* Remove custom active styles and use btn-secondary active state */
+}
+
+.hex-input-group button.disabled {
+  /* Remove custom disabled styles and use btn-secondary disabled state */
+}
+
+.hex-input-group button svg {
+  width: 20px;
+  height: 20px;
+  stroke: #fff;
+  fill: #fff;
+}

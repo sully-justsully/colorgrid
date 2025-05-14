@@ -1,0 +1,96 @@
+.left-drawer {
+  width: 400px;
+  background-color: #191c21;
+  border-right: 1px solid #292d33;
+  padding-bottom: 72px;
+  overflow-y: auto;
+  overflow-x: hidden;
+  position: fixed;
+  top: 72px;
+  bottom: 0;
+  left: 0;
+  height: calc(100vh - 72px);
+  scrollbar-width: thin;
+  scrollbar-color: #292d33 transparent;
+  z-index: 100;
+}
+
+.left-drawer::-webkit-scrollbar {
+  width: 4px;
+  margin-right: 4px;
+}
+
+.left-drawer::-webkit-scrollbar-track {
+  background: transparent;
+  margin: 12px 0;
+  margin-right: 4px;
+}
+
+.left-drawer::-webkit-scrollbar-thumb {
+  background: #292d33;
+  border-radius: 2px;
+  margin-right: 4px;
+}
+
+.left-drawer::-webkit-scrollbar-thumb:hover {
+  background: #3d4047;
+}
+
+.left-drawer-section {
+  padding: 20px;
+  border-bottom: 1px solid #292d33;
+}
+
+.left-drawer-section h3 {
+  color: white;
+  margin: 0 0 16px 0;
+  font-size: 14px;
+  font-weight: 500;
+  font-family: "Lato", sans-serif;
+}
+
+.left-drawer-section p {
+  color: #7e8187;
+  margin: 0 0 16px 0;
+  font-size: 13px;
+  line-height: 1.5;
+  font-family: "Lato", sans-serif;
+  font-weight: 400;
+}
+
+.ramp-actions {
+  display: flex;
+  flex-direction: row;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+
+.ramp-actions.save-actions {
+  margin-bottom: 0;
+}
+
+.ramp-actions button {
+  /* Use btn btn-secondary instead */
+}
+
+.update-button.save-button {
+  /* Use btn btn-secondary instead */
+}
+
+.section {
+  padding: 16px;
+  border-bottom: 1px solid #292d33;
+}
+
+.section-header {
+  color: #7e8187;
+  font-size: 12px;
+  margin-bottom: 8px;
+}
+
+.drawer-content {
+  display: flex;
+  flex-direction: column;
+  min-height: 100%;
+  padding-right: 4px;
+}
