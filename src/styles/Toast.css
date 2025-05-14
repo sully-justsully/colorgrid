@@ -1,9 +1,9 @@
 .toast {
   position: fixed;
-  bottom: 24px;
-  right: 24px;
+  bottom: 16px;
+  left: 416px;
   background-color: #333;
-  color: white;
+  color: #757575;
   padding: 12px;
   border-radius: 4px;
   font-family: "Lato", sans-serif;

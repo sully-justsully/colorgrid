@@ -1,0 +1,82 @@
+.mobile-container {
+  display: none;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  text-align: center;
+  height: 100vh;
+  background-color: #121212;
+}
+
+.mobile-headline {
+  font-size: 24px;
+  font-weight: 500;
+  color: white;
+  margin-bottom: 16px;
+  font-family: "Lato", sans-serif;
+}
+
+.mobile-body {
+  font-size: 16px;
+  color: #999;
+  margin-bottom: 32px;
+  line-height: 1.5;
+  font-family: "Lato", sans-serif;
+  max-width: 320px;
+}
+
+.mobile-share-button {
+  background-color: #1773cf;
+  color: white;
+  border: none;
+  padding: 12px 24px;
+  border-radius: 8px;
+  font-size: 16px;
+  font-weight: 500;
+  cursor: pointer;
+  font-family: "Lato", sans-serif;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  transition: background-color 0.2s;
+}
+
+.mobile-share-button:hover {
+  background-color: #125ea7;
+}
+
+@media (max-width: 768px) {
+  .mobile-container {
+    display: flex;
+  }
+
+  .main-container,
+  .left-drawer,
+  .fab-help {
+    display: none !important;
+  }
+
+  .app {
+    overflow: hidden;
+  }
+
+  .main-content {
+    margin-left: 0 !important;
+  }
+
+  /* Hide only the buttons in the header */
+  .header-actions,
+  .filters-dropdown {
+    display: none !important;
+  }
+
+  /* Ensure the header remains visible and centered */
+  .app-header {
+    justify-content: center !important;
+  }
+
+  .app-header h1 {
+    margin: 0;
+  }
+}

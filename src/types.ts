@@ -1,11 +1,3 @@
-export interface ColorSwatch {
-  id: number;
-  lValue: number;
-  hexColor: string;
-  whiteContrast: number;
-  blackContrast: number;
-}
-
 export interface Dot {
   row: number;
   col: number;
@@ -14,6 +6,15 @@ export interface Dot {
   hsbText: string;
   isActive: boolean;
   isFiltered: boolean;
+  isInActiveDots: boolean;
+}
+
+export interface ColorSwatch {
+  id: number;
+  hexColor: string;
+  lValue: number;
+  whiteContrast: number;
+  blackContrast: number;
 }
 
 export interface ColorCache {
