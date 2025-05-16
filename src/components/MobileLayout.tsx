@@ -18,14 +18,18 @@ const MobileLayout: React.FC = () => {
   };
 
   return (
-    <div className="mobile-container">
+    <div className="mobile-container" role="main">
       <h1 className="mobile-headline">Color Grid Tool</h1>
       <p className="mobile-body">
         This tool works best on larger screens like laptops or tablets. Use the
         button below to share this page with your preferred device.
       </p>
-      <button className="btn btn-secondary" onClick={handleShare}>
-        <ShareIcon />
+      <button
+        className="btn btn-secondary"
+        onClick={handleShare}
+        aria-label="Share Color Grid Tool"
+      >
+        <ShareIcon aria-hidden="true" />
         Airdrop or Share Link
       </button>
     </div>

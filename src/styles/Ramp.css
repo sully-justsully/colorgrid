@@ -1,0 +1,35 @@
+/* Dashed rectangle for placeholder ramps in Custom tab */
+.dashed-rectangle {
+  height: 48px;
+  width: 100%;
+  border: 1px dashed var(--color-neutral-450);
+  border-radius: 6px;
+  margin: 8px 0;
+  background: none;
+  box-sizing: border-box;
+  transition: ease-out 0.24s;
+}
+
+.dashed-rectangle:hover,
+.dashed-rectangle:focus {
+  background: none;
+  border-color: var(--color-primary-450);
+  outline: none;
+}
+
+.dashed-rectangle:active {
+  background: var(--color-neutral-850);
+  border-color: var(--color-primary-450);
+}
+
+.dashed-rectangle svg {
+  width: 16px;
+  height: 16px;
+  display: block;
+  fill: var(--color-neutral-450);
+  transition: ease-out 0.24s;
+}
+
+.dashed-rectangle:hover svg {
+  fill: var(--color-primary-450);
+}

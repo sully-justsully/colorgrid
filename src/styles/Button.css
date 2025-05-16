@@ -23,32 +23,31 @@
 
 /* Primary button styles */
 .btn {
-  background: #9e0676;
-  color: #fff;
+  background: var(--color-primary-450);
+  color: var(--color-neutral-00);
   border: none;
 }
 
 .btn:hover {
-  background: #7d025c;
+  background: var(--color-primary-500);
 }
 
 .btn.active {
-  background: #590142;
+  background: var(--color-primary-550);
 }
 
 /* Secondary button styles */
 .btn-secondary {
-  background: #12151a;
-  color: #fff;
-  border: 1px solid #191c21;
+  background: var(--color-neutral-650);
+  color: var(--color-neutral-00);
 }
 
 .btn-secondary:hover {
-  background: #0c0e12;
+  background: var(--color-neutral-600);
 }
 
 .btn-secondary.active {
-  background: #06070a;
+  background: var(--color-neutral-550);
 }
 
 /* Icon-only button styles */
@@ -56,54 +55,70 @@
   padding: 12px;
   width: 48px;
   height: 48px;
-  background: #12151a;
+  background: var(--color-neutral-750);
   border-radius: 999px;
-  color: #fff;
+  color: var(--color-neutral-00);
 }
 
 .btn-icon-only:hover {
-  background: #0c0e12;
+  background: var(--color-neutral-650);
 }
 
 .btn-icon-only.active {
-  background: #06070a;
+  background: var(--color-neutral-550);
 }
 
 .btn-icon-only svg {
   width: 16px;
   height: 16px;
-  stroke: #fff;
-  fill: #fff;
+  stroke: var(--color-neutral-00);
+  fill: var(--color-neutral-00);
+}
+
+.btn-icon-only.small {
+  width: 24px;
+  height: 24px;
+  padding: 0;
+  min-width: 0;
+  min-height: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.btn-icon-only.small svg {
+  width: 16px;
+  height: 16px;
 }
 
 /* Destructive button styles */
 .btn-destructive {
-  background: #d60b3e;
-  color: #fff;
+  background: var(--color-error-450);
+  color: var(--color-neutral-00);
   border: none;
 }
 
 .btn-destructive:hover {
-  background: #a8032d;
+  background: var(--color-error-500);
 }
 
 .btn-destructive.active {
-  background: #850122;
+  background: var(--color-error-550);
 }
 
 /* Tertiary button styles */
 .btn-tertiary {
   background: transparent;
-  color: #fff;
-  border: 1px solid #191c21;
+  color: var(--color-neutral-00);
+  border: 1px solid var(--color-neutral-700);
 }
 
 .btn-tertiary:hover {
-  background: #1a1d23;
+  background: var(--color-neutral-750);
 }
 
 .btn-tertiary.active {
-  background: #1e2128;
+  background: var(--color-neutral-800);
 }
 
 /* FAB button styles */
@@ -112,8 +127,8 @@
   right: 24px;
   bottom: 24px;
   z-index: 2100;
-  background: #9e0676;
-  color: #fff;
+  background: var(--color-primary-450);
+  color: var(--color-neutral-00);
   border: none;
   border-radius: 999px;
   padding: 8px 16px;
@@ -124,12 +139,12 @@
 }
 
 .btn-fab:hover {
-  background: #7d025c;
+  background: var(--color-primary-500);
   box-shadow: 0 6px 24px rgba(0, 0, 0, 0.22);
 }
 
 .btn-fab.active {
-  background: #590142;
+  background: var(--color-primary-550);
 }
 
 /* General button styles */
@@ -150,36 +165,11 @@
 .btn-destructive:disabled,
 .btn-tertiary:disabled,
 .btn-fab:disabled {
-  opacity: 0.5;
   cursor: not-allowed;
   pointer-events: none;
-}
-
-/* Moved from App.css: Button and button group styles */
-.ramp-actions {
-  display: flex;
-  flex-direction: row;
-  gap: 8px;
-}
-
-.ramp-actions .btn {
-  flex: 1;
-}
-
-.ramp-tabs {
-  display: flex;
-  gap: 2px;
-  margin-bottom: 16px;
-}
-
-.ramp-tabs .btn {
-  flex: 1;
-  font-size: 12px;
-  min-height: 40px;
-}
-
-.ramp-tabs .btn.active {
-  font-weight: 800;
+  background: var(--color-neutral-750);
+  color: var(--color-neutral-400);
+  fill: var(--color-neutral-400);
 }
 
 .hex-input-group button {
@@ -187,17 +177,9 @@
   height: 48px;
 }
 
-.hex-input-group button.active {
-  /* Remove custom active styles and use btn-secondary active state */
-}
-
-.hex-input-group button.disabled {
-  /* Remove custom disabled styles and use btn-secondary disabled state */
-}
-
 .hex-input-group button svg {
   width: 20px;
   height: 20px;
-  stroke: #fff;
-  fill: #fff;
+  stroke: var(--color-neutral-00);
+  fill: var(--color-neutral-00);
 }

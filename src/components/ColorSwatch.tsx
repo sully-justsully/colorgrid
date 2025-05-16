@@ -8,6 +8,7 @@ interface ColorSwatchProps {
   onLValueChange: (id: number, value: number) => void;
   onClick: (id: number) => void;
   isKeyHexCode?: boolean;
+  removeButton?: React.ReactNode;
 }
 
 const ColorSwatch: React.FC<ColorSwatchProps> = ({
@@ -16,6 +17,7 @@ const ColorSwatch: React.FC<ColorSwatchProps> = ({
   onLValueChange,
   onClick,
   isKeyHexCode = false,
+  removeButton,
 }) => {
   const [inputValue, setInputValue] = useState(swatch.lValue.toString());
 
@@ -66,12 +68,23 @@ const ColorSwatch: React.FC<ColorSwatchProps> = ({
   };
 
   return (
-    <div className="color-swatch-container">
+    <div
+      className="color-swatch-container"
+      role="group"
+      aria-label={`Color swatch ${swatch.hexColor}`}
+    >
       <div className="lightness-controls">
         <div className="input-group">
           <div className="input-row">
             <div className="input-container" style={{ position: "relative" }}>
+              <label
+                htmlFor={`lightness-input-${swatch.id}`}
+                className="visually-hidden"
+              >
+                Lightness value for color {swatch.hexColor}
+              </label>
               <input
+                id={`lightness-input-${swatch.id}`}
                 type="number"
                 min="0"
                 max="100"
@@ -82,6 +95,7 @@ const ColorSwatch: React.FC<ColorSwatchProps> = ({
                 disabled={isKeyHexCode}
                 className="standard-input"
                 style={{ opacity: isKeyHexCode ? 0.5 : 1 }}
+                aria-label={`Lightness value for color ${swatch.hexColor}`}
               />
               {isKeyHexCode && (
                 <svg
@@ -100,6 +114,7 @@ const ColorSwatch: React.FC<ColorSwatchProps> = ({
                     transform: "translateY(-50%)",
                     opacity: 0.5,
                   }}
+                  aria-hidden="true"
                 >
                   <rect x="3" y="11" width="18" height="11" rx="2" ry="2" />
                   <path d="M7 11V7a5 5 0 0 1 10 0v4" />
@@ -110,9 +125,19 @@ const ColorSwatch: React.FC<ColorSwatchProps> = ({
               className={`color-swatch ${isActive ? "active" : ""}`}
               style={{ backgroundColor: swatch.hexColor }}
               onClick={() => onClick(swatch.id)}
+              role="button"
+              aria-label={`Color swatch ${swatch.hexColor}`}
+              tabIndex={0}
+              onKeyDown={(e) => {
+                if (e.key === "Enter" || e.key === " ") {
+                  onClick(swatch.id);
+                }
+              }}
             >
-              <div className="hex-label">{swatch.hexColor}</div>
-              <div className="reference-dots">
+              <div className="hex-label" aria-hidden="true">
+                {swatch.hexColor}
+              </div>
+              <div className="reference-dots" aria-hidden="true">
                 <div className="reference-dot white-dot">
                   {swatch.whiteContrast.toFixed(1)}:1
                 </div>
@@ -121,6 +146,7 @@ const ColorSwatch: React.FC<ColorSwatchProps> = ({
                 </div>
               </div>
             </div>
+            {removeButton}
           </div>
         </div>
       </div>

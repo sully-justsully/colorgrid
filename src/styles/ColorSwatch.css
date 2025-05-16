@@ -7,47 +7,6 @@
   width: 100%;
 }
 
-.input-group {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-}
-
-.input-row {
-  display: flex;
-  gap: 8px;
-  align-items: center;
-}
-
-.input-container {
-  background-color: #2a2a2a;
-  border-radius: 4px;
-  padding: 0 12px;
-  width: 60px;
-  height: 48px;
-  display: flex;
-  align-items: center;
-}
-
-.input-container input {
-  width: 100%;
-  background: none;
-  border: none;
-  color: white;
-  font-size: 16px;
-  font-family: "Lato", sans-serif;
-  padding: 0;
-  margin: 0;
-  text-align: left;
-  -moz-appearance: textfield;
-}
-
-.input-container input::-webkit-outer-spin-button,
-.input-container input::-webkit-inner-spin-button {
-  -webkit-appearance: none;
-  margin: 0;
-}
-
 .color-swatch {
   flex: 1;
   height: 48px;
@@ -59,18 +18,19 @@
   align-items: center;
   justify-content: space-between;
   padding: 0 8px;
+  grid-column: span 3;
 }
 
 .color-swatch.active {
-  outline: 2px solid #1773cf;
+  outline: 2px solid var(--color-primary-500);
 }
 
 .hex-label {
-  color: white;
+  color: var(--color-neutral-00);
   font-size: 14px;
   font-family: "Lato", sans-serif;
   opacity: 0.9;
-  background-color: rgba(0, 0, 0, 0.3);
+  background-color: rgba(0, 0, 0, 0.64);
   padding: 4px 6px;
   border-radius: 4px;
 }
@@ -89,12 +49,12 @@
 }
 
 .white-dot {
-  color: white;
+  color: var(--color-neutral-00);
   opacity: 0.9;
 }
 
 .black-dot {
-  color: black;
+  color: var(--color-neutral-850);
   opacity: 0.9;
 }
 

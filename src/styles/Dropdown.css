@@ -1,0 +1,53 @@
+/* Dropdown and filter styles moved from Header.css */
+.filters-dropdown {
+  position: relative;
+  cursor: pointer;
+}
+
+.dropdown-menu {
+  position: absolute;
+  top: 100%;
+  right: 0;
+  margin-top: 4px;
+  background-color: var(--color-neutral-700);
+  border-radius: 4px;
+  padding: 8px;
+  min-width: 180px;
+  z-index: 1000;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+  cursor: pointer;
+}
+
+.wcag-filters {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.dropdown-menu label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px;
+  color: white;
+  cursor: pointer;
+  font-size: 14px;
+  font-family: "Lato", sans-serif;
+  font-weight: 400;
+  border-radius: 4px;
+  transition: all 0.2s;
+}
+
+.dropdown-menu label:hover {
+  cursor: pointer;
+  background-color: var(--color-neutral-600);
+}
+
+.dropdown-menu input[type="radio"],
+.dropdown-menu input[type="checkbox"] {
+  width: 16px;
+  height: 16px;
+  margin: 0;
+  cursor: pointer;
+  accent-color: var(--color-error-450);
+}

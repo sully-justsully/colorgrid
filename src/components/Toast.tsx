@@ -28,7 +28,13 @@ const Toast: React.FC<ToastProps> = ({
   const textColor = contrastWithWhite >= 4.5 ? "#FFFFFF" : "#000000";
 
   return (
-    <div className="toast" style={{ backgroundColor, color: textColor }}>
+    <div
+      className="toast"
+      style={{ backgroundColor, color: textColor }}
+      role="alert"
+      aria-live="polite"
+      aria-atomic="true"
+    >
       {message}
     </div>
   );

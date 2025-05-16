@@ -20,6 +20,7 @@ import {
   getRgbLabLightness,
 } from "./utils/colorUtils";
 import "./App.css";
+import "./styles/variables.css";
 import "./styles/Dot.css";
 import "./styles/HexTooltip.css";
 import "./styles/ExportStyles.css";
@@ -29,6 +30,9 @@ import Modal from "./components/Modal";
 import "./styles/Modal.css";
 import "./styles/Button.css";
 import "./styles/Input.css";
+import "./styles/Dropdown.css";
+import "./styles/Typography.css";
+import "./styles/Tabs.css";
 import packageJson from "../package.json";
 import { Routes, Route, useLocation } from "react-router-dom";
 import ContrastGrid from "./components/ContrastGrid";
@@ -42,6 +46,9 @@ import { ReactComponent as DownloadIcon } from "./icons/download.svg";
 import { ReactComponent as ChevronRightIcon } from "./icons/chevron-right.svg";
 import { ReactComponent as ChevronLeftIcon } from "./icons/chevron-left.svg";
 import { ReactComponent as CloseIcon } from "./icons/close.svg";
+import "./styles/Ramp.css";
+import { ReactComponent as AddIcon } from "./icons/add-alt.svg";
+import { ReactComponent as ResetIcon } from "./icons/reset.svg";
 
 const STORAGE_KEY = "colorGridSwatches";
 const HEX_STORAGE_KEY = "colorGridHexCode";
@@ -204,6 +211,7 @@ const App: React.FC = () => {
 
   const dropdownRef = useRef<HTMLDivElement>(null);
   const location = useLocation();
+  const cancelButtonRef = useRef<HTMLButtonElement>(null);
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -482,7 +490,7 @@ const App: React.FC = () => {
     [isPickingColor, activeSwatchId, activeTab]
   );
 
-  const handleAddRamp = () => {
+  const handleAddRamp = (position = "bottom") => {
     const setCurrentSwatches =
       activeTab === "simple"
         ? setSwatchesSimple
@@ -490,24 +498,28 @@ const App: React.FC = () => {
         ? setSwatchesAdvanced
         : setSwatchesCustom;
     setCurrentSwatches((prevSwatches) => {
-      // Find the lowest L* value in the current swatches
-      const lowestLValue = Math.min(
-        ...prevSwatches.map((swatch) => swatch.lValue)
-      );
-      const newLValue = Math.max(0, lowestLValue - 1);
+      // Find the lowest and highest L* values in the current swatches
+      const lValues = prevSwatches.map((swatch) => swatch.lValue);
+      const lowestLValue = Math.min(...lValues);
+      const highestLValue = Math.max(...lValues);
+      let newLValue;
+      if (position === "top") {
+        newLValue = Math.min(100, highestLValue + 1);
+      } else {
+        newLValue = Math.max(0, lowestLValue - 1);
+      }
       const [r, g, b] = labToRgb(newLValue);
       const hexColor = rgbToHex(r, g, b);
-
-      return [
-        ...prevSwatches,
-        {
-          id: prevSwatches.length + 1,
-          lValue: newLValue,
-          hexColor,
-          whiteContrast: calculateContrastRatio(hexColor),
-          blackContrast: calculateContrastRatio(hexColor, "#000000"),
-        },
-      ];
+      const newRamp = {
+        id: prevSwatches.length + 1,
+        lValue: newLValue,
+        hexColor,
+        whiteContrast: calculateContrastRatio(hexColor),
+        blackContrast: calculateContrastRatio(hexColor, "#000000"),
+      };
+      return position === "top"
+        ? [newRamp, ...prevSwatches]
+        : [...prevSwatches, newRamp];
     });
   };
 
@@ -813,6 +825,13 @@ const App: React.FC = () => {
     );
   }, [savedSwatches]);
 
+  // Add a handler to remove a ramp by id
+  const handleRemoveCustomRamp = (id: number) => {
+    setSwatchesCustom((prevSwatches) =>
+      prevSwatches.filter((swatch) => swatch.id !== id)
+    );
+  };
+
   return (
     <div className="app">
       <MobileLayout />
@@ -947,7 +966,7 @@ const App: React.FC = () => {
                       onClick={() => setIsPaletteCreatorOpen(false)}
                       aria-label="Close drawer"
                     >
-                      ×
+                      <CloseIcon />
                     </button>
                   </div>
                 </div>
@@ -972,6 +991,18 @@ const App: React.FC = () => {
                     {
                       title: "Error",
                       text: "Error colors are used for destructive actions or error states.",
+                    },
+                    {
+                      title: "Custom 1",
+                      text: "Custom 1 section for additional color swatches.",
+                    },
+                    {
+                      title: "Custom 2",
+                      text: "Custom 2 section for additional color swatches.",
+                    },
+                    {
+                      title: "Custom 3",
+                      text: "Custom 3 section for additional color swatches.",
                     },
                   ].map((section, idx) => (
                     <div className="right-drawer-section" key={section.title}>
@@ -1007,16 +1038,21 @@ const App: React.FC = () => {
                           ))}
                         </div>
                         <div style={{ display: "flex", gap: "4px" }}>
-                          <button
+                          {/* <button
                             className="btn btn-icon-only"
                             aria-label="Edit"
                           >
                             <PencilIcon />
-                          </button>
+                          </button> */}
                           <button
                             className="btn btn-destructive btn-icon-only"
                             aria-label="Remove"
                             onClick={() => handleRemovePalette(section.title)}
+                            disabled={
+                              !savedSwatches[
+                                section.title.toLowerCase().replace(/\s+/g, "-")
+                              ]
+                            }
                           >
                             <TrashIcon />
                           </button>
@@ -1050,7 +1086,7 @@ const App: React.FC = () => {
                               setHue(h);
                             }
                           }}
-                          className="color-picker color-picker-input"
+                          className="color-picker"
                           title="Pick a color"
                         />
                         <input
@@ -1059,11 +1095,11 @@ const App: React.FC = () => {
                           onChange={handleHexCodeChange}
                           onKeyPress={handleKeyPress}
                           placeholder="000000"
-                          className="standard-input"
+                          className="standard-input input-prefix-hex"
                         />
                         <button
                           onClick={updateHexCode}
-                          className={`btn btn-secondary btn-icon-only ${
+                          className={`btn btn-icon-only ${
                             isHexValid && isHexDirty ? "active" : "disabled"
                           }`}
                           disabled={!isHexValid || !isHexDirty}
@@ -1081,7 +1117,7 @@ const App: React.FC = () => {
                           onKeyDown={(e) => handleHslKeyDown(e, "h")}
                           min="0"
                           max="360"
-                          className="standard-input hsv-input"
+                          className="standard-input input-prefix-h hsv-input"
                         />
                         <input
                           type="number"
@@ -1092,7 +1128,7 @@ const App: React.FC = () => {
                           onKeyDown={(e) => handleHslKeyDown(e, "s")}
                           min="0"
                           max="100"
-                          className="standard-input hsv-input"
+                          className="standard-input input-prefix-s hsv-input"
                         />
                         <input
                           type="number"
@@ -1103,7 +1139,7 @@ const App: React.FC = () => {
                           onKeyDown={(e) => handleHslKeyDown(e, "b")}
                           min="0"
                           max="100"
-                          className="standard-input hsv-input"
+                          className="standard-input input-prefix-b hsv-input"
                         />
                       </div>
                     </div>
@@ -1122,9 +1158,9 @@ const App: React.FC = () => {
                         <span className="toggle-slider" />
                       </label>
                     </div>
-                    <div className="ramp-tabs">
+                    <div className="tabs">
                       <button
-                        className={`btn btn-secondary ${
+                        className={`tab ${
                           activeTab === "simple" ? "active" : ""
                         }`}
                         onClick={() => handleTabChange("simple")}
@@ -1132,7 +1168,7 @@ const App: React.FC = () => {
                         Simple
                       </button>
                       <button
-                        className={`btn btn-secondary ${
+                        className={`tab ${
                           activeTab === "advanced" ? "active" : ""
                         }`}
                         onClick={() => handleTabChange("advanced")}
@@ -1140,7 +1176,7 @@ const App: React.FC = () => {
                         Advanced
                       </button>
                       <button
-                        className={`btn btn-secondary ${
+                        className={`tab ${
                           activeTab === "custom" ? "active" : ""
                         }`}
                         onClick={() => handleTabChange("custom")}
@@ -1149,6 +1185,23 @@ const App: React.FC = () => {
                       </button>
                     </div>
                     <div className="color-ramps">
+                      {activeTab === "custom" && (
+                        <div
+                          className="dashed-rectangle"
+                          style={{
+                            display: "flex",
+                            alignItems: "center",
+                            justifyContent: "center",
+                            cursor: "pointer",
+                          }}
+                          onClick={() => handleAddRamp("top")}
+                          tabIndex={0}
+                          role="button"
+                          aria-label="Add ramp at top"
+                        >
+                          <AddIcon className="dashed-rectangle-add-icon" />
+                        </div>
+                      )}
                       {activeTab === "simple"
                         ? swatchesSimple.map((swatch) => (
                             <ColorSwatch
@@ -1175,6 +1228,19 @@ const App: React.FC = () => {
                                 onLValueChange={handleLValueChange}
                                 onClick={handleSwatchClick}
                                 isKeyHexCode={swatch.id === 1}
+                                removeButton={
+                                  swatch.id !== 1 ? (
+                                    <button
+                                      className="btn btn-icon-only btn-destructive small"
+                                      onClick={() =>
+                                        handleRemoveCustomRamp(swatch.id)
+                                      }
+                                      aria-label="Remove ramp"
+                                    >
+                                      <RemoveIcon />
+                                    </button>
+                                  ) : null
+                                }
                               />
                             );
                           })
@@ -1188,34 +1254,25 @@ const App: React.FC = () => {
                             />
                           ))}
                     </div>
+                  </div>
+                  <div className="left-drawer-section">
                     <div className="ramp-actions">
-                      {activeTab === "custom" && (
-                        <>
-                          <button
-                            className="btn btn-secondary"
-                            onClick={handleAddRamp}
-                          >
-                            Add Ramp
-                          </button>
-                          <button
-                            className="btn btn-secondary"
-                            onClick={handleRemoveRamp}
-                          >
-                            Remove Ramp
-                          </button>
-                        </>
-                      )}
+                      {
+                        activeTab === "custom" &&
+                          false /* Remove Ramp button removed */
+                      }
                       <button
-                        className="btn btn-secondary"
+                        className="btn btn-secondary btn-full"
                         onClick={handleResetRamps}
                         title="Reset to default ramps"
                       >
+                        <ResetIcon />
                         Reset Ramps
                       </button>
                     </div>
                     <div className="ramp-actions save-actions">
                       <button
-                        className="btn"
+                        className="btn btn-full"
                         onClick={handleSaveToPaletteCreator}
                       >
                         <ColorIcon />
@@ -1285,6 +1342,35 @@ const App: React.FC = () => {
           }
         />
       </Routes>
+      {showRemoveConfirmModal && (
+        <Modal
+          onClose={() => setShowRemoveConfirmModal(false)}
+          initialFocusRef={cancelButtonRef}
+        >
+          <div className="modal-header">
+            <h2 className="heading-lg">Are you sure?</h2>
+          </div>
+          <div className="body-lg modal-content-message">
+            This will permanently remove the palette and you'll have to recreate
+            the palette swatch-by-swatch if you want it back.
+          </div>
+          <div className="modal-actions">
+            <button
+              className="btn btn-destructive"
+              onClick={confirmRemovePalette}
+            >
+              Remove
+            </button>
+            <button
+              ref={cancelButtonRef}
+              className="btn btn-secondary"
+              onClick={() => setShowRemoveConfirmModal(false)}
+            >
+              Cancel
+            </button>
+          </div>
+        </Modal>
+      )}
     </div>
   );
 };

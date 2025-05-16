@@ -22,12 +22,12 @@
   font-weight: 700;
   letter-spacing: 0.5px;
   padding: 0;
-  background: #181818;
-  color: #fff;
+  background: var(--color-neutral-800);
+  color: var(--color-neutral-00);
 }
 
 .contrast-grid__tile--empty {
-  background: #181818;
+  background: var(--color-neutral-800);
 }
 
 .contrast-grid__tile--header {
@@ -63,7 +63,7 @@
 }
 
 .contrast-grid__label {
-  color: #7c5cfa;
+  color: var(--color-primary-500);
   font-weight: 600;
   font-size: 12px;
   margin-left: 2px;

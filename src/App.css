@@ -5,27 +5,26 @@
   display: flex;
   flex-direction: column;
   min-height: 100vh;
-  background: #06070a;
-  color: #fff;
+  background: var(--color-neutral-800);
+  color: var(--color-neutral-00);
 }
 
 .main-container {
   display: flex;
   flex: 1;
-  margin-top: 72px;
+  margin-top: 80px;
   height: calc(100vh - 88px);
   overflow: hidden;
 }
 
 .main-content {
+  background: linear-gradient(#000000, #161616);
   flex: 1;
   overflow: hidden;
-  height: 100%;
   padding: 24px;
   display: flex;
   justify-content: flex-start;
   align-items: flex-start;
-  background-color: #0c0e12;
   position: relative;
   margin-left: 400px;
 }
@@ -44,7 +43,7 @@
   grid-template-columns: repeat(101, 10px);
   grid-template-rows: repeat(101, 10px);
   gap: 1px;
-  background-color: #121212;
+  background-color: none;
   padding: 1px;
   margin: 0;
 }

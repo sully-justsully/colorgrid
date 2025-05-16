@@ -1,12 +1,15 @@
 .app-header {
-  background-color: #191c21;
-  padding: 24px 32px;
-  border-bottom: 1px solid #292d33;
+  background-color: var(--color-neutral-750);
+  padding: 16px 16px;
+  border-bottom: 1px solid var(--color-neutral-650);
   display: flex;
   justify-content: space-between;
   align-items: center;
-  position: sticky;
+  position: fixed;
   top: 0;
+  left: 0;
+  right: 0;
+  width: 100vw;
   z-index: 100;
 }
 
@@ -23,7 +26,7 @@
 
 .version-number {
   font-size: 12px;
-  color: #4f5259;
+  color: var(--color-neutral-500);
   font-weight: 400;
   margin-top: 7px;
   font-family: "Lato", sans-serif;
@@ -31,62 +34,7 @@
 
 .header-actions {
   display: flex;
-  gap: 12px;
-}
-
-.header-actions button {
-  /* Use btn and btn-secondary classes from Button.css */
-}
-
-.filters-dropdown {
-  position: relative;
-}
-
-.dropdown-menu {
-  position: absolute;
-  top: 100%;
-  right: 0;
-  margin-top: 4px;
-  background-color: #292d33;
-  border: 1px solid #292d33;
-  border-radius: 4px;
-  padding: 8px;
-  min-width: 180px;
-  z-index: 1000;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
-}
-
-.wcag-filters {
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-}
-
-.dropdown-menu label {
-  display: flex;
-  align-items: center;
   gap: 8px;
-  padding: 8px;
-  color: white;
-  cursor: pointer;
-  font-size: 13px;
-  font-family: "Lato", sans-serif;
-  font-weight: 400;
-  transition: background-color 0.2s;
-  border-radius: 4px;
-}
-
-.dropdown-menu label:hover {
-  background-color: #3d4047;
-}
-
-.dropdown-menu input[type="radio"],
-.dropdown-menu input[type="checkbox"] {
-  width: 16px;
-  height: 16px;
-  margin: 0;
-  cursor: pointer;
-  accent-color: #1773cf;
 }
 
 .section-header {

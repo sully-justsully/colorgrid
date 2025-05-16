@@ -1,17 +1,16 @@
 .left-drawer {
   width: 400px;
-  background-color: #191c21;
-  border-right: 1px solid #292d33;
-  padding-bottom: 72px;
+  background-color: var(--color-neutral-750);
+  border-right: 1px solid var(--color-neutral-650);
   overflow-y: auto;
   overflow-x: hidden;
   position: fixed;
-  top: 72px;
+  top: 81px;
   bottom: 0;
   left: 0;
-  height: calc(100vh - 72px);
+  height: calc(100vh - 88px);
   scrollbar-width: thin;
-  scrollbar-color: #292d33 transparent;
+  scrollbar-color: var(--color-neutral-700) transparent;
   z-index: 100;
 }
 
@@ -27,18 +26,22 @@
 }
 
 .left-drawer::-webkit-scrollbar-thumb {
-  background: #292d33;
+  background: var(--color-neutral-700);
   border-radius: 2px;
   margin-right: 4px;
 }
 
 .left-drawer::-webkit-scrollbar-thumb:hover {
-  background: #3d4047;
+  background: var(--color-neutral-600);
 }
 
 .left-drawer-section {
   padding: 20px;
-  border-bottom: 1px solid #292d33;
+  border-bottom: 1px solid var(--color-neutral-650);
+}
+
+.left-drawer-section:last-child {
+  border-bottom: none;
 }
 
 .left-drawer-section h3 {
@@ -50,7 +53,7 @@
 }
 
 .left-drawer-section p {
-  color: #7e8187;
+  color: var(--color-neutral-400);
   margin: 0 0 16px 0;
   font-size: 13px;
   line-height: 1.5;
@@ -79,11 +82,11 @@
 
 .section {
   padding: 16px;
-  border-bottom: 1px solid #292d33;
+  border-bottom: 1px solid var(--color-neutral-650);
 }
 
 .section-header {
-  color: #7e8187;
+  color: var(--color-neutral-400);
   font-size: 12px;
   margin-bottom: 8px;
 }

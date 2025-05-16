@@ -1,10 +1,11 @@
+/* Only styles used by the 'are you sure?' modal */
 .modal-backdrop {
   position: fixed;
   top: 0;
   left: 0;
   width: 100vw;
   height: 100vh;
-  background: rgba(0, 0, 0, 0.6);
+  background: rgba(18, 21, 26, 0.64);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -12,145 +13,29 @@
 }
 
 .modal-content {
-  background: #222;
-  color: #fff;
-  padding: 32px 24px 24px 24px;
+  background: var(--color-neutral-850);
+  padding: 24px;
   border-radius: 8px;
   box-shadow: 0 4px 32px rgba(0, 0, 0, 0.3);
-  min-width: 320px;
-  max-width: 90vw;
+  width: auto;
   position: relative;
-  font-family: "Lato", sans-serif;
-  line-height: 1.525;
+  width: auto;
 }
 
 .modal-header {
   display: flex;
+  align-items: flex-start;
   justify-content: space-between;
-  align-items: center;
-  padding: 16px;
-  border-bottom: 1px solid #e5e5e5;
+  margin-bottom: 8px;
+  height: auto;
 }
 
-.modal-title {
-  font-size: 18px;
-  font-weight: 600;
-  color: #000;
+.modal-content .modal-content-message {
+  margin-bottom: 24px;
 }
 
-.modal-close {
-  width: 32px;
-  height: 32px;
-  border-radius: 8px;
-  background: transparent;
-  border: none;
-  color: #000;
-  font-size: 24px;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  transition: background-color 0.2s;
-}
-
-.modal-close:hover {
-  background: #f5f5f5;
-}
-
-.modal-content h2 {
-  margin-top: 0;
-  font-size: 1.5rem;
-  margin-bottom: 16px;
-}
-
-.modal-content ul {
-  margin: 0 0 16px 0;
-  padding-left: 20px;
-}
-
-.modal-footer {
-  display: flex;
-  justify-content: flex-end;
-  gap: 8px;
-  padding: 16px;
-  border-top: 1px solid #e5e5e5;
-}
-
-/* Remove old button styles */
-.modal-button {
-  /* Use btn btn-secondary instead */
-}
-
-.modal-button.primary {
-  /* Use btn instead */
-}
-
-.modal-button.danger {
-  /* Use btn btn-destructive instead */
-}
-
-.fab-help {
-  position: fixed;
-  right: 24px;
-  bottom: 24px;
-  z-index: 2100;
-  background: #1773cf;
-  color: #fff;
-  border: none;
-  border-radius: 999px;
-  padding: 8px 16px;
-  font-size: 14px;
-  font-family: "Lato", sans-serif;
-  font-weight: 400;
-  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.18);
-  cursor: pointer;
-  transition: background 0.2s, box-shadow 0.2s;
-  outline: none;
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  min-width: unset;
-  width: auto;
-  height: 40px;
-}
-
-.fab-help:hover,
-.fab-help:focus {
-  background: #125ea7;
-  box-shadow: 0 6px 24px rgba(0, 0, 0, 0.22);
-}
-
-.modal-ramp-tabs {
+.modal-actions {
   display: flex;
   gap: 8px;
-  flex: 1;
-}
-
-.modal-ramp-tab {
-  flex: 1;
-  background-color: #2a2a2a;
-  color: #999;
-  border: none;
-  padding: 8px 12px;
-  border-radius: 4px;
-  cursor: pointer;
-  font-size: 12px;
-  font-weight: 500;
-  transition: all 0.2s;
-  font-family: "Lato", sans-serif;
-  min-height: 36px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.modal-ramp-tab:hover {
-  background-color: #333;
-  color: #fff;
-}
-
-.modal-ramp-tab.active {
-  background-color: #1773cf;
-  color: #fff;
-  box-shadow: 0 0 0 1px rgba(23, 115, 207, 0.18);
+  justify-content: right;
 }

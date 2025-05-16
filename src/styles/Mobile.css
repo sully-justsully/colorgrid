@@ -6,7 +6,7 @@
   padding: 24px;
   text-align: center;
   height: 100vh;
-  background-color: #0c0e12;
+  background-color: var(--color-neutral-750);
 }
 
 .mobile-headline {
@@ -19,7 +19,7 @@
 
 .mobile-body {
   font-size: 16px;
-  color: #7e8187;
+  color: var(--color-neutral-400);
   margin-bottom: 32px;
   line-height: 1.5;
   font-family: "Lato", sans-serif;
@@ -28,7 +28,7 @@
 
 .mobile-header {
   padding: 16px;
-  color: #7e8187;
+  color: var(--color-neutral-400);
   text-align: center;
 }
 

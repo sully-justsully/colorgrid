@@ -1,0 +1,63 @@
+/*
+  Typography utility classes for consistent text styles across the app.
+  Usage: Add .heading-lg, .body-lg, or .text-warning to elements as needed.
+  Also includes base styles for h1-h6 and p for consistent browser defaults.
+*/
+
+h1 {
+  font-size: 2.25rem;
+  font-weight: 700;
+  margin: 0;
+  font-family: "Lato", sans-serif;
+}
+h2 {
+  font-size: 1.5rem;
+  font-weight: 600;
+  margin: 0;
+  font-family: "Lato", sans-serif;
+}
+h3 {
+  font-size: 1.25rem;
+  font-weight: 500;
+  margin: 0;
+  font-family: "Lato", sans-serif;
+}
+h4 {
+  font-size: 1.1rem;
+  font-weight: 500;
+  margin: 0;
+  font-family: "Lato", sans-serif;
+}
+h5 {
+  font-size: 1rem;
+  font-weight: 500;
+  margin: 0;
+  font-family: "Lato", sans-serif;
+}
+h6 {
+  font-size: 0.95rem;
+  font-weight: 500;
+  margin: 0;
+  font-family: "Lato", sans-serif;
+}
+p {
+  font-size: 1rem;
+  font-weight: 400;
+  margin: 0;
+  font-family: "Lato", sans-serif;
+}
+
+.heading-lg {
+  font-size: 20px;
+  font-weight: 600;
+  margin: 0;
+  text-align: left;
+}
+
+.body-lg {
+  font-size: 16px;
+  color: var(--color-neutral-400);
+  line-height: 1.35;
+  text-align: left;
+  max-width: 320px;
+}
