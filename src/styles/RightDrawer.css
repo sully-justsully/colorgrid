@@ -91,14 +91,14 @@ body.drawer-open {
 .section-row {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 12px;
   flex-direction: row;
 }
 
 .empty-state {
   flex: 1;
   height: 48px;
-  border: 2px dashed var(--color-neutral-600);
+  border: 1px dashed var(--color-neutral-600);
   border-radius: 8px;
   background: none;
   min-width: 0;
@@ -109,8 +109,8 @@ body.drawer-open {
 }
 
 .empty-state.pulsing {
-  animation: pulse 1.5s infinite;
-  border-color: var(--color-primary-450);
+  animation: 2s infinite 1s pulse;
+  border-color: var(--color-neutral-500);
   cursor: pointer;
 }
 
@@ -133,54 +133,16 @@ body.drawer-open {
   cursor: default;
 }
 
-.dashed-rectangle {
-  flex: 1;
-  height: 48px;
-  border: 2px dashed var(--color-neutral-600);
-  border-radius: 8px;
-  background: none;
-  min-width: 0;
-  cursor: default;
-  display: flex;
-  transition: all 0.3s ease;
-  overflow: hidden;
-}
-
-.dashed-rectangle.pulsing {
-  animation: pulse 1.5s infinite;
-  border-color: var(--color-primary-450);
-  cursor: pointer;
-}
-
-.dashed-rectangle.saving-mode {
-  cursor: pointer;
-}
-
-.dashed-rectangle:not(.saving-mode) {
-  cursor: default;
-}
-
 @keyframes pulse {
   0% {
-    box-shadow: 0 0 0 0 rgba(23, 115, 207, 0.4);
+    box-shadow: 0 0 0 0 rgba(9, 101, 222, 1);
   }
   70% {
-    box-shadow: 0 0 0 10px rgba(23, 115, 207, 0);
+    box-shadow: 0 0 24px 1px rgba(9, 101, 222, 0);
   }
   100% {
-    box-shadow: 0 0 0 0 rgba(23, 115, 207, 0);
+    box-shadow: 0 0 0 0 rgba(9, 101, 222, 0);
   }
-}
-
-.dashed-rectangle .color-swatch {
-  height: 100%;
-  transition: all 0.3s ease;
-  flex: 1;
-  min-width: 0;
-}
-
-.dashed-rectangle .color-swatch:hover {
-  filter: brightness(1.1);
 }
 
 .drawer-actions {

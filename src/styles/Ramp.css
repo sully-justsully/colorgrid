@@ -2,7 +2,7 @@
 .dashed-rectangle {
   height: 48px;
   width: 100%;
-  border: 1px dashed var(--color-neutral-450);
+  border: 1px dashed var(--color-neutral-600);
   border-radius: 6px;
   margin: 8px 0;
   background: none;

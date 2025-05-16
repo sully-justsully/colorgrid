@@ -192,7 +192,7 @@ input:checked + .toggle-slider:before {
   -webkit-appearance: textfield;
   -moz-appearance: textfield;
   appearance: textfield;
-  background: var(--color-neutral-850);
+  background: var(--color-neutral-700);
   border: 1px solid var(--color-neutral-650);
   border-radius: 4px;
   color: var(--color-neutral-00);
