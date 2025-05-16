@@ -774,13 +774,23 @@ const App: React.FC = () => {
     );
   }, [savedSwatches]);
 
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+  const handleDrawerClose = () => {
+    setIsPaletteCreatorOpen(false);
+    setIsSavingMode(false);
+    setPulsingRectangle(null);
+  };
+
+  // Update the effect to use the new handler
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === "Escape" && isPickingColor) {
-        setIsPickingColor(false);
-        setActiveSwatchId(null);
-        setActiveLValue(null);
+      if (e.key === "Escape") {
+        if (isPickingColor) {
+          setIsPickingColor(false);
+          setActiveSwatchId(null);
+          setActiveLValue(null);
+        } else if (isPaletteCreatorOpen) {
+          handleDrawerClose();
+        }
       }
     };
 
@@ -788,7 +798,7 @@ const App: React.FC = () => {
     return () => {
       document.removeEventListener("keydown", handleKeyDown);
     };
-  }, [isPickingColor]);
+  }, [isPickingColor, isPaletteCreatorOpen]);
 
   // Turn on filter after 320ms
   useEffect(() => {
@@ -804,6 +814,17 @@ const App: React.FC = () => {
       prevSwatches.filter((swatch) => swatch.id !== id)
     );
   };
+
+  useEffect(() => {
+    if (isPaletteCreatorOpen) {
+      document.body.classList.add("drawer-open");
+    } else {
+      document.body.classList.remove("drawer-open");
+    }
+    return () => {
+      document.body.classList.remove("drawer-open");
+    };
+  }, [isPaletteCreatorOpen]);
 
   return (
     <div className="app">
@@ -936,7 +957,7 @@ const App: React.FC = () => {
                     </button>
                     <button
                       className="btn btn-icon-only"
-                      onClick={() => setIsPaletteCreatorOpen(false)}
+                      onClick={handleDrawerClose}
                       aria-label="Close drawer"
                     >
                       <CloseIcon />
@@ -1035,6 +1056,14 @@ const App: React.FC = () => {
                   ))}
                 </div>
               </div>
+
+              <div
+                className={`drawer-backdrop ${
+                  isPaletteCreatorOpen ? "open" : ""
+                }`}
+                onClick={handleDrawerClose}
+                role="presentation"
+              />
 
               <div className="main-container">
                 <div className="left-drawer">

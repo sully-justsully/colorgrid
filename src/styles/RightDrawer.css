@@ -4,7 +4,7 @@
   right: -640px;
   width: 640px;
   height: 100vh;
-  background-color: var(--color-neutral-850);
+  background-color: var(--color-neutral-750);
   border-left: 1px solid var(--color-neutral-700);
   z-index: 1000;
   transition: right 0.3s ease-in-out;
@@ -16,6 +16,30 @@
 
 .right-drawer.open {
   right: 0;
+}
+
+.drawer-backdrop {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background: rgba(0, 0, 0, 0.64);
+  z-index: 999;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.3s ease-in-out;
+  backdrop-filter: blur(1px);
+}
+
+.drawer-backdrop.open {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+/* Prevent scrolling when drawer is open */
+body.drawer-open {
+  overflow: hidden;
 }
 
 .drawer-header {
@@ -36,7 +60,7 @@
 .drawer-sections {
   flex: 1;
   overflow-y: auto;
-  padding: 20px;
+  padding: 20px 20px 48px 20px;
   display: flex;
   flex-direction: column;
   gap: 32px;
@@ -86,7 +110,7 @@
 
 .empty-state.pulsing {
   animation: pulse 1.5s infinite;
-  border-color: var(--color-primary-500);
+  border-color: var(--color-primary-450);
   cursor: pointer;
 }
 
@@ -124,7 +148,7 @@
 
 .dashed-rectangle.pulsing {
   animation: pulse 1.5s infinite;
-  border-color: var(--color-primary-500);
+  border-color: var(--color-primary-450);
   cursor: pointer;
 }
 

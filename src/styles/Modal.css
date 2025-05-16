@@ -1,19 +1,25 @@
-/* Only styles used by the 'are you sure?' modal */
 .modal-backdrop {
   position: fixed;
   top: 0;
   left: 0;
   width: 100vw;
   height: 100vh;
-  background: rgba(18, 21, 26, 0.64);
+  background: rgba(0, 0, 0, 0.64);
+  backdrop-filter: blur(1px);
   display: flex;
   align-items: center;
   justify-content: center;
-  z-index: 2000;
+  opacity: 0;
+  z-index: 3333;
+  transition: opacity 0.2s ease-in-out;
+}
+
+.modal-backdrop.open {
+  opacity: 1;
 }
 
 .modal-content {
-  background: var(--color-neutral-850);
+  background: var(--color-neutral-750);
   padding: 24px;
   border-radius: 8px;
   box-shadow: 0 4px 32px rgba(0, 0, 0, 0.3);

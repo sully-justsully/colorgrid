@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect, useRef, useState } from "react";
 import "../styles/Modal.css";
 
 interface ModalProps {
@@ -16,26 +16,40 @@ const Modal: React.FC<ModalProps> = ({
   initialFocusRef,
   title,
 }) => {
-  const handleClose = (e: React.MouseEvent) => {
-    e.preventDefault();
-    e.stopPropagation();
-    onClose();
-  };
+  const backdropRef = useRef<HTMLDivElement>(null);
+  const [isOpen, setIsOpen] = useState(false);
 
-  // Focus trap for modal
-  React.useEffect(() => {
-    const handleEscape = (e: KeyboardEvent) => {
+  useEffect(() => {
+    // Add the open class after mount to trigger the transition
+    const id = requestAnimationFrame(() => setIsOpen(true));
+    return () => cancelAnimationFrame(id);
+  }, []);
+
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === "Escape") {
         onClose();
       }
     };
 
-    document.addEventListener("keydown", handleEscape);
-    return () => document.removeEventListener("keydown", handleEscape);
+    document.addEventListener("keydown", handleKeyDown);
+    return () => {
+      document.removeEventListener("keydown", handleKeyDown);
+    };
   }, [onClose]);
 
+  useEffect(() => {
+    if (initialFocusRef?.current) {
+      initialFocusRef.current.focus();
+    }
+  }, [initialFocusRef]);
+
   return (
-    <div className="modal-backdrop" onClick={handleClose} role="presentation">
+    <div
+      className={`modal-backdrop${isOpen ? " open" : ""}`}
+      ref={backdropRef}
+      onClick={onClose}
+    >
       <div
         className="modal-content"
         onClick={(e) => e.stopPropagation()}

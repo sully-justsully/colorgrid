@@ -13,7 +13,7 @@ const Toast: React.FC<ToastProps> = ({
   message,
   duration = 3000,
   onClose,
-  backgroundColor = "#333",
+  backgroundColor = "#000",
 }) => {
   useEffect(() => {
     const timer = setTimeout(() => {
