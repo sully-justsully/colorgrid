@@ -16,7 +16,6 @@ import {
   calculateContrastRatio,
   rgbToHsb,
   hexToHsb,
-  hsbToRgb,
   getRgbLabLightness,
 } from "./utils/colorUtils";
 import "./App.css";
@@ -39,12 +38,10 @@ import ContrastGrid from "./components/ContrastGrid";
 import { ReactComponent as ColorIcon } from "./icons/color.svg";
 import { ReactComponent as EyeIcon } from "./icons/eye.svg";
 import { ReactComponent as GridIcon } from "./icons/grid.svg";
-import { ReactComponent as PencilIcon } from "./icons/pencil.svg";
 import { ReactComponent as RemoveIcon } from "./icons/remove.svg";
 import { ReactComponent as TrashIcon } from "./icons/trash.svg";
 import { ReactComponent as DownloadIcon } from "./icons/download.svg";
 import { ReactComponent as ChevronRightIcon } from "./icons/chevron-right.svg";
-import { ReactComponent as ChevronLeftIcon } from "./icons/chevron-left.svg";
 import { ReactComponent as CloseIcon } from "./icons/close.svg";
 import "./styles/Ramp.css";
 import { ReactComponent as AddIcon } from "./icons/add-alt.svg";
@@ -116,7 +113,6 @@ const App: React.FC = () => {
     return h;
   });
   const [isFiltering, setIsFiltering] = useState(false);
-  const [showGuides, setShowGuides] = useState(false);
   const [wcagLevel, setWcagLevel] = useState<"none" | "A" | "AA" | "AAA">(
     "none"
   );
@@ -165,11 +161,6 @@ const App: React.FC = () => {
   const [toastHexCode, setToastHexCode] = useState("#333");
   const [isHexValid, setIsHexValid] = useState(true);
   const [isHexDirty, setIsHexDirty] = useState(false);
-  const [showColorPickModal, setShowColorPickModal] = useState(() => {
-    return !localStorage.getItem("colorPickModalShown");
-  });
-  const [modalPage, setModalPage] = useState(0);
-  const [rampTabClicked, setRampTabClicked] = useState(false);
   const [clearActiveDotsSignal, setClearActiveDotsSignal] = useState(0);
   const [isPaletteCreatorOpen, setIsPaletteCreatorOpen] = useState(false);
   const [pulsingRectangle, setPulsingRectangle] = useState<string | null>(null);
@@ -271,35 +262,6 @@ const App: React.FC = () => {
       });
     }
   }, [keyHexCode]);
-
-  useEffect(() => {
-    if (showColorPickModal) {
-      localStorage.setItem("colorPickModalShown", "true");
-    }
-  }, [showColorPickModal]);
-
-  useEffect(() => {
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === "Escape" && isPickingColor) {
-        setIsPickingColor(false);
-        setActiveSwatchId(null);
-        setActiveLValue(null);
-      }
-    };
-
-    document.addEventListener("keydown", handleKeyDown);
-    return () => {
-      document.removeEventListener("keydown", handleKeyDown);
-    };
-  }, [isPickingColor]);
-
-  // Turn on filter after 320ms
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      setIsFiltering(true);
-    }, 320);
-    return () => clearTimeout(timer);
-  }, []);
 
   const handleHexCodeChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const newHexCode = e.target.value
@@ -520,19 +482,6 @@ const App: React.FC = () => {
       return position === "top"
         ? [newRamp, ...prevSwatches]
         : [...prevSwatches, newRamp];
-    });
-  };
-
-  const handleRemoveRamp = () => {
-    const setCurrentSwatches =
-      activeTab === "simple"
-        ? setSwatchesSimple
-        : activeTab === "advanced"
-        ? setSwatchesAdvanced
-        : setSwatchesCustom;
-    setCurrentSwatches((prevSwatches) => {
-      if (prevSwatches.length <= 1) return prevSwatches;
-      return prevSwatches.slice(0, -1);
     });
   };
 
@@ -824,6 +773,30 @@ const App: React.FC = () => {
       JSON.stringify(savedSwatches)
     );
   }, [savedSwatches]);
+
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape" && isPickingColor) {
+        setIsPickingColor(false);
+        setActiveSwatchId(null);
+        setActiveLValue(null);
+      }
+    };
+
+    document.addEventListener("keydown", handleKeyDown);
+    return () => {
+      document.removeEventListener("keydown", handleKeyDown);
+    };
+  }, [isPickingColor]);
+
+  // Turn on filter after 320ms
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setIsFiltering(true);
+    }, 320);
+    return () => clearTimeout(timer);
+  }, []);
 
   // Add a handler to remove a ramp by id
   const handleRemoveCustomRamp = (id: number) => {
@@ -1213,37 +1186,29 @@ const App: React.FC = () => {
                             />
                           ))
                         : activeTab === "custom"
-                        ? swatchesCustom.map((swatch) => {
-                            const r = parseInt(keyHexCode.slice(0, 2), 16);
-                            const g = parseInt(keyHexCode.slice(2, 4), 16);
-                            const b = parseInt(keyHexCode.slice(4, 6), 16);
-                            const keyLValue = Math.round(
-                              getRgbLabLightness(r, g, b)
-                            );
-                            return (
-                              <ColorSwatch
-                                key={swatch.id}
-                                swatch={swatch}
-                                isActive={swatch.id === activeSwatchId}
-                                onLValueChange={handleLValueChange}
-                                onClick={handleSwatchClick}
-                                isKeyHexCode={swatch.id === 1}
-                                removeButton={
-                                  swatch.id !== 1 ? (
-                                    <button
-                                      className="btn btn-icon-only btn-destructive small"
-                                      onClick={() =>
-                                        handleRemoveCustomRamp(swatch.id)
-                                      }
-                                      aria-label="Remove ramp"
-                                    >
-                                      <RemoveIcon />
-                                    </button>
-                                  ) : null
-                                }
-                              />
-                            );
-                          })
+                        ? swatchesCustom.map((swatch) => (
+                            <ColorSwatch
+                              key={swatch.id}
+                              swatch={swatch}
+                              isActive={swatch.id === activeSwatchId}
+                              onLValueChange={handleLValueChange}
+                              onClick={handleSwatchClick}
+                              isKeyHexCode={swatch.id === 1}
+                              removeButton={
+                                swatch.id !== 1 ? (
+                                  <button
+                                    className="btn btn-icon-only btn-destructive small"
+                                    onClick={() =>
+                                      handleRemoveCustomRamp(swatch.id)
+                                    }
+                                    aria-label="Remove ramp"
+                                  >
+                                    <RemoveIcon />
+                                  </button>
+                                ) : null
+                              }
+                            />
+                          ))
                         : swatchesAdvanced.map((swatch) => (
                             <ColorSwatch
                               key={swatch.id}

@@ -200,16 +200,6 @@ const ColorGrid: React.FC<ColorGridProps> = ({
   // Memoize the rendered dots
   const renderedDots = useMemo(() => {
     return dots.map((dot) => {
-      const isTopHalf = dot.row < 50;
-      const isLeftHalf = dot.col < 50;
-      const positionClass = isTopHalf
-        ? isLeftHalf
-          ? "tooltip-top-left"
-          : "tooltip-top-right"
-        : isLeftHalf
-        ? "tooltip-bottom-left"
-        : "tooltip-bottom-right";
-
       return (
         <div
           key={`${dot.row}-${dot.col}`}

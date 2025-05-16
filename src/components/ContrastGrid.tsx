@@ -43,12 +43,15 @@ const X_ICON = (
 );
 
 const tileSize = 80;
-const fontSize = 12;
 
 const ContrastGrid: React.FC<{
   swatches: ColorSwatchType[];
   title?: string;
 }> = ({ swatches }) => {
+  const getContrastText = (contrast: number) => {
+    return contrast.toFixed(1);
+  };
+
   return (
     <div className="contrast-grid__wrapper">
       <div
@@ -117,7 +120,7 @@ const ContrastGrid: React.FC<{
                 }}
               >
                 <span className="contrast-grid__ratio">
-                  {contrast.toFixed(1)}:1
+                  {getContrastText(contrast)}:1
                 </span>
                 <div className="contrast-grid__row">
                   {passesA ? CHECK_ICON : X_ICON}

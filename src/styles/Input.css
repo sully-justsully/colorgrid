@@ -56,10 +56,6 @@ input[type="number"]::-webkit-inner-spin-button {
   flex: 1;
 }
 
-.hex-input-group input:focus {
-  /* Removed outline and border-color, use .standard-input:focus instead */
-}
-
 /* =====================
    Hue input group
    (.hue-input-group, .hue-control input)

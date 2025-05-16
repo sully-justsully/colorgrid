@@ -77,14 +77,7 @@ const ColorSwatch: React.FC<ColorSwatchProps> = ({
         <div className="input-group">
           <div className="input-row">
             <div className="input-container" style={{ position: "relative" }}>
-              <label
-                htmlFor={`lightness-input-${swatch.id}`}
-                className="visually-hidden"
-              >
-                Lightness value for color {swatch.hexColor}
-              </label>
               <input
-                id={`lightness-input-${swatch.id}`}
                 type="number"
                 min="0"
                 max="100"

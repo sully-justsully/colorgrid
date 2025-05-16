@@ -7,7 +7,7 @@ interface ModalProps {
   /** Optional ref to focus an element inside the modal, e.g., a button */
   initialFocusRef?: React.RefObject<HTMLElement>;
   /** Title of the modal for screen readers */
-  title: string;
+  title?: string;
 }
 
 const Modal: React.FC<ModalProps> = ({
@@ -41,11 +41,13 @@ const Modal: React.FC<ModalProps> = ({
         onClick={(e) => e.stopPropagation()}
         role="dialog"
         aria-modal="true"
-        aria-labelledby="modal-title"
+        {...(title ? { "aria-labelledby": "modal-title" } : {})}
       >
-        <h2 id="modal-title" className="visually-hidden">
-          {title}
-        </h2>
+        {title && (
+          <h2 id="modal-title" className="visually-hidden">
+            {title}
+          </h2>
+        )}
         {children}
       </div>
     </div>
