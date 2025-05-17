@@ -46,6 +46,7 @@ import { ReactComponent as CloseIcon } from "./icons/close.svg";
 import "./styles/Ramp.css";
 import { ReactComponent as AddIcon } from "./icons/add-alt.svg";
 import { ReactComponent as ResetIcon } from "./icons/reset.svg";
+import ButtonDemo from "./ButtonDemo";
 
 const STORAGE_KEY = "colorGridSwatches";
 const HEX_STORAGE_KEY = "colorGridHexCode";
@@ -956,7 +957,7 @@ const App: React.FC = () => {
                       Download Palettes
                     </button>
                     <button
-                      className="btn btn-icon-only"
+                      className="btn-secondary btn-icon-only"
                       onClick={handleDrawerClose}
                       aria-label="Close drawer"
                     >
@@ -1009,7 +1010,7 @@ const App: React.FC = () => {
                               section.title.toLowerCase().replace(/\s+/g, "-")
                             ]
                               ? `filled-state${
-                                  isSavingMode ? " saving-mode" : ""
+                                  isSavingMode ? " saving-mode pulsing" : ""
                                 }`
                               : `empty-state${
                                   pulsingRectangle === "all" ? " pulsing" : ""
@@ -1101,10 +1102,9 @@ const App: React.FC = () => {
                         />
                         <button
                           onClick={updateHexCode}
-                          className={`btn btn-icon-only ${
-                            isHexValid && isHexDirty ? "active" : "disabled"
+                          className={`btn-secondary btn-icon-only ${
+                            !isHexValid || !isHexDirty ? "disabled" : ""
                           }`}
-                          disabled={!isHexValid || !isHexDirty}
                         >
                           <ChevronRightIcon />
                         </button>
@@ -1335,6 +1335,7 @@ const App: React.FC = () => {
             />
           }
         />
+        <Route path="/button-demo" element={<ButtonDemo />} />
       </Routes>
       {showRemoveConfirmModal && (
         <Modal

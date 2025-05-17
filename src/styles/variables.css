@@ -6,10 +6,10 @@
   --color-primary-150: #deecff;
   --color-primary-200: #cfe4ff;
   --color-primary-250: #a8ceff;
-  --color-primary-300: #7eb5fc;
+  --color-primary-300: rgb(126, 181, 252);
   --color-primary-350: #589ffc;
   --color-primary-400: #237ff7;
-  --color-primary-450: #0965de;
+  --color-primary-450: rgb(9, 101, 222);
   --color-primary-500: #044eb0;
   --color-primary-550: #013c8a;
   --color-primary-600: #002b63;

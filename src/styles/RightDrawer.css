@@ -114,6 +114,16 @@ body.drawer-open {
   cursor: pointer;
 }
 
+.empty-state.saving-mode {
+  border-color: var(--color-neutral-500);
+  cursor: pointer;
+}
+
+.empty-state.saving-mode:hover {
+  background-color: var(--color-neutral-700);
+  border-color: var(--color-neutral-400);
+}
+
 .filled-state {
   flex: 1;
   height: 48px;
@@ -124,13 +134,57 @@ body.drawer-open {
   display: flex;
   overflow: hidden;
   padding: 0;
-  cursor: default;
+  transition: all 0.3s ease;
+  position: relative;
+}
+
+.filled-state:hover {
+  background-color: var(--color-neutral-700);
+}
+
+.filled-state:hover::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  border-radius: 8px;
+  pointer-events: none;
+  cursor: vertical-text;
 }
 
 .filled-state .color-swatch {
   border: none !important;
   border-radius: 0 !important;
+  transition: opacity 0.2s ease;
+}
+
+.filled-state:hover .color-swatch {
+  opacity: 1;
   cursor: default;
+}
+
+.filled-state.pulsing {
+  animation: 2s infinite 1s pulse;
+  cursor: help;
+  border: 1px dashed var(--color-neutral-500);
+}
+
+.filled-state.saving-mode {
+  border: 1px dashed var(--color-neutral-500);
+  cursor: crosshair;
+  background-color: var(--color-neutral-700);
+}
+
+.filled-state.saving-mode:hover {
+  background-color: var(--color-neutral-600);
+  border-color: var(--color-neutral-400);
+  cursor: e-resize;
+}
+
+.filled-state.saving-mode .color-swatch {
+  cursor: pointer;
 }
 
 @keyframes pulse {
