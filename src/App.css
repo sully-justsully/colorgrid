@@ -12,8 +12,8 @@
 .main-container {
   display: flex;
   flex: 1;
-  margin-top: 80px;
-  height: calc(100vh - 88px);
+  margin-top: 81px;
+  height: calc(100vh - 81px);
   overflow: hidden;
 }
 
@@ -27,6 +27,7 @@
   align-items: flex-start;
   position: relative;
   margin-left: 400px;
+  height: auto;
 }
 
 .grid-container {

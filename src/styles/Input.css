@@ -70,7 +70,7 @@ input[type="number"]::-webkit-inner-spin-button {
 .hue-control {
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: 8px;
 }
 
 .hue-control input {
@@ -117,8 +117,8 @@ input[type="number"]::-webkit-inner-spin-button {
   right: 0;
   bottom: 0;
   background-color: var(--color-neutral-600);
-  transition: transform 0.25s ease-out;
-  border-radius: 20px;
+  transition: transform 0.4s ease-in;
+  border-radius: 999px;
 }
 
 .toggle-slider:before {
@@ -129,7 +129,7 @@ input[type="number"]::-webkit-inner-spin-button {
   left: 2px;
   bottom: 2px;
   background-color: white;
-  transition: transform 0.25s ease-out;
+  transition: transform 0.2s ease-out;
   border-radius: 50%;
   transform: translateX(0);
 }
@@ -149,7 +149,7 @@ input:checked + .toggle-slider:before {
 .input-flex-center {
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: 8px;
 }
 
 .color-picker {

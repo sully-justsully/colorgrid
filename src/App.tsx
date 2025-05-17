@@ -4,6 +4,8 @@ import React, {
   useEffect,
   useRef,
   useMemo,
+  createRef,
+  RefObject,
 } from "react";
 import ColorGrid from "./components/ColorGrid";
 import ColorSwatch from "./components/ColorSwatch";
@@ -205,6 +207,20 @@ const App: React.FC = () => {
   const location = useLocation();
   const cancelButtonRef = useRef<HTMLButtonElement>(null);
 
+  const currentSwatches = useMemo(() => {
+    return activeTab === "simple"
+      ? swatchesSimple
+      : activeTab === "custom"
+      ? swatchesCustom
+      : swatchesAdvanced;
+  }, [activeTab, swatchesSimple, swatchesCustom, swatchesAdvanced]);
+
+  // Swatch refs for keyboard navigation (must come after currentSwatches)
+  const swatchRefs = useMemo(
+    () => currentSwatches.map(() => createRef<HTMLDivElement>()),
+    [currentSwatches.length]
+  );
+
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       if (
@@ -296,14 +312,6 @@ const App: React.FC = () => {
     },
     []
   );
-
-  const currentSwatches = useMemo(() => {
-    return activeTab === "simple"
-      ? swatchesSimple
-      : activeTab === "custom"
-      ? swatchesCustom
-      : swatchesAdvanced;
-  }, [activeTab, swatchesSimple, swatchesCustom, swatchesAdvanced]);
 
   const currentLValues = useMemo(() => {
     return currentSwatches.map((s) => s.lValue);
@@ -1205,17 +1213,30 @@ const App: React.FC = () => {
                         </div>
                       )}
                       {activeTab === "simple"
-                        ? swatchesSimple.map((swatch) => (
+                        ? swatchesSimple.map((swatch, idx) => (
                             <ColorSwatch
                               key={swatch.id}
                               swatch={swatch}
                               isActive={swatch.id === activeSwatchId}
                               onLValueChange={handleLValueChange}
                               onClick={handleSwatchClick}
+                              ref={swatchRefs[idx] as RefObject<HTMLDivElement>}
+                              onSwatchKeyDown={(
+                                e: React.KeyboardEvent<HTMLDivElement>
+                              ) => {
+                                if (
+                                  e.key === "ArrowRight" &&
+                                  idx < swatchRefs.length - 1
+                                ) {
+                                  swatchRefs[idx + 1].current?.focus();
+                                } else if (e.key === "ArrowLeft" && idx > 0) {
+                                  swatchRefs[idx - 1].current?.focus();
+                                }
+                              }}
                             />
                           ))
                         : activeTab === "custom"
-                        ? swatchesCustom.map((swatch) => (
+                        ? swatchesCustom.map((swatch, idx) => (
                             <ColorSwatch
                               key={swatch.id}
                               swatch={swatch}
@@ -1236,15 +1257,41 @@ const App: React.FC = () => {
                                   </button>
                                 ) : null
                               }
+                              ref={swatchRefs[idx] as RefObject<HTMLDivElement>}
+                              onSwatchKeyDown={(
+                                e: React.KeyboardEvent<HTMLDivElement>
+                              ) => {
+                                if (
+                                  e.key === "ArrowRight" &&
+                                  idx < swatchRefs.length - 1
+                                ) {
+                                  swatchRefs[idx + 1].current?.focus();
+                                } else if (e.key === "ArrowLeft" && idx > 0) {
+                                  swatchRefs[idx - 1].current?.focus();
+                                }
+                              }}
                             />
                           ))
-                        : swatchesAdvanced.map((swatch) => (
+                        : swatchesAdvanced.map((swatch, idx) => (
                             <ColorSwatch
                               key={swatch.id}
                               swatch={swatch}
                               isActive={swatch.id === activeSwatchId}
                               onLValueChange={handleLValueChange}
                               onClick={handleSwatchClick}
+                              ref={swatchRefs[idx] as RefObject<HTMLDivElement>}
+                              onSwatchKeyDown={(
+                                e: React.KeyboardEvent<HTMLDivElement>
+                              ) => {
+                                if (
+                                  e.key === "ArrowRight" &&
+                                  idx < swatchRefs.length - 1
+                                ) {
+                                  swatchRefs[idx + 1].current?.focus();
+                                } else if (e.key === "ArrowLeft" && idx > 0) {
+                                  swatchRefs[idx - 1].current?.focus();
+                                }
+                              }}
                             />
                           ))}
                     </div>
@@ -1351,17 +1398,18 @@ const App: React.FC = () => {
           </div>
           <div className="modal-actions">
             <button
+              ref={cancelButtonRef}
+              className="btn btn-secondary"
+              onClick={() => setShowRemoveConfirmModal(false)}
+              autoFocus
+            >
+              Cancel
+            </button>
+            <button
               className="btn btn-destructive"
               onClick={confirmRemovePalette}
             >
               Remove
-            </button>
-            <button
-              ref={cancelButtonRef}
-              className="btn btn-secondary"
-              onClick={() => setShowRemoveConfirmModal(false)}
-            >
-              Cancel
             </button>
           </div>
         </Modal>

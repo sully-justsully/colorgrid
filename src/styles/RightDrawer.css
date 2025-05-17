@@ -68,7 +68,7 @@ body.drawer-open {
 
 .right-drawer-section {
   background: none;
-  border-radius: 8px;
+  border-radius: 4px;
   padding: 0;
   margin-bottom: 0;
 }
@@ -91,7 +91,7 @@ body.drawer-open {
 .section-row {
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: 8px;
   flex-direction: row;
 }
 
@@ -99,7 +99,7 @@ body.drawer-open {
   flex: 1;
   height: 48px;
   border: 1px dashed var(--color-neutral-600);
-  border-radius: 8px;
+  border-radius: 4px;
   background: none;
   min-width: 0;
   cursor: default;
@@ -128,7 +128,7 @@ body.drawer-open {
   flex: 1;
   height: 48px;
   border: none;
-  border-radius: 8px;
+  border-radius: 4px;
   background: none;
   min-width: 0;
   display: flex;
@@ -149,7 +149,7 @@ body.drawer-open {
   left: 0;
   right: 0;
   bottom: 0;
-  border-radius: 8px;
+  border-radius: 4px;
   pointer-events: none;
   cursor: vertical-text;
 }
@@ -191,11 +191,11 @@ body.drawer-open {
   0% {
     box-shadow: 0 0 0 0 rgba(9, 101, 222, 1);
   }
-  70% {
-    box-shadow: 0 0 24px 1px rgba(9, 101, 222, 0);
+  50% {
+    box-shadow: 0 0 24px 1px rgba(9, 101, 222, 0.3);
   }
   100% {
-    box-shadow: 0 0 0 0 rgba(9, 101, 222, 0);
+    box-shadow: 0 0 24px 1px rgba(9, 101, 222, 0);
   }
 }
 
