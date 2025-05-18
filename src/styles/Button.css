@@ -127,7 +127,7 @@
   border: none;
   border-radius: 999px;
   padding: 8px 16px;
-  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.18);
+  box-shadow: 0 4px 16px var(--color-overlay-shadow);
   min-width: unset;
   width: auto;
   height: 48px;
@@ -135,7 +135,7 @@
 
 .btn-fab:hover {
   background: var(--color-primary-500);
-  box-shadow: 0 6px 24px rgba(0, 0, 0, 0.22);
+  box-shadow: 0 6px 24px var(--color-overlay-shadow);
 }
 
 .btn-fab.active {

@@ -45,7 +45,7 @@
 }
 
 .left-drawer-section h3 {
-  color: white;
+  color: var(--color-neutral-00);
   margin: 0 0 16px 0;
   font-size: 14px;
   font-weight: 500;

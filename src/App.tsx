@@ -45,6 +45,8 @@ import { ReactComponent as TrashIcon } from "./icons/trash.svg";
 import { ReactComponent as DownloadIcon } from "./icons/download.svg";
 import { ReactComponent as ChevronRightIcon } from "./icons/chevron-right.svg";
 import { ReactComponent as CloseIcon } from "./icons/close.svg";
+import { ReactComponent as LightModeIcon } from "./icons/light_mode.svg";
+import { ReactComponent as DarkModeIcon } from "./icons/dark_mode.svg";
 import "./styles/Ramp.css";
 import { ReactComponent as AddIcon } from "./icons/add-alt.svg";
 import { ReactComponent as ResetIcon } from "./icons/reset.svg";
@@ -52,6 +54,7 @@ import ButtonDemo from "./ButtonDemo";
 
 const STORAGE_KEY = "colorGridSwatches";
 const HEX_STORAGE_KEY = "colorGridHexCode";
+const CUSTOM_RAMPS_STORAGE_KEY = "colorGridCustomRamps";
 
 const initialLValuesSimple = [100, 95, 85, 75, 65, 55, 45, 35, 25, 15, 5, 0];
 const initialLValuesAdvanced = [
@@ -59,13 +62,13 @@ const initialLValuesAdvanced = [
 ];
 
 const guideSvg = `<svg width="1110" height="1110" viewBox="0 0 1110 1110" preserveAspectRatio="none" fill="none" xmlns="http://www.w3.org/2000/svg">
-  <path d="M1110 1110C1110 1110 1110 282 968 142C826 0.4 0.4 0.4 0.4 0.4" stroke="white" stroke-width="1"/>
-  <path d="M1110 1110C1110 1110 968 424 826 282C684 142 0.4 0.4 0.4 0.4" stroke="white" stroke-width="1"/>
-  <path d="M1110 1110C1110 1110 826 566 684 424C542 282 0.4 0.4 0.4 0.4" stroke="white" stroke-width="1"/>
-  <path d="M0.4 0.4L1110 1110" stroke="white" stroke-width="1"/>
-  <path d="M0.4 0.4C0.4 0.4 282 542 424 684C566 826 1110 1110 1110 1110" stroke="white" stroke-width="1"/>
-  <path d="M0.4 0.4C0.4 0.4 142 684 282 826C424 968 1110 1110 1110 1110" stroke="white" stroke-width="1"/>
-  <path d="M0.4 0.4C0.4 0.4 0.4 826 142 968C282 1110 1110 1110 1110 1110" stroke="white" stroke-width="1"/>
+  <path d="M1110 1110C1110 1110 1110 282 968 142C826 0.4 0.4 0.4 0.4 0.4" stroke="var(--color-neutral-00)" stroke-width="1"/>
+  <path d="M1110 1110C1110 1110 968 424 826 282C684 142 0.4 0.4 0.4 0.4" stroke="var(--color-neutral-00)" stroke-width="1"/>
+  <path d="M1110 1110C1110 1110 826 566 684 424C542 282 0.4 0.4 0.4 0.4" stroke="var(--color-neutral-00)" stroke-width="1"/>
+  <path d="M0.4 0.4L1110 1110" stroke="var(--color-neutral-00)" stroke-width="1"/>
+  <path d="M0.4 0.4C0.4 0.4 282 542 424 684C566 826 1110 1110 1110 1110" stroke="var(--color-neutral-00)" stroke-width="1"/>
+  <path d="M0.4 0.4C0.4 0.4 142 684 282 826C424 968 1110 1110 1110 1110" stroke="var(--color-neutral-00)" stroke-width="1"/>
+  <path d="M0.4 0.4C0.4 0.4 0.4 826 142 968C282 1110 1110 1110 1110 1110" stroke="var(--color-neutral-00)" stroke-width="1"/>
 </svg>`;
 
 const createInitialSwatches = (lValues: number[], hexCode?: string) => {
@@ -121,10 +124,10 @@ const App: React.FC = () => {
   );
   const [isPickingColor, setIsPickingColor] = useState(false);
   const [activeSwatchId, setActiveSwatchId] = useState<number | null>(null);
+  const [selectedSwatchId, setSelectedSwatchId] = useState<number | null>(null);
   const [activeLValue, setActiveLValue] = useState<number | null>(null);
-  const [activeDots, setActiveDots] = useState<Set<string>>(new Set());
   const [showFiltersDropdown, setShowFiltersDropdown] = useState(false);
-  const [activeTab, setActiveTab] = useState<"simple" | "custom" | "advanced">(
+  const [activeTab, setActiveTab] = useState<"simple" | "advanced" | "custom">(
     "simple"
   );
   const [swatchesSimple, setSwatchesSimple] = useState<ColorSwatchType[]>(
@@ -143,6 +146,15 @@ const App: React.FC = () => {
   );
   const [swatchesCustom, setSwatchesCustom] = useState<ColorSwatchType[]>(
     () => {
+      const savedCustomRamps = localStorage.getItem(CUSTOM_RAMPS_STORAGE_KEY);
+      if (savedCustomRamps) {
+        try {
+          return JSON.parse(savedCustomRamps);
+        } catch (e) {
+          console.error("Failed to parse saved custom ramps:", e);
+          return createInitialSwatches([100], keyHexCode);
+        }
+      }
       return createInitialSwatches([100], keyHexCode);
     }
   );
@@ -202,6 +214,10 @@ const App: React.FC = () => {
   const [isSavingMode, setIsSavingMode] = useState(false);
   const [showRemoveConfirmModal, setShowRemoveConfirmModal] = useState(false);
   const [paletteToRemove, setPaletteToRemove] = useState<string | null>(null);
+  const [isDarkMode, setIsDarkMode] = useState(() => {
+    const savedTheme = localStorage.getItem("theme");
+    return savedTheme ? savedTheme === "dark" : false;
+  });
 
   const dropdownRef = useRef<HTMLDivElement>(null);
   const location = useLocation();
@@ -280,6 +296,13 @@ const App: React.FC = () => {
     }
   }, [keyHexCode]);
 
+  useEffect(() => {
+    localStorage.setItem(
+      CUSTOM_RAMPS_STORAGE_KEY,
+      JSON.stringify(swatchesCustom)
+    );
+  }, [swatchesCustom]);
+
   const handleHexCodeChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const newHexCode = e.target.value
       .replace(/[^0-9A-Fa-f]/g, "")
@@ -332,6 +355,7 @@ const App: React.FC = () => {
       // If clicking a different swatch or not picking, activate it
       setIsPickingColor(true);
       setActiveSwatchId(id);
+      // Do NOT update selectedSwatchId here
 
       // Get the correct swatch array based on active tab
       const swatchArray =
@@ -428,15 +452,12 @@ const App: React.FC = () => {
         }
 
         setIsPickingColor(false);
+        setSelectedSwatchId(activeSwatchId);
         setActiveSwatchId(null);
       }
 
       // Copy hex code to clipboard
       navigator.clipboard.writeText(dot.hexColor).then(() => {
-        setToastHexCode(dot.hexColor);
-        setShowToast(true);
-        setTimeout(() => setShowToast(false), 2000);
-
         // Track color copy
         if (typeof window.gtag !== "undefined") {
           window.gtag("event", "color_copied", {
@@ -445,17 +466,6 @@ const App: React.FC = () => {
             hsb_text: dot.hsbText,
           });
         }
-      });
-
-      const dotKey = `${dot.row}-${dot.col}`;
-      setActiveDots((prev) => {
-        const newSet = new Set(prev);
-        if (newSet.has(dotKey)) {
-          newSet.delete(dotKey);
-        } else {
-          newSet.add(dotKey);
-        }
-        return newSet;
       });
     },
     [isPickingColor, activeSwatchId, activeTab]
@@ -519,7 +529,6 @@ const App: React.FC = () => {
         setSwatchesAdvanced(createInitialSwatches(initialLValuesAdvanced));
         break;
     }
-    setActiveDots(new Set());
     setClearActiveDotsSignal((prev) => prev + 1);
   };
 
@@ -835,6 +844,23 @@ const App: React.FC = () => {
     };
   }, [isPaletteCreatorOpen]);
 
+  useEffect(() => {
+    document.documentElement.setAttribute(
+      "data-theme",
+      isDarkMode ? "dark" : "light"
+    );
+    localStorage.setItem("theme", isDarkMode ? "dark" : "light");
+  }, [isDarkMode]);
+
+  const toggleTheme = () => {
+    document.body.classList.add("theme-changing");
+    setIsDarkMode((prev) => !prev);
+    // Remove the class after a short delay to ensure the theme change is complete
+    requestAnimationFrame(() => {
+      document.body.classList.remove("theme-changing");
+    });
+  };
+
   return (
     <div className="app">
       <MobileLayout />
@@ -946,6 +972,17 @@ const App: React.FC = () => {
                   >
                     <ColorIcon />
                     Palette Creator
+                  </button>
+                  <button
+                    className="btn btn-secondary btn-icon-only"
+                    onClick={toggleTheme}
+                    aria-label={
+                      isDarkMode
+                        ? "Switch to light mode"
+                        : "Switch to dark mode"
+                    }
+                  >
+                    {isDarkMode ? <LightModeIcon /> : <DarkModeIcon />}
                   </button>
                 </div>
               </header>
@@ -1333,11 +1370,14 @@ const App: React.FC = () => {
                       isAAATextContrast={wcagLevel === "AAA"}
                       lValues={currentLValues}
                       onDotClick={handleDotClick}
-                      activeDots={activeDots}
                       keyHexCode={keyHexCode}
                       isPickingColor={isPickingColor}
                       activeLValue={activeLValue}
                       clearActiveDotsSignal={clearActiveDotsSignal}
+                      activeTab={activeTab}
+                      activeSwatchId={
+                        isPickingColor ? activeSwatchId : selectedSwatchId
+                      }
                     />
                     {isFiltering && (
                       <div

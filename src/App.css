@@ -18,7 +18,10 @@
 }
 
 .main-content {
-  background: linear-gradient(#000000, #161616);
+  background: linear-gradient(
+    var(--color-neutral-850),
+    var(--color-neutral-800)
+  );
   flex: 1;
   overflow: hidden;
   padding: 24px;

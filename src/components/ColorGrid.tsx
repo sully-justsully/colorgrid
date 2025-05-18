@@ -27,11 +27,12 @@ interface ColorGridProps {
   isAAATextContrast: boolean;
   lValues: number[];
   onDotClick: (dot: Dot) => void;
-  activeDots: Set<string>;
   keyHexCode: string;
   isPickingColor: boolean;
   activeLValue: number | null;
-  clearActiveDotsSignal?: number;
+  clearActiveDotsSignal: number;
+  activeTab: "simple" | "advanced" | "custom";
+  activeSwatchId: number | null;
 }
 
 const ColorGrid: React.FC<ColorGridProps> = ({
@@ -42,17 +43,19 @@ const ColorGrid: React.FC<ColorGridProps> = ({
   isAAATextContrast,
   lValues,
   onDotClick,
-  activeDots,
   keyHexCode,
   isPickingColor,
   activeLValue,
   clearActiveDotsSignal,
+  activeTab,
+  activeSwatchId,
 }) => {
   const {
     handleDotClick: handleGridDotClick,
     isDotActive,
     clearActiveDots,
-  } = useColorGrid();
+    activeDots,
+  } = useColorGrid(activeTab);
 
   // Tooltip state
   const [hoveredDot, setHoveredDot] = useState<null | Dot>(null);
@@ -63,6 +66,15 @@ const ColorGrid: React.FC<ColorGridProps> = ({
     isLeftHalf: boolean;
   } | null>(null);
   const gridRef = useRef<HTMLDivElement>(null);
+
+  // Add a ref to track previous activeSwatchId
+  const prevActiveSwatchId = useRef(activeSwatchId);
+  useEffect(() => {
+    if (prevActiveSwatchId.current !== activeSwatchId) {
+      console.log("activeSwatchId changed:", activeSwatchId);
+      prevActiveSwatchId.current = activeSwatchId;
+    }
+  }, [activeSwatchId]);
 
   // Memoize the color cache calculation with improved caching
   const colorCache = useMemo(() => {
@@ -156,7 +168,10 @@ const ColorGrid: React.FC<ColorGridProps> = ({
             isFiltered = Math.abs(cached.labLightness - activeLValue) > 0.5;
           }
 
-          const isInActiveDots = isDotActive(dotKey);
+          const isInActiveDots =
+            activeSwatchId !== null
+              ? isDotActive(dotKey, activeSwatchId)
+              : false;
 
           const dot: Dot = {
             row,
@@ -187,28 +202,45 @@ const ColorGrid: React.FC<ColorGridProps> = ({
     isPickingColor,
     activeLValue,
     isDotActive,
+    activeSwatchId,
   ]);
 
   const handleDotClick = useCallback(
     (dot: Dot) => {
-      handleGridDotClick(dot);
-      onDotClick(dot);
+      if (isPickingColor && activeSwatchId !== null) {
+        handleGridDotClick(dot, activeSwatchId);
+        onDotClick(dot);
+      }
     },
-    [handleGridDotClick, onDotClick]
+    [handleGridDotClick, onDotClick, isPickingColor, activeSwatchId]
   );
 
   // Memoize the rendered dots
   const renderedDots = useMemo(() => {
     return dots.map((dot) => {
+      const dotKey = `${dot.row}-${dot.col}`;
+      // Highlight if this dot is active for any swatch
+      const isSelected = Array.from(activeDots.values()).includes(dotKey);
+      if (isSelected) {
+        console.log("Dot", dotKey, "isSelected for some swatch");
+      }
       return (
         <div
-          key={`${dot.row}-${dot.col}`}
+          key={dotKey}
           data-testid="color-dot"
           className={`dot ${dot.isActive ? "active" : ""} ${
             dot.isFiltered ? "filtered" : ""
-          } ${dot.isInActiveDots ? "selected" : ""}`}
+          } ${isSelected ? "selected" : ""}`}
           style={{ backgroundColor: dot.hexColor }}
-          onClick={() => handleDotClick(dot)}
+          onClick={() => {
+            console.log("Dot clicked:", {
+              dotKey,
+              isPickingColor,
+              activeSwatchId,
+              dot,
+            });
+            handleDotClick(dot);
+          }}
           onMouseEnter={(e) => {
             setHoveredDot(dot);
             // Calculate position relative to grid
@@ -232,7 +264,7 @@ const ColorGrid: React.FC<ColorGridProps> = ({
         />
       );
     });
-  }, [dots, handleDotClick]);
+  }, [dots, handleDotClick, activeDots, isPickingColor, activeSwatchId]);
 
   // Ref for tooltip to measure its size
   const tooltipRef = useRef<HTMLDivElement>(null);
@@ -292,6 +324,8 @@ const ColorGrid: React.FC<ColorGridProps> = ({
       clearActiveDots();
     }
   }, [clearActiveDotsSignal, clearActiveDots]);
+
+  console.log("ColorGrid render: activeSwatchId", activeSwatchId);
 
   return (
     <div

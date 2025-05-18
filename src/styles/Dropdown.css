@@ -14,7 +14,7 @@
   padding: 8px;
   min-width: 180px;
   z-index: 1000;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+  box-shadow: 0 2px 8px var(--color-overlay-shadow);
   cursor: pointer;
 }
 
@@ -29,7 +29,7 @@
   align-items: center;
   gap: 8px;
   padding: 8px;
-  color: white;
+  color: var(--color-neutral-00);
   cursor: pointer;
   font-size: 14px;
   font-family: "Lato", sans-serif;

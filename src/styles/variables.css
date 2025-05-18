@@ -1,61 +1,259 @@
 :root {
-  /* Brand Primary Colors */
-  --color-primary-00: #ffffff;
-  --color-primary-50: #f5f9ff;
-  --color-primary-100: #ebf3ff;
-  --color-primary-150: #deecff;
-  --color-primary-200: #cfe4ff;
-  --color-primary-250: #a8ceff;
-  --color-primary-300: rgb(126, 181, 252);
-  --color-primary-350: #589ffc;
-  --color-primary-400: #237ff7;
-  --color-primary-450: rgb(9, 101, 222);
-  --color-primary-500: #044eb0;
-  --color-primary-550: #013c8a;
-  --color-primary-600: #002b63;
-  --color-primary-650: #001b3d;
-  --color-primary-700: #001633;
-  --color-primary-750: #000f24;
-  --color-primary-800: #000914;
-  --color-primary-850: #000205;
+  /* Light Theme (Default) */
+  --color-primary-00-light: #ffffff;
+  --color-primary-50-light: #f5f9ff;
+  --color-primary-100-light: #ebf3ff;
+  --color-primary-150-light: #deecff;
+  --color-primary-200-light: #cfe4ff;
+  --color-primary-250-light: #a8ceff;
+  --color-primary-300-light: #7eb5fc;
+  --color-primary-350-light: #589ffc;
+  --color-primary-400-light: #237ff7;
+  --color-primary-450-light: #0965de;
+  --color-primary-500-light: #044eb0;
+  --color-primary-550-light: #013c8a;
+  --color-primary-600-light: #002b63;
+  --color-primary-650-light: #001b3d;
+  --color-primary-700-light: #001633;
+  --color-primary-750-light: #000f24;
+  --color-primary-800-light: #000914;
+  --color-primary-850-light: #000205;
 
-  /* Neutral Colors */
-  --color-neutral-00: #ffffff;
-  --color-neutral-50: #fafafa;
-  --color-neutral-100: #f2f3f5;
-  --color-neutral-150: #ebebeb;
-  --color-neutral-200: #e3e3e3;
-  --color-neutral-250: #cccccc;
-  --color-neutral-300: #b3b4b5;
-  --color-neutral-350: #9d9d9e;
-  --color-neutral-400: #7f8182;
-  --color-neutral-450: #696a6b;
-  --color-neutral-500: #515254;
-  --color-neutral-550: #3e4042;
-  --color-neutral-600: #2a2c2e;
-  --color-neutral-650: #1b1c1f;
-  --color-neutral-700: #131517;
-  --color-neutral-750: #0e0f12;
-  --color-neutral-800: #07080a;
-  --color-neutral-850: #010103;
+  --color-neutral-00-light: #ffffff;
+  --color-neutral-50-light: #fafafa;
+  --color-neutral-100-light: #f2f3f5;
+  --color-neutral-150-light: #ebebeb;
+  --color-neutral-200-light: #e3e3e3;
+  --color-neutral-250-light: #cccccc;
+  --color-neutral-300-light: #b3b4b5;
+  --color-neutral-350-light: #9d9d9e;
+  --color-neutral-400-light: #7f8182;
+  --color-neutral-450-light: #696a6b;
+  --color-neutral-500-light: #515254;
+  --color-neutral-550-light: #3e4042;
+  --color-neutral-600-light: #2a2c2e;
+  --color-neutral-650-light: #1b1c1f;
+  --color-neutral-700-light: #131517;
+  --color-neutral-750-light: #0e0f12;
+  --color-neutral-800-light: #07080a;
+  --color-neutral-850-light: #010103;
 
-  /* Error Colors */
-  --color-error-00: #ffffff;
-  --color-error-50: #fff7f9;
-  --color-error-100: #fff0f4;
-  --color-error-150: #ffe6ec;
-  --color-error-200: #ffd9e2;
-  --color-error-250: #ffbacb;
-  --color-error-300: #fc95af;
-  --color-error-350: #f77293;
-  --color-error-400: #ed3764;
-  --color-error-450: #d41343;
-  --color-error-500: #a80830;
-  --color-error-550: #850424;
-  --color-error-600: #5e0118;
-  --color-error-650: #400110;
-  --color-error-700: #36000d;
-  --color-error-750: #29000a;
-  --color-error-800: #1c0007;
-  --color-error-850: #050001;
+  --color-error-00-light: #ffffff;
+  --color-error-50-light: #fff7f9;
+  --color-error-100-light: #fff0f4;
+  --color-error-150-light: #ffe6ec;
+  --color-error-200-light: #ffd9e2;
+  --color-error-250-light: #ffbacb;
+  --color-error-300-light: #fc95af;
+  --color-error-350-light: #f77293;
+  --color-error-400-light: #ed3764;
+  --color-error-450-light: #d41343;
+  --color-error-500-light: #a80830;
+  --color-error-550-light: #850424;
+  --color-error-600-light: #5e0118;
+  --color-error-650-light: #400110;
+  --color-error-700-light: #36000d;
+  --color-error-750-light: #29000a;
+  --color-error-800-light: #1c0007;
+  --color-error-850-light: #050001;
+
+  --color-overlay-background-light: rgba(0, 0, 0, 0.64);
+  --color-overlay-shadow-light: rgba(0, 0, 0, 0.8);
+
+  /* Dark Theme */
+  --color-primary-00-dark: #000205;
+  --color-primary-50-dark: #000914;
+  --color-primary-100-dark: #000f24;
+  --color-primary-150-dark: #001633;
+  --color-primary-200-dark: #001b3d;
+  --color-primary-250-dark: #002b63;
+  --color-primary-300-dark: #013c8a;
+  --color-primary-350-dark: #044eb0;
+  --color-primary-400-dark: #0965de;
+  --color-primary-450-dark: #237ff7;
+  --color-primary-500-dark: #589ffc;
+  --color-primary-550-dark: #7eb5fc;
+  --color-primary-600-dark: #a8ceff;
+  --color-primary-650-dark: #cfe4ff;
+  --color-primary-700-dark: #deecff;
+  --color-primary-750-dark: #ebf3ff;
+  --color-primary-800-dark: #f5f9ff;
+  --color-primary-850-dark: #ffffff;
+
+  --color-neutral-00-dark: #010103;
+  --color-neutral-50-dark: #07080a;
+  --color-neutral-100-dark: #0e0f12;
+  --color-neutral-150-dark: #131517;
+  --color-neutral-200-dark: #1b1c1f;
+  --color-neutral-250-dark: #2a2c2e;
+  --color-neutral-300-dark: #3e4042;
+  --color-neutral-350-dark: #515254;
+  --color-neutral-400-dark: #696a6b;
+  --color-neutral-450-dark: #7f8182;
+  --color-neutral-500-dark: #9d9d9e;
+  --color-neutral-550-dark: #b3b4b5;
+  --color-neutral-600-dark: #cccccc;
+  --color-neutral-650-dark: #e3e3e3;
+  --color-neutral-700-dark: #ebebeb;
+  --color-neutral-750-dark: #f2f3f5;
+  --color-neutral-800-dark: #fafafa;
+  --color-neutral-850-dark: #ffffff;
+
+  --color-error-00-dark: #050001;
+  --color-error-50-dark: #1c0007;
+  --color-error-100-dark: #29000a;
+  --color-error-150-dark: #36000d;
+  --color-error-200-dark: #400110;
+  --color-error-250-dark: #5e0118;
+  --color-error-300-dark: #850424;
+  --color-error-350-dark: #a80830;
+  --color-error-400-dark: #d41343;
+  --color-error-450-dark: #ed3764;
+  --color-error-500-dark: #f77293;
+  --color-error-550-dark: #fc95af;
+  --color-error-600-dark: #ffbacb;
+  --color-error-650-dark: #ffd9e2;
+  --color-error-700-dark: #ffe6ec;
+  --color-error-750-dark: #fff0f4;
+  --color-error-800-dark: #fff7f9;
+  --color-error-850-dark: #ffffff;
+
+  --color-overlay-background-dark: rgba(255, 255, 255, 0.8);
+  --color-overlay-shadow-dark: rgba(0, 0, 0, 0.1);
+
+  /* Default to Light Theme */
+  --color-primary-00: var(--color-primary-00-light);
+  --color-primary-50: var(--color-primary-50-light);
+  --color-primary-100: var(--color-primary-100-light);
+  --color-primary-150: var(--color-primary-150-light);
+  --color-primary-200: var(--color-primary-200-light);
+  --color-primary-250: var(--color-primary-250-light);
+  --color-primary-300: var(--color-primary-300-light);
+  --color-primary-350: var(--color-primary-350-light);
+  --color-primary-400: var(--color-primary-400-light);
+  --color-primary-450: var(--color-primary-450-light);
+  --color-primary-500: var(--color-primary-500-light);
+  --color-primary-550: var(--color-primary-550-light);
+  --color-primary-600: var(--color-primary-600-light);
+  --color-primary-650: var(--color-primary-650-light);
+  --color-primary-700: var(--color-primary-700-light);
+  --color-primary-750: var(--color-primary-750-light);
+  --color-primary-800: var(--color-primary-800-light);
+  --color-primary-850: var(--color-primary-850-light);
+
+  --color-neutral-00: var(--color-neutral-00-light);
+  --color-neutral-50: var(--color-neutral-50-light);
+  --color-neutral-100: var(--color-neutral-100-light);
+  --color-neutral-150: var(--color-neutral-150-light);
+  --color-neutral-200: var(--color-neutral-200-light);
+  --color-neutral-250: var(--color-neutral-250-light);
+  --color-neutral-300: var(--color-neutral-300-light);
+  --color-neutral-350: var(--color-neutral-350-light);
+  --color-neutral-400: var(--color-neutral-400-light);
+  --color-neutral-450: var(--color-neutral-450-light);
+  --color-neutral-500: var(--color-neutral-500-light);
+  --color-neutral-550: var(--color-neutral-550-light);
+  --color-neutral-600: var(--color-neutral-600-light);
+  --color-neutral-650: var(--color-neutral-650-light);
+  --color-neutral-700: var(--color-neutral-700-light);
+  --color-neutral-750: var(--color-neutral-750-light);
+  --color-neutral-800: var(--color-neutral-800-light);
+  --color-neutral-850: var(--color-neutral-850-light);
+
+  --color-error-00: var(--color-error-00-light);
+  --color-error-50: var(--color-error-50-light);
+  --color-error-100: var(--color-error-100-light);
+  --color-error-150: var(--color-error-150-light);
+  --color-error-200: var(--color-error-200-light);
+  --color-error-250: var(--color-error-250-light);
+  --color-error-300: var(--color-error-300-light);
+  --color-error-350: var(--color-error-350-light);
+  --color-error-400: var(--color-error-400-light);
+  --color-error-450: var(--color-error-450-light);
+  --color-error-500: var(--color-error-500-light);
+  --color-error-550: var(--color-error-550-light);
+  --color-error-600: var(--color-error-600-light);
+  --color-error-650: var(--color-error-650-light);
+  --color-error-700: var(--color-error-700-light);
+  --color-error-750: var(--color-error-750-light);
+  --color-error-800: var(--color-error-800-light);
+  --color-error-850: var(--color-error-850-light);
+
+  --color-overlay-background: var(--color-overlay-background-light);
+  --color-overlay-shadow: var(--color-overlay-shadow-light);
+}
+
+/* Dark Theme */
+[data-theme="dark"] {
+  --color-primary-00: var(--color-primary-00-dark);
+  --color-primary-50: var(--color-primary-50-dark);
+  --color-primary-100: var(--color-primary-100-dark);
+  --color-primary-150: var(--color-primary-150-dark);
+  --color-primary-200: var(--color-primary-200-dark);
+  --color-primary-250: var(--color-primary-250-dark);
+  --color-primary-300: var(--color-primary-300-dark);
+  --color-primary-350: var(--color-primary-350-dark);
+  --color-primary-400: var(--color-primary-400-dark);
+  --color-primary-450: var(--color-primary-450-dark);
+  --color-primary-500: var(--color-primary-500-dark);
+  --color-primary-550: var(--color-primary-550-dark);
+  --color-primary-600: var(--color-primary-600-dark);
+  --color-primary-650: var(--color-primary-650-dark);
+  --color-primary-700: var(--color-primary-700-dark);
+  --color-primary-750: var(--color-primary-750-dark);
+  --color-primary-800: var(--color-primary-800-dark);
+  --color-primary-850: var(--color-primary-850-dark);
+
+  --color-neutral-00: var(--color-neutral-00-dark);
+  --color-neutral-50: var(--color-neutral-50-dark);
+  --color-neutral-100: var(--color-neutral-100-dark);
+  --color-neutral-150: var(--color-neutral-150-dark);
+  --color-neutral-200: var(--color-neutral-200-dark);
+  --color-neutral-250: var(--color-neutral-250-dark);
+  --color-neutral-300: var(--color-neutral-300-dark);
+  --color-neutral-350: var(--color-neutral-350-dark);
+  --color-neutral-400: var(--color-neutral-400-dark);
+  --color-neutral-450: var(--color-neutral-450-dark);
+  --color-neutral-500: var(--color-neutral-500-dark);
+  --color-neutral-550: var(--color-neutral-550-dark);
+  --color-neutral-600: var(--color-neutral-600-dark);
+  --color-neutral-650: var(--color-neutral-650-dark);
+  --color-neutral-700: var(--color-neutral-700-dark);
+  --color-neutral-750: var(--color-neutral-750-dark);
+  --color-neutral-800: var(--color-neutral-800-dark);
+  --color-neutral-850: var(--color-neutral-850-dark);
+
+  --color-error-00: var(--color-error-00-dark);
+  --color-error-50: var(--color-error-50-dark);
+  --color-error-100: var(--color-error-100-dark);
+  --color-error-150: var(--color-error-150-dark);
+  --color-error-200: var(--color-error-200-dark);
+  --color-error-250: var(--color-error-250-dark);
+  --color-error-300: var(--color-error-300-dark);
+  --color-error-350: var(--color-error-350-dark);
+  --color-error-400: var(--color-error-400-dark);
+  --color-error-450: var(--color-error-450-dark);
+  --color-error-500: var(--color-error-500-dark);
+  --color-error-550: var(--color-error-550-dark);
+  --color-error-600: var(--color-error-600-dark);
+  --color-error-650: var(--color-error-650-dark);
+  --color-error-700: var(--color-error-700-dark);
+  --color-error-750: var(--color-error-750-dark);
+  --color-error-800: var(--color-error-800-dark);
+  --color-error-850: var(--color-error-850-dark);
+
+  --color-overlay-background: var(--color-overlay-background-dark);
+  --color-overlay-shadow: var(--color-overlay-shadow-dark);
+}
+
+/* Make theme changes instant */
+:root,
+[data-theme="light"],
+[data-theme="dark"] {
+  transition: none !important;
+}
+
+/* Make theme changes instant */
+.theme-changing * {
+  transition: none !important;
 }

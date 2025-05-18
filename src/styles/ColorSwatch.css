@@ -19,6 +19,7 @@
   justify-content: space-between;
   padding: 0 8px;
   grid-column: span 3;
+  background-color: var(--color-overlay-background);
 }
 
 .color-swatch.active {
@@ -29,8 +30,8 @@
   color: var(--color-neutral-00);
   font-size: 14px;
   font-family: "Lato", sans-serif;
-  opacity: 0.9;
-  background-color: rgba(0, 0, 0, 0.64);
+  opacity: 1;
+  background-color: var(--color-overlay-background);
   padding: 4px 6px;
   border-radius: 4px;
 }
@@ -49,12 +50,12 @@
 }
 
 .white-dot {
-  color: var(--color-neutral-00);
+  color: white;
   opacity: 0.9;
 }
 
 .black-dot {
-  color: var(--color-neutral-850);
+  color: black;
   opacity: 0.9;
 }
 

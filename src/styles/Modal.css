@@ -4,7 +4,7 @@
   left: 0;
   width: 100vw;
   height: 100vh;
-  background: rgba(0, 0, 0, 0.64);
+  background: var(--color-overlay-background);
   backdrop-filter: blur(1px);
   display: flex;
   align-items: center;
@@ -12,6 +12,7 @@
   opacity: 0;
   z-index: 3333;
   transition: opacity 0.2s ease-in-out;
+  box-shadow: 0 4px 32px var(--color-overlay-shadow);
 }
 
 .modal-backdrop.open {
@@ -22,7 +23,7 @@
   background: var(--color-neutral-750);
   padding: 24px;
   border-radius: 8px;
-  box-shadow: 0 4px 32px rgba(0, 0, 0, 0.3);
+  box-shadow: 0 4px 32px var(--color-overlay-shadow);
   width: auto;
   position: relative;
   width: auto;

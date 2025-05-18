@@ -1,12 +1,12 @@
 .hex-tooltip {
-  background-color: rgba(0, 0, 0, 0.9);
+  background-color: var(--color-overlay-background);
   color: white;
   border-radius: 4px;
   font-size: 12px;
   white-space: nowrap;
   pointer-events: none;
   z-index: 9999;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+  box-shadow: 0 2px 8px var(--color-overlay-shadow);
   min-width: 100px;
   padding: 4px 8px;
 }
