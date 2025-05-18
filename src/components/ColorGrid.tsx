@@ -217,12 +217,13 @@ const ColorGrid: React.FC<ColorGridProps> = ({
 
   // Memoize the rendered dots
   const renderedDots = useMemo(() => {
+    // Get all active dot keys
+    const activeDotKeys = new Set(Array.from(activeDots.values()));
     return dots.map((dot) => {
       const dotKey = `${dot.row}-${dot.col}`;
-      // Highlight if this dot is active for any swatch
-      const isSelected = Array.from(activeDots.values()).includes(dotKey);
+      const isSelected = activeDotKeys.has(dotKey);
       if (isSelected) {
-        console.log("Dot", dotKey, "isSelected for some swatch");
+        console.log("Dot", dotKey, "isSelected for any swatch");
       }
       return (
         <div
