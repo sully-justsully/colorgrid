@@ -13,17 +13,27 @@
   border-radius: 4px;
   position: relative;
   cursor: pointer;
-  transition: all 0.2s;
   display: flex;
   align-items: center;
   justify-content: space-between;
   padding: 0 8px;
   grid-column: span 3;
   background-color: var(--color-overlay-background);
+  outline: none;
+}
+
+.color-swatch:focus {
+  outline: none;
+}
+
+.color-swatch:focus-visible {
+  outline: none;
 }
 
 .color-swatch.active {
-  outline: 2px solid var(--color-primary-500);
+  outline: 1px solid var(--color-primary-450);
+  animation: 2s infinite pulses;
+  z-index: 999;
 }
 
 .hex-label {
@@ -61,4 +71,16 @@
 
 .contrast-ratio {
   font-weight: 500;
+}
+
+@keyframes pulses {
+  0% {
+    box-shadow: 0 0 0 0px rgba(35, 127, 247, 0);
+  }
+  50% {
+    box-shadow: 0 0 8px 4px rgba(35, 127, 247, 0.8);
+  }
+  100% {
+    box-shadow: 0 0 0px 0px rgba(35, 127, 247, 0);
+  }
 }

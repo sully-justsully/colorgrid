@@ -431,6 +431,7 @@ const App: React.FC = () => {
               ? {
                   ...swatch,
                   hexColor: dot.hexColor,
+                  originalHexColor: swatch.hexColor,
                   whiteContrast: calculateContrastRatio(dot.hexColor),
                   blackContrast: calculateContrastRatio(
                     dot.hexColor,
@@ -468,6 +469,62 @@ const App: React.FC = () => {
           });
         }
       });
+    },
+    [isPickingColor, activeSwatchId, activeTab]
+  );
+
+  const handleDotHover = useCallback(
+    (dot: Dot | null) => {
+      if (isPickingColor && activeSwatchId !== null && dot) {
+        const setCurrentSwatches =
+          activeTab === "simple"
+            ? setSwatchesSimple
+            : activeTab === "advanced"
+            ? setSwatchesAdvanced
+            : setSwatchesCustom;
+
+        setCurrentSwatches((prevSwatches) =>
+          prevSwatches.map((swatch) =>
+            swatch.id === activeSwatchId
+              ? {
+                  ...swatch,
+                  hexColor: dot.hexColor,
+                  whiteContrast: calculateContrastRatio(dot.hexColor),
+                  blackContrast: calculateContrastRatio(
+                    dot.hexColor,
+                    "#000000"
+                  ),
+                }
+              : swatch
+          )
+        );
+      } else if (isPickingColor && activeSwatchId !== null && !dot) {
+        // Restore the original color when mouse leaves
+        const setCurrentSwatches =
+          activeTab === "simple"
+            ? setSwatchesSimple
+            : activeTab === "advanced"
+            ? setSwatchesAdvanced
+            : setSwatchesCustom;
+
+        setCurrentSwatches((prevSwatches) =>
+          prevSwatches.map((swatch) =>
+            swatch.id === activeSwatchId
+              ? {
+                  ...swatch,
+                  hexColor: swatch.originalHexColor || swatch.hexColor,
+                  whiteContrast: calculateContrastRatio(
+                    swatch.originalHexColor || swatch.hexColor
+                  ),
+                  blackContrast: calculateContrastRatio(
+                    swatch.originalHexColor || swatch.hexColor,
+                    "#000000"
+                  ),
+                }
+              : swatch
+          )
+        );
+      }
     },
     [isPickingColor, activeSwatchId, activeTab]
   );
@@ -1371,6 +1428,7 @@ const App: React.FC = () => {
                       isAAATextContrast={wcagLevel === "AAA"}
                       lValues={currentLValues}
                       onDotClick={handleDotClick}
+                      onDotHover={handleDotHover}
                       keyHexCode={keyHexCode}
                       isPickingColor={isPickingColor}
                       activeLValue={activeLValue}

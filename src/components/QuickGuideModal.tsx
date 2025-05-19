@@ -122,11 +122,11 @@ const QuickGuideModal: React.FC<QuickGuideModalProps> = ({ onClose }) => {
             <div className="guide-content">
               <h2 className="heading-lg">Finishing Up</h2>
               <p>
-                When you're all done, click on Download Palette and a
-                Figma-ready SVG file will be downloaded.
+                When you're all done, click on Download Palettes and you'll get
+                a Figma-ready SVG file.
               </p>
               <p>
-                Import the SVG into{"  "}
+                You can import the SVG into{"  "}
                 <a
                   target="_blank"
                   rel="noopener noreferrer"
@@ -134,7 +134,8 @@ const QuickGuideModal: React.FC<QuickGuideModalProps> = ({ onClose }) => {
                 >
                   Design System Variables
                 </a>
-                {"  "}to use your custom color system.
+                {"  "}to use your custom color system with over 400+ ready-to-go
+                color variables. Enjoy!
               </p>
             </div>
             <div className="guide-image">
@@ -158,7 +159,7 @@ const QuickGuideModal: React.FC<QuickGuideModalProps> = ({ onClose }) => {
             disabled={currentPage === 0}
           >
             <ChevronLeftIcon />
-            Previous
+            Back
           </button>
           <div className="guide-progress">
             {Array.from({ length: totalPages }).map((_, index) => (
@@ -169,7 +170,7 @@ const QuickGuideModal: React.FC<QuickGuideModalProps> = ({ onClose }) => {
             ))}
           </div>
           <button className="btn" onClick={handleNext}>
-            {currentPage === totalPages - 1 ? "Finish" : "Next"}
+            {currentPage === totalPages - 1 ? "Done" : "Next"}
             <ChevronRightIcon />
           </button>
         </div>

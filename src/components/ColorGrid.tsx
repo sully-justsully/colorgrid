@@ -27,6 +27,7 @@ interface ColorGridProps {
   isAAATextContrast: boolean;
   lValues: number[];
   onDotClick: (dot: Dot) => void;
+  onDotHover?: (dot: Dot | null) => void;
   keyHexCode: string;
   isPickingColor: boolean;
   activeLValue: number | null;
@@ -43,6 +44,7 @@ const ColorGrid: React.FC<ColorGridProps> = ({
   isAAATextContrast,
   lValues,
   onDotClick,
+  onDotHover,
   keyHexCode,
   isPickingColor,
   activeLValue,
@@ -145,8 +147,13 @@ const ColorGrid: React.FC<ColorGridProps> = ({
           const dotKey = `${row}-${col}`;
           let isFiltered = false;
 
-          // Skip filtering for the key hex code dot
-          if (!isActive) {
+          // Check if this dot is active for any swatch
+          const isActiveForAnySwatch = Array.from(activeDots.values()).includes(
+            dotKey
+          );
+
+          // Skip filtering for the key hex code dot or any active dot
+          if (!isActive && !isActiveForAnySwatch) {
             // Apply all filters in a single pass
             if (isFiltering && lValuesSet.size > 0) {
               isFiltered = !lValuesSet.has(cached.labLightness);
@@ -206,6 +213,7 @@ const ColorGrid: React.FC<ColorGridProps> = ({
     activeLValue,
     isDotActive,
     activeSwatchId,
+    activeDots,
   ]);
 
   const handleDotClick = useCallback(
@@ -251,57 +259,58 @@ const ColorGrid: React.FC<ColorGridProps> = ({
             const gridRect = gridRef.current?.getBoundingClientRect();
             const dotRect = (e.target as HTMLElement).getBoundingClientRect();
             if (gridRect) {
-              // Default offsets
+              // Calculate initial position
               let left = dotRect.left - gridRect.left;
               let top = dotRect.top - gridRect.top;
-              // Adjust for tooltip position
+
+              // Pre-calculate the final position based on dot location
               const isTopHalf = dot.row < 50;
               const isLeftHalf = dot.col < 50;
-              // We'll adjust after tooltip renders (see below)
+
+              // Adjust position based on dot location
+              if (isTopHalf) {
+                // Show below dot
+                top += 18; // dot height (10px) + gap (8px)
+              } else {
+                // Show above dot
+                top -= 78; // tooltip height (60px) + gap (8px) + dot height (10px)
+              }
+
+              if (!isLeftHalf) {
+                // Anchor right
+                left += 0; // move to right edge of dot
+                left -= 140; // shift left by tooltip width
+              }
+
               setTooltipPos({ left, top, isTopHalf, isLeftHalf });
+            }
+            // Call onDotHover if provided
+            if (onDotHover) {
+              onDotHover(dot);
             }
           }}
           onMouseLeave={() => {
             setHoveredDot(null);
             setTooltipPos(null);
+            // Call onDotHover with null if provided
+            if (onDotHover) {
+              onDotHover(null);
+            }
           }}
         />
       );
     });
-  }, [dots, handleDotClick, activeDots, isPickingColor, activeSwatchId]);
+  }, [
+    dots,
+    handleDotClick,
+    activeDots,
+    isPickingColor,
+    activeSwatchId,
+    onDotHover,
+  ]);
 
   // Ref for tooltip to measure its size
   const tooltipRef = useRef<HTMLDivElement>(null);
-
-  // After tooltip renders, adjust its position based on its size and the intended anchor
-  useEffect(() => {
-    if (hoveredDot && tooltipPos && tooltipRef.current) {
-      const tooltipRect = tooltipRef.current.getBoundingClientRect();
-      const gridRect = gridRef.current?.getBoundingClientRect();
-      if (!gridRect) return;
-      let left = tooltipPos.left;
-      let top = tooltipPos.top;
-      // Position logic
-      if (tooltipPos.isTopHalf) {
-        // Show below dot
-        top += 20; // dot height (10px) + gap (10px)
-      } else {
-        // Show above dot
-        top -= tooltipRect.height + 12; // gap (10px) + tooltip height
-      }
-      if (tooltipPos.isLeftHalf) {
-        // Anchor left
-        // no change to left
-      } else {
-        // Anchor right
-        left += 10; // move to right edge of dot
-        left -= tooltipRect.width; // shift left by tooltip width
-      }
-      setTooltipPos((pos) => pos && { ...pos, left, top });
-    }
-    // Only run after tooltip renders
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [hoveredDot]);
 
   // Tooltip position class
   let tooltipPositionClass = "";

@@ -12,9 +12,10 @@ export interface Dot {
 export interface ColorSwatch {
   id: number;
   hexColor: string;
-  lValue: number;
+  originalHexColor?: string;
   whiteContrast: number;
   blackContrast: number;
+  lValue: number;
 }
 
 export interface ColorCache {
