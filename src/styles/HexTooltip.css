@@ -1,6 +1,5 @@
 .hex-tooltip {
-  background-color: var(--color-overlay-background);
-  color: white;
+  background-color: var(--color-neutral-750);
   border-radius: 4px;
   font-size: 12px;
   white-space: nowrap;
@@ -12,7 +11,7 @@
 }
 
 .hex-value {
-  color: white;
+  color: var(--color-neutral-00);
   font-size: 14px;
   font-family: "Lato", sans-serif;
   font-weight: 600;
@@ -23,7 +22,7 @@
 
 .lab-value,
 .hsb-value {
-  color: var(--color-neutral-400);
+  color: var(--color-neutral-350);
   font-size: 14px;
   font-family: "Lato", sans-serif;
   font-weight: 400;

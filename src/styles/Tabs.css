@@ -46,6 +46,6 @@
 
 .tab.active::after {
   height: 2px;
-  background: var(--color-primary-450);
+  background: var(--color-primary-500);
   border-radius: 2px 2px 0 0;
 }

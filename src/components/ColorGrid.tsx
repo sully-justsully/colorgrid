@@ -145,27 +145,30 @@ const ColorGrid: React.FC<ColorGridProps> = ({
           const dotKey = `${row}-${col}`;
           let isFiltered = false;
 
-          // Apply all filters in a single pass
-          if (isFiltering && lValuesSet.size > 0) {
-            isFiltered = !lValuesSet.has(cached.labLightness);
-          }
+          // Skip filtering for the key hex code dot
+          if (!isActive) {
+            // Apply all filters in a single pass
+            if (isFiltering && lValuesSet.size > 0) {
+              isFiltered = !lValuesSet.has(cached.labLightness);
+            }
 
-          if (
-            !isFiltered &&
-            (isATextContrast || isAATextContrast || isAAATextContrast)
-          ) {
-            const contrastRatio = calculateContrastRatio(cached.hexColor);
-            isFiltered =
-              contrastRatio <
-              Math.max(
-                contrastThresholds.a,
-                contrastThresholds.aa,
-                contrastThresholds.aaa
-              );
-          }
+            if (
+              !isFiltered &&
+              (isATextContrast || isAATextContrast || isAAATextContrast)
+            ) {
+              const contrastRatio = calculateContrastRatio(cached.hexColor);
+              isFiltered =
+                contrastRatio <
+                Math.max(
+                  contrastThresholds.a,
+                  contrastThresholds.aa,
+                  contrastThresholds.aaa
+                );
+            }
 
-          if (isPickingColor && activeLValue !== null) {
-            isFiltered = Math.abs(cached.labLightness - activeLValue) > 0.5;
+            if (isPickingColor && activeLValue !== null) {
+              isFiltered = Math.abs(cached.labLightness - activeLValue) > 0.5;
+            }
           }
 
           const isInActiveDots =

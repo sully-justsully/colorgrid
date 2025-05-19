@@ -51,6 +51,8 @@ import "./styles/Ramp.css";
 import { ReactComponent as AddIcon } from "./icons/add-alt.svg";
 import { ReactComponent as ResetIcon } from "./icons/reset.svg";
 import ButtonDemo from "./ButtonDemo";
+import { ReactComponent as InfoIcon } from "./icons/info.svg";
+import QuickGuideModal from "./components/QuickGuideModal";
 
 const STORAGE_KEY = "colorGridSwatches";
 const HEX_STORAGE_KEY = "colorGridHexCode";
@@ -218,6 +220,7 @@ const App: React.FC = () => {
     const savedTheme = localStorage.getItem("theme");
     return savedTheme ? savedTheme === "dark" : false;
   });
+  const [showQuickGuide, setShowQuickGuide] = useState(false);
 
   const dropdownRef = useRef<HTMLDivElement>(null);
   const location = useLocation();
@@ -269,31 +272,29 @@ const App: React.FC = () => {
 
   useEffect(() => {
     localStorage.setItem(HEX_STORAGE_KEY, keyHexCode);
-    // Update Custom mode swatches when key hex code changes
-    if (activeTab === "custom") {
-      const r = parseInt(keyHexCode.slice(0, 2), 16);
-      const g = parseInt(keyHexCode.slice(2, 4), 16);
-      const b = parseInt(keyHexCode.slice(4, 6), 16);
-      const lValue = Math.round(getRgbLabLightness(r, g, b));
+    // Always update Custom mode swatches when key hex code changes
+    const r = parseInt(keyHexCode.slice(0, 2), 16);
+    const g = parseInt(keyHexCode.slice(2, 4), 16);
+    const b = parseInt(keyHexCode.slice(4, 6), 16);
+    const lValue = Math.round(getRgbLabLightness(r, g, b));
 
-      setSwatchesCustom((prevSwatches) => {
-        // Update only the swatch with ID 1 (key hex code swatch)
-        return prevSwatches.map((swatch) =>
-          swatch.id === 1
-            ? {
-                ...swatch,
-                lValue,
-                hexColor: `#${keyHexCode}`,
-                whiteContrast: calculateContrastRatio(`#${keyHexCode}`),
-                blackContrast: calculateContrastRatio(
-                  `#${keyHexCode}`,
-                  "#000000"
-                ),
-              }
-            : swatch
-        );
-      });
-    }
+    setSwatchesCustom((prevSwatches) => {
+      // Update only the swatch with ID 1 (key hex code swatch)
+      return prevSwatches.map((swatch) =>
+        swatch.id === 1
+          ? {
+              ...swatch,
+              lValue,
+              hexColor: `#${keyHexCode}`,
+              whiteContrast: calculateContrastRatio(`#${keyHexCode}`),
+              blackContrast: calculateContrastRatio(
+                `#${keyHexCode}`,
+                "#000000"
+              ),
+            }
+          : swatch
+      );
+    });
   }, [keyHexCode]);
 
   useEffect(() => {
@@ -1453,6 +1454,17 @@ const App: React.FC = () => {
             </button>
           </div>
         </Modal>
+      )}
+      <button
+        className="btn-fab"
+        onClick={() => setShowQuickGuide(true)}
+        aria-label="Quick Guide"
+      >
+        <InfoIcon />
+        Quick Guide
+      </button>
+      {showQuickGuide && (
+        <QuickGuideModal onClose={() => setShowQuickGuide(false)} />
       )}
     </div>
   );

@@ -135,7 +135,7 @@ input[type="number"]::-webkit-inner-spin-button {
 }
 
 input:checked + .toggle-slider {
-  background-color: var(--color-primary-450);
+  background-color: var(--color-primary-500);
 }
 
 input:checked + .toggle-slider:before {

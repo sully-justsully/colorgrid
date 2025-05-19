@@ -189,7 +189,7 @@ body.drawer-open {
 
 @keyframes pulse {
   0% {
-    box-shadow: 0 0 0 0 var(--color-primary-450);
+    box-shadow: 0 0 0 0 var(--color-primary-500);
   }
   50% {
     box-shadow: 0 0 24px 1px rgba(9, 101, 222, 0.3);
