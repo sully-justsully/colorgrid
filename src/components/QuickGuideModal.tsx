@@ -82,13 +82,16 @@ const QuickGuideModal: React.FC<QuickGuideModalProps> = ({ onClose }) => {
               <h2 className="heading-lg">Using Color Picking Mode</h2>
               <p>
                 Click on any swatch in the left drawer to begin create your
-                color palette. Follow the simple guide lines if need help
-                creating consistent families.
+                color palette.
               </p>
               <p>
-                Adjust the inputs next to your swatch if you want more or less
-                difference between the swatches. When you're done, click on View
-                Contrast Grid to see which color combinations are accessible.
+                <strong>Hint:</strong> If you want help creating a cohesive
+                family, pick one of the guide lines and select whichever dots
+                intersect with the line.
+              </p>
+              <p>
+                When you're done, click on 'View Contrast Grid' to see which
+                color combinations are accessible.
               </p>
             </div>
             <div className="guide-image">
@@ -102,13 +105,13 @@ const QuickGuideModal: React.FC<QuickGuideModalProps> = ({ onClose }) => {
             <div className="guide-content">
               <h2 className="heading-lg">Saving to Palette Creator</h2>
               <p>
-                The Palette Creator helps you organize your color swatches into
-                semantic color families that you can import into your Figma
+                Click on 'Save to Palette Creator' to save your color swatches
+                as semantic color families which you can import into your Figma
                 files.
               </p>
               <p>
-                Save up 8 color families at a time. You can always come back and
-                replace families if you need.
+                You can save up 8 color families at a time and always come back
+                and replace families if you need.
               </p>
             </div>
             <div className="guide-image">
@@ -122,8 +125,8 @@ const QuickGuideModal: React.FC<QuickGuideModalProps> = ({ onClose }) => {
             <div className="guide-content">
               <h2 className="heading-lg">Finishing Up</h2>
               <p>
-                When you're all done, click on Download Palettes and you'll get
-                a Figma-ready SVG file.
+                When you're all done, click on 'Download Palettes' and you'll
+                get a Figma-ready SVG file.
               </p>
               <p>
                 You can import the SVG into{"  "}
