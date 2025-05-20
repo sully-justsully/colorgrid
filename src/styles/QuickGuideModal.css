@@ -1,0 +1,140 @@
+/* Modal Base Styles */
+.modal-backdrop {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background: var(--color-overlay-background);
+  backdrop-filter: blur(1px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0;
+  z-index: 3333;
+  transition: opacity 0.2s ease-in-out;
+}
+
+.modal-backdrop.open {
+  opacity: 1;
+}
+
+.modal-content {
+  background: var(--color-neutral-750);
+  padding: 16px;
+  border-radius: 8px;
+  box-shadow: 0 4px 32px var(--color-overlay-shadow);
+  width: auto;
+  position: relative;
+}
+
+/* Guide Container Styles */
+.guide-container {
+  width: 560px;
+  height: auto;
+  display: flex;
+  flex-direction: column;
+}
+
+.guide-page {
+  height: 328px;
+  display: flex;
+  gap: 8px;
+  padding: 8px;
+  margin-bottom: 16px;
+}
+
+.guide-content {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  overflow-y: auto;
+  color: var(--color-neutral-350);
+}
+
+.guide-image {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 312px;
+}
+
+.guide-content p {
+  margin-bottom: 0;
+}
+
+.guide-content ul,
+.guide-content ol {
+  margin: 0;
+  padding-left: 16px;
+}
+
+.guide-content li {
+  margin-bottom: 8px;
+}
+
+.guide-content li:last-child {
+  margin-bottom: 0;
+}
+
+.guide-navigation {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding-top: 16px;
+  border-top: 1px solid var(--color-neutral-600);
+}
+
+.guide-progress {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.guide-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--color-neutral-500);
+  transition: all 0.2s;
+}
+
+.guide-dot.active {
+  background: var(--color-primary-450);
+  transform: scale(1.2);
+}
+
+/* Prevent scrolling when modal is open */
+body.modal-open {
+  overflow: hidden;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+.guide-image svg {
+  animation: fadeIn 0.3s ease-out;
+  width: 100%;
+  height: 100%;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .guide-page {
+    flex-direction: column;
+    height: auto;
+  }
+
+  .guide-image {
+    width: 100%;
+    min-height: 200px;
+  }
+}
