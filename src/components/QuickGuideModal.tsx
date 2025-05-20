@@ -1,8 +1,14 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { ReactComponent as InfoIcon } from "../icons/info.svg";
 import { ReactComponent as ChevronRightIcon } from "../icons/chevron-right.svg";
 import { ReactComponent as ChevronLeftIcon } from "../icons/chevron-left.svg";
-import Modal from "./Modal";
+import Step1HueRotateAnimation from "./Step1HueRotateAnimation";
+import Step2KeyframeAnimation from "./Step2KeyframeAnimation";
+import Step3KeyframeAnimation from "./Step3KeyframeAnimation";
+import Step4KeyframeAnimation from "./Step4KeyframeAnimation";
+import Step5KeyframeAnimation from "./Step5KeyframeAnimation";
+import AreYouSureModal from "./AreYouSureModal";
+import "../styles/QuickGuideModal.css";
 
 interface QuickGuideModalProps {
   onClose: () => void;
@@ -11,6 +17,13 @@ interface QuickGuideModalProps {
 const QuickGuideModal: React.FC<QuickGuideModalProps> = ({ onClose }) => {
   const [currentPage, setCurrentPage] = useState(0);
   const totalPages = 5;
+
+  useEffect(() => {
+    document.body.classList.add("modal-open");
+    return () => {
+      document.body.classList.remove("modal-open");
+    };
+  }, []);
 
   const handleNext = () => {
     if (currentPage < totalPages - 1) {
@@ -39,12 +52,12 @@ const QuickGuideModal: React.FC<QuickGuideModalProps> = ({ onClose }) => {
                 as a reference point.
               </p>
               <p>
-                Or maybe you just need a new neutral, success, and error
-                families? Pick a hue and jump right in!
+                Maybe you just need a new neutral, success, or error family?
+                Pick a hue and jump right in!
               </p>
             </div>
             <div className="guide-image">
-              {/* Placeholder for hex code visualization */}
+              <Step1HueRotateAnimation />
             </div>
           </div>
         );
@@ -63,7 +76,7 @@ const QuickGuideModal: React.FC<QuickGuideModalProps> = ({ onClose }) => {
               </p>
               <p>
                 <strong>Advanced: </strong>
-                Never run out of options with 18 swatches per family.
+                Make things robust with 18 swatches per family.
               </p>
               <p>
                 <strong>Custom: </strong>
@@ -71,7 +84,7 @@ const QuickGuideModal: React.FC<QuickGuideModalProps> = ({ onClose }) => {
               </p>
             </div>
             <div className="guide-image">
-              {/* Placeholder for color swatch visualization */}
+              <Step2KeyframeAnimation />
             </div>
           </div>
         );
@@ -95,7 +108,7 @@ const QuickGuideModal: React.FC<QuickGuideModalProps> = ({ onClose }) => {
               </p>
             </div>
             <div className="guide-image">
-              {/* Placeholder for color picking visualization */}
+              <Step3KeyframeAnimation />
             </div>
           </div>
         );
@@ -115,7 +128,7 @@ const QuickGuideModal: React.FC<QuickGuideModalProps> = ({ onClose }) => {
               </p>
             </div>
             <div className="guide-image">
-              {/* Placeholder for palette creator visualization */}
+              <Step4KeyframeAnimation />
             </div>
           </div>
         );
@@ -129,20 +142,20 @@ const QuickGuideModal: React.FC<QuickGuideModalProps> = ({ onClose }) => {
                 get a Figma-ready SVG file.
               </p>
               <p>
-                You can import the SVG into{"  "}
+                You can import the SVG into{" "}
                 <a
+                  href="https://www.figma.com/community/file/1428517491497047139/design-system-variables-midnight-v-2-0"
                   target="_blank"
                   rel="noopener noreferrer"
-                  href="https://www.figma.com/community/file/1428517491497047139/design-system-variables-midnight-v-2-0"
                 >
-                  Design System Variables
-                </a>
-                {"  "}to use your custom color system with over 400+ ready-to-go
-                color variables. Enjoy!
+                  Design System Variables — Midnight v2.0
+                </a>{" "}
+                to use your custom color system with over 400+ ready-to-go color
+                variables. Enjoy!
               </p>
             </div>
             <div className="guide-image">
-              {/* Placeholder for download visualization */}
+              <Step5KeyframeAnimation />
             </div>
           </div>
         );
@@ -152,7 +165,7 @@ const QuickGuideModal: React.FC<QuickGuideModalProps> = ({ onClose }) => {
   };
 
   return (
-    <Modal onClose={onClose}>
+    <AreYouSureModal onClose={onClose}>
       <div className="guide-container">
         {renderPage()}
         <div className="guide-navigation">
@@ -178,7 +191,7 @@ const QuickGuideModal: React.FC<QuickGuideModalProps> = ({ onClose }) => {
           </button>
         </div>
       </div>
-    </Modal>
+    </AreYouSureModal>
   );
 };
 
