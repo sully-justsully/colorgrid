@@ -27,8 +27,8 @@ import "./styles/HexTooltip.css";
 import "./styles/ExportStyles.css";
 import "./styles/Header.css";
 import "./styles/RightDrawer.css";
-import Modal from "./components/Modal";
-import "./styles/Modal.css";
+import AreYouSureModal from "./components/AreYouSureModal";
+import "./styles/AreYouSureModal.css";
 import "./styles/Button.css";
 import "./styles/Input.css";
 import "./styles/Dropdown.css";
@@ -53,6 +53,9 @@ import { ReactComponent as ResetIcon } from "./icons/reset.svg";
 import ButtonDemo from "./ButtonDemo";
 import { ReactComponent as InfoIcon } from "./icons/info.svg";
 import QuickGuideModal from "./components/QuickGuideModal";
+import ScorePillDemo from "./pages/ScorePillDemo";
+import ScorePill from "./components/ScorePill";
+import { evaluateColorSystem } from "./utils/evaluateColorSystem";
 
 const STORAGE_KEY = "colorGridSwatches";
 const HEX_STORAGE_KEY = "colorGridHexCode";
@@ -128,6 +131,9 @@ const App: React.FC = () => {
   const [activeSwatchId, setActiveSwatchId] = useState<number | null>(null);
   const [selectedSwatchId, setSelectedSwatchId] = useState<number | null>(null);
   const [activeLValue, setActiveLValue] = useState<number | null>(null);
+  const [lastSelectedColor, setLastSelectedColor] = useState<string | null>(
+    null
+  );
   const [showFiltersDropdown, setShowFiltersDropdown] = useState(false);
   const [activeTab, setActiveTab] = useState<"simple" | "advanced" | "custom">(
     "simple"
@@ -179,13 +185,13 @@ const App: React.FC = () => {
   const [isHexValid, setIsHexValid] = useState(true);
   const [isHexDirty, setIsHexDirty] = useState(false);
   const [clearActiveDotsSignal, setClearActiveDotsSignal] = useState(0);
-  const [isPaletteCreatorOpen, setIsPaletteCreatorOpen] = useState(false);
+  const [isColorSystemOpen, setIsColorSystemOpen] = useState(false);
   const [pulsingRectangle, setPulsingRectangle] = useState<string | null>(null);
   const [savedSwatches, setSavedSwatches] = useState<{
     [key: string]: ColorSwatchType[];
   }>(() => {
     // Check for palettes under the new key first
-    const savedPalettes = localStorage.getItem("paletteCreatorPalettes");
+    const savedPalettes = localStorage.getItem("colorSystemPalettes");
     if (savedPalettes) {
       try {
         return JSON.parse(savedPalettes);
@@ -201,7 +207,7 @@ const App: React.FC = () => {
       try {
         const parsedOldPalettes = JSON.parse(oldPalettes);
         // Save to new key
-        localStorage.setItem("paletteCreatorPalettes", oldPalettes);
+        localStorage.setItem("colorSystemPalettes", oldPalettes);
         // Clean up old data
         localStorage.removeItem("systemCreatorPalettes");
         return parsedOldPalettes;
@@ -371,6 +377,25 @@ const App: React.FC = () => {
       if (selectedSwatch) {
         setActiveLValue(selectedSwatch.lValue);
 
+        // Store the original color when entering color picking mode
+        const setCurrentSwatches =
+          activeTab === "simple"
+            ? setSwatchesSimple
+            : activeTab === "advanced"
+            ? setSwatchesAdvanced
+            : setSwatchesCustom;
+
+        setCurrentSwatches((prevSwatches) =>
+          prevSwatches.map((swatch) =>
+            swatch.id === id
+              ? {
+                  ...swatch,
+                  originalHexColor: swatch.hexColor,
+                }
+              : swatch
+          )
+        );
+
         // Track color picker activation
         if (typeof window.gtag !== "undefined") {
           window.gtag("event", "color_picker_activate", {
@@ -442,6 +467,9 @@ const App: React.FC = () => {
           )
         );
 
+        // Update last selected color
+        setLastSelectedColor(dot.hexColor);
+
         // Track color selection
         if (typeof window.gtag !== "undefined") {
           window.gtag("event", "color_selected", {
@@ -475,7 +503,7 @@ const App: React.FC = () => {
 
   const handleDotHover = useCallback(
     (dot: Dot | null) => {
-      if (isPickingColor && activeSwatchId !== null && dot) {
+      if (isPickingColor && activeSwatchId !== null) {
         const setCurrentSwatches =
           activeTab === "simple"
             ? setSwatchesSimple
@@ -484,9 +512,11 @@ const App: React.FC = () => {
             : setSwatchesCustom;
 
         setCurrentSwatches((prevSwatches) =>
-          prevSwatches.map((swatch) =>
-            swatch.id === activeSwatchId
-              ? {
+          prevSwatches.map((swatch) => {
+            if (swatch.id === activeSwatchId) {
+              // If we have a dot, use its color
+              if (dot) {
+                return {
                   ...swatch,
                   hexColor: dot.hexColor,
                   whiteContrast: calculateContrastRatio(dot.hexColor),
@@ -494,35 +524,24 @@ const App: React.FC = () => {
                     dot.hexColor,
                     "#000000"
                   ),
-                }
-              : swatch
-          )
-        );
-      } else if (isPickingColor && activeSwatchId !== null && !dot) {
-        // Restore the original color when mouse leaves
-        const setCurrentSwatches =
-          activeTab === "simple"
-            ? setSwatchesSimple
-            : activeTab === "advanced"
-            ? setSwatchesAdvanced
-            : setSwatchesCustom;
+                };
+              }
 
-        setCurrentSwatches((prevSwatches) =>
-          prevSwatches.map((swatch) =>
-            swatch.id === activeSwatchId
-              ? {
-                  ...swatch,
-                  hexColor: swatch.originalHexColor || swatch.hexColor,
-                  whiteContrast: calculateContrastRatio(
-                    swatch.originalHexColor || swatch.hexColor
-                  ),
-                  blackContrast: calculateContrastRatio(
-                    swatch.originalHexColor || swatch.hexColor,
-                    "#000000"
-                  ),
-                }
-              : swatch
-          )
+              // If no dot (hovering off), restore to original color
+              return {
+                ...swatch,
+                hexColor: swatch.originalHexColor || swatch.hexColor,
+                whiteContrast: calculateContrastRatio(
+                  swatch.originalHexColor || swatch.hexColor
+                ),
+                blackContrast: calculateContrastRatio(
+                  swatch.originalHexColor || swatch.hexColor,
+                  "#000000"
+                ),
+              };
+            }
+            return swatch;
+          })
         );
       }
     },
@@ -803,8 +822,8 @@ const App: React.FC = () => {
     }
   };
 
-  const handleSaveToPaletteCreator = () => {
-    setIsPaletteCreatorOpen(true);
+  const handleSaveToColorSystem = () => {
+    setIsColorSystemOpen(true);
     setIsSavingMode(true);
     setPulsingRectangle("all");
   };
@@ -844,14 +863,11 @@ const App: React.FC = () => {
   };
 
   useEffect(() => {
-    localStorage.setItem(
-      "paletteCreatorPalettes",
-      JSON.stringify(savedSwatches)
-    );
+    localStorage.setItem("colorSystemPalettes", JSON.stringify(savedSwatches));
   }, [savedSwatches]);
 
   const handleDrawerClose = () => {
-    setIsPaletteCreatorOpen(false);
+    setIsColorSystemOpen(false);
     setIsSavingMode(false);
     setPulsingRectangle(null);
   };
@@ -864,7 +880,7 @@ const App: React.FC = () => {
           setIsPickingColor(false);
           setActiveSwatchId(null);
           setActiveLValue(null);
-        } else if (isPaletteCreatorOpen) {
+        } else if (isColorSystemOpen) {
           handleDrawerClose();
         }
       }
@@ -874,7 +890,7 @@ const App: React.FC = () => {
     return () => {
       document.removeEventListener("keydown", handleKeyDown);
     };
-  }, [isPickingColor, isPaletteCreatorOpen]);
+  }, [isPickingColor, isColorSystemOpen]);
 
   // Turn on filter after 320ms
   useEffect(() => {
@@ -892,7 +908,7 @@ const App: React.FC = () => {
   };
 
   useEffect(() => {
-    if (isPaletteCreatorOpen) {
+    if (isColorSystemOpen) {
       document.body.classList.add("drawer-open");
     } else {
       document.body.classList.remove("drawer-open");
@@ -900,7 +916,7 @@ const App: React.FC = () => {
     return () => {
       document.body.classList.remove("drawer-open");
     };
-  }, [isPaletteCreatorOpen]);
+  }, [isColorSystemOpen]);
 
   useEffect(() => {
     document.documentElement.setAttribute(
@@ -1024,12 +1040,10 @@ const App: React.FC = () => {
                   </div>
                   <button
                     className="btn"
-                    onClick={() =>
-                      setIsPaletteCreatorOpen(!isPaletteCreatorOpen)
-                    }
+                    onClick={() => setIsColorSystemOpen(!isColorSystemOpen)}
                   >
                     <ColorIcon />
-                    Palette Creator
+                    Color System
                   </button>
                   <button
                     className="btn btn-secondary btn-icon-only"
@@ -1046,10 +1060,10 @@ const App: React.FC = () => {
               </header>
 
               <div
-                className={`right-drawer ${isPaletteCreatorOpen ? "open" : ""}`}
+                className={`right-drawer ${isColorSystemOpen ? "open" : ""}`}
               >
                 <div className="drawer-header">
-                  <span className="drawer-title">Palette Creator</span>
+                  <span className="drawer-title">Color System</span>
                   <div className="drawer-actions">
                     <button
                       className="btn"
@@ -1057,7 +1071,7 @@ const App: React.FC = () => {
                       disabled={Object.keys(savedSwatches).length === 0}
                     >
                       <DownloadIcon />
-                      Download Palettes
+                      Download System
                     </button>
                     <button
                       className="btn-secondary btn-icon-only"
@@ -1102,69 +1116,92 @@ const App: React.FC = () => {
                       title: "Custom 3",
                       text: "Custom 3 section for additional color swatches.",
                     },
-                  ].map((section, idx) => (
-                    <div className="right-drawer-section" key={section.title}>
-                      <div className="section-title">{section.title}</div>
-                      <div className="section-desc">{section.text}</div>
-                      <div className="section-row">
-                        <div
-                          className={
-                            savedSwatches[
-                              section.title.toLowerCase().replace(/\s+/g, "-")
-                            ]
-                              ? `filled-state${
-                                  isSavingMode ? " saving-mode pulsing" : ""
-                                }`
-                              : `empty-state${
-                                  pulsingRectangle === "all" ? " pulsing" : ""
-                                }${isSavingMode ? " saving-mode" : ""}`
-                          }
-                          onClick={() => handleRectangleClick(section.title)}
-                        >
-                          {savedSwatches[
-                            section.title.toLowerCase().replace(/\s+/g, "-")
-                          ]?.map((swatch) => (
-                            <div
-                              key={swatch.id}
-                              className="color-swatch"
-                              style={{
-                                backgroundColor: swatch.hexColor,
-                                height: "100%",
-                                border: "1px solid #222",
-                              }}
-                            />
-                          ))}
-                        </div>
-                        <div style={{ display: "flex", gap: "4px" }}>
-                          {/* <button
-                            className="btn btn-icon-only"
-                            aria-label="Edit"
-                          >
-                            <PencilIcon />
-                          </button> */}
-                          <button
-                            className="btn btn-destructive btn-icon-only"
-                            aria-label="Remove"
-                            onClick={() => handleRemovePalette(section.title)}
-                            disabled={
-                              !savedSwatches[
-                                section.title.toLowerCase().replace(/\s+/g, "-")
-                              ]
+                  ].map((section, idx) => {
+                    const sectionKey = section.title
+                      .toLowerCase()
+                      .replace(/\s+/g, "-");
+                    const palette = savedSwatches[sectionKey] || [];
+                    // Extract hex colors for evaluation
+                    const hexColors = palette.map((swatch) => swatch.hexColor);
+                    let scores = null;
+                    if (hexColors.length > 0) {
+                      scores = evaluateColorSystem(hexColors);
+                    }
+                    return (
+                      <div className="right-drawer-section" key={section.title}>
+                        <div className="section-title">{section.title}</div>
+                        <div className="section-desc">{section.text}</div>
+                        <div className="section-row">
+                          <div
+                            className={
+                              savedSwatches[sectionKey]
+                                ? `filled-state${
+                                    isSavingMode ? " saving-mode pulsing" : ""
+                                  }`
+                                : `empty-state${
+                                    pulsingRectangle === "all" ? " pulsing" : ""
+                                  }${isSavingMode ? " saving-mode" : ""}`
                             }
+                            onClick={() => handleRectangleClick(section.title)}
                           >
-                            <TrashIcon />
-                          </button>
+                            {palette.map((swatch) => (
+                              <div
+                                key={swatch.id}
+                                className="color-swatch"
+                                style={{
+                                  backgroundColor: swatch.hexColor,
+                                  height: "100%",
+                                  border: "1px solid #222",
+                                }}
+                              />
+                            ))}
+                          </div>
+                          <div style={{ display: "flex", gap: "4px" }}>
+                            {/* <button
+                              className="btn btn-icon-only"
+                              aria-label="Edit"
+                            >
+                              <PencilIcon />
+                            </button> */}
+                            <button
+                              className="btn btn-destructive btn-icon-only"
+                              aria-label="Remove"
+                              onClick={() => handleRemovePalette(section.title)}
+                              disabled={!savedSwatches[sectionKey]}
+                            >
+                              <TrashIcon />
+                            </button>
+                          </div>
+                        </div>
+                        {/* Score Pills Row */}
+                        <div
+                          style={{
+                            display: "flex",
+                            gap: "12px",
+                            marginTop: 12,
+                          }}
+                        >
+                          <ScorePill
+                            score={scores ? scores.overallScore : NaN}
+                            label="Overall:"
+                          />
+                          <ScorePill
+                            score={scores ? scores.visualQualityScore : NaN}
+                            label="Visual Quality:"
+                          />
+                          <ScorePill
+                            score={scores ? scores.accessibilityScore : NaN}
+                            label="Accessibility:"
+                          />
                         </div>
                       </div>
-                    </div>
-                  ))}
+                    );
+                  })}
                 </div>
               </div>
 
               <div
-                className={`drawer-backdrop ${
-                  isPaletteCreatorOpen ? "open" : ""
-                }`}
+                className={`drawer-backdrop ${isColorSystemOpen ? "open" : ""}`}
                 onClick={handleDrawerClose}
                 role="presentation"
               />
@@ -1409,10 +1446,10 @@ const App: React.FC = () => {
                     <div className="ramp-actions save-actions">
                       <button
                         className="btn btn-full"
-                        onClick={handleSaveToPaletteCreator}
+                        onClick={handleSaveToColorSystem}
                       >
                         <ColorIcon />
-                        Save to Palette Creator
+                        Save to Color System
                       </button>
                     </div>
                   </div>
@@ -1482,9 +1519,10 @@ const App: React.FC = () => {
           }
         />
         <Route path="/button-demo" element={<ButtonDemo />} />
+        <Route path="/scorepill-demo" element={<ScorePillDemo />} />
       </Routes>
       {showRemoveConfirmModal && (
-        <Modal
+        <AreYouSureModal
           onClose={() => setShowRemoveConfirmModal(false)}
           initialFocusRef={cancelButtonRef}
         >
@@ -1511,7 +1549,7 @@ const App: React.FC = () => {
               Remove
             </button>
           </div>
-        </Modal>
+        </AreYouSureModal>
       )}
       <button
         className="btn-fab"

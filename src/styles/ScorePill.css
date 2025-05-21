@@ -1,0 +1,97 @@
+.score-card {
+  display: flex;
+  align-items: center;
+  border-radius: 999px;
+  padding: 4px 8px 4px 4px;
+  width: fit-content;
+  gap: 4px;
+}
+
+.score-card__content {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 1px;
+}
+
+.score-card__icon {
+  width: 16px;
+  height: 16px;
+  display: block;
+  color: inherit;
+  fill: currentColor;
+}
+.score-card__icon-wrapper {
+  padding: 4px;
+  border-radius: 999px;
+}
+
+.score-card__score {
+  font-size: 12px;
+  font-weight: 400;
+  margin-right: 2px;
+}
+
+.score-card__label {
+  font-size: 12px;
+  font-weight: 400;
+  margin-right: 2px;
+}
+
+/* Positive Variant */
+.score-card--positive {
+  background: var(--color-primary-700);
+  outline: 1px solid var(--color-primary-500);
+  outline-offset: -1px;
+}
+.score-card--positive .score-card__icon-wrapper {
+  background: var(--color-primary-500);
+  align-items: center;
+}
+.score-card--positive .score-card__icon {
+  color: var(--color-primary-200);
+}
+.score-card--positive .score-card__label {
+  color: var(--color-primary-200);
+}
+.score-card--positive .score-card__score {
+  color: var(--color-primary-200);
+}
+
+/* Warning Variant */
+.score-card--warning {
+  background: var(--color-neutral-700);
+  outline: 1px solid var(--color-neutral-500);
+  outline-offset: -1px;
+}
+.score-card--warning .score-card__icon-wrapper {
+  background: var(--color-neutral-500);
+}
+.score-card--warning .score-card__icon {
+  color: var(--color-neutral-200);
+}
+.score-card--warning .score-card__label {
+  color: var(--color-neutral-200);
+}
+.score-card--warning .score-card__score {
+  color: var(--color-neutral-200);
+}
+
+/* Negative Variant */
+.score-card--negative {
+  background: var(--color-error-bg, var(--color-error-700));
+  outline: 1px solid var(--color-error-border, var(--color-error-500));
+  outline-offset: -1px;
+}
+.score-card--negative .score-card__icon-wrapper {
+  background: var(--color-error-500);
+}
+.score-card--negative .score-card__icon {
+  color: var(--color-error-200);
+}
+.score-card--negative .score-card__label {
+  color: var(--color-error-200);
+}
+.score-card--negative .score-card__score {
+  color: var(--color-error-200);
+}

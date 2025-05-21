@@ -48,7 +48,7 @@ const QuickGuideModal: React.FC<QuickGuideModalProps> = ({ onClose }) => {
               <h2 className="heading-lg">Pick a Hue or Key Hex Code</h2>
               <p>
                 Creating a color palette for your new brand? Put in the hex code
-                and it's corresponding dot will always appear on the color grid
+                and its corresponding dot will always appear on the color grid
                 as a reference point.
               </p>
               <p>
@@ -116,10 +116,10 @@ const QuickGuideModal: React.FC<QuickGuideModalProps> = ({ onClose }) => {
         return (
           <div className="guide-page">
             <div className="guide-content">
-              <h2 className="heading-lg">Saving to Palette Creator</h2>
+              <h2 className="heading-lg">Saving to Color System</h2>
               <p>
-                Click on 'Save to Palette Creator' to save your color swatches
-                as semantic color families which you can import into your Figma
+                Click on 'Save to Color System' to save your color swatches as
+                semantic color families which you can import into your Figma
                 files.
               </p>
               <p>
@@ -138,8 +138,8 @@ const QuickGuideModal: React.FC<QuickGuideModalProps> = ({ onClose }) => {
             <div className="guide-content">
               <h2 className="heading-lg">Finishing Up</h2>
               <p>
-                When you're all done, click on 'Download Palettes' and you'll
-                get a Figma-ready SVG file.
+                When you're all done, click on 'Download System' and you'll get
+                a Figma-ready SVG file.
               </p>
               <p>
                 You can import the SVG into{" "}
@@ -151,8 +151,9 @@ const QuickGuideModal: React.FC<QuickGuideModalProps> = ({ onClose }) => {
                   Design System Variables — Midnight v2.0
                 </a>{" "}
                 to use your custom color system with over 400+ ready-to-go color
-                variables. Enjoy!
+                variables.
               </p>
+              <p>Enjoy!</p>
             </div>
             <div className="guide-image">
               <Step5KeyframeAnimation />
