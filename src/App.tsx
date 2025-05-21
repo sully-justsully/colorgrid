@@ -1174,13 +1174,7 @@ const App: React.FC = () => {
                           </div>
                         </div>
                         {/* Score Pills Row */}
-                        <div
-                          style={{
-                            display: "flex",
-                            gap: "12px",
-                            marginTop: 12,
-                          }}
-                        >
+                        <div className="score-pill-row">
                           <ScorePill
                             score={scores ? scores.overallScore : NaN}
                             label="Overall:"

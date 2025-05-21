@@ -2,7 +2,7 @@
   display: flex;
   align-items: center;
   border-radius: 999px;
-  padding: 4px 8px 4px 4px;
+  padding: 4px 10px 4px 4px;
   width: fit-content;
   gap: 4px;
 }
@@ -49,7 +49,7 @@
   align-items: center;
 }
 .score-card--positive .score-card__icon {
-  color: var(--color-primary-200);
+  color: var(--color-primary-250);
 }
 .score-card--positive .score-card__label {
   color: var(--color-primary-200);
@@ -68,7 +68,7 @@
   background: var(--color-neutral-500);
 }
 .score-card--warning .score-card__icon {
-  color: var(--color-neutral-200);
+  color: var(--color-neutral-250);
 }
 .score-card--warning .score-card__label {
   color: var(--color-neutral-200);
@@ -87,11 +87,29 @@
   background: var(--color-error-500);
 }
 .score-card--negative .score-card__icon {
-  color: var(--color-error-200);
+  color: var(--color-error-250);
 }
 .score-card--negative .score-card__label {
   color: var(--color-error-200);
 }
 .score-card--negative .score-card__score {
   color: var(--color-error-200);
+}
+
+/* Empty Variant */
+.score-card--empty {
+  background: var(--color-neutral-800);
+  outline: 1px solid var(--color-neutral-600);
+  outline-offset: -1px;
+}
+.score-card--empty .score-card__icon-wrapper {
+  background: var(--color-neutral-600);
+}
+.score-card--empty .score-card__icon {
+  color: var(--color-neutral-400);
+  fill: currentColor;
+}
+.score-card--empty .score-card__label,
+.score-card--empty .score-card__score {
+  color: var(--color-neutral-600);
 }
