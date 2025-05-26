@@ -23,10 +23,12 @@ describe("App Component", () => {
     );
     const headings = screen.getAllByRole("heading", { level: 1 });
     expect(
-      headings.some((h) => h.textContent?.includes("Color Grid Tool"))
+      headings.some((h: Element) => h.textContent?.includes("Color Grid Tool"))
     ).toBe(true);
     expect(
-      headings.some((h) => /v\.\d+\.\d+\.\d+/.test(h.textContent || ""))
+      headings.some((h: Element) =>
+        /v\.\d+\.\d+\.\d+/.test(h.textContent || "")
+      )
     ).toBe(true);
   });
 

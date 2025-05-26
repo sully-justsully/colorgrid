@@ -258,7 +258,7 @@ const Step4KeyframeAnimation: React.FC = () => {
   const next = KEYFRAMES[nextFrame];
 
   // For dissolve: render both dashed and filled rects for transitioning squares
-  const rects: JSX.Element[] = [];
+  const rects: React.ReactElement[] = [];
   for (let i = 0; i < current.length; i++) {
     const a = current[i];
     const b = next[i];

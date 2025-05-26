@@ -113,13 +113,6 @@ export const xyzToLab = (
   return [l, a, b];
 };
 
-// Get LAB lightness from RGB
-export const getRgbLabLightness = (r: number, g: number, b: number): number => {
-  const [x, y, z] = rgbToXyz(r, g, b);
-  const [l] = xyzToLab(x, y, z);
-  return l;
-};
-
 // Convert L* value to RGB color
 export const labToRgb = (l: number): [number, number, number] => {
   // Special case for pure white (L* = 100)
@@ -312,4 +305,14 @@ export function hexToHsb(hex: string): { h: number; s: number; b: number } {
   v = Math.round(v * 100);
 
   return { h, s, b: v };
+}
+
+// hexToLabLightness is the single source of truth for L* from hex
+export function hexToLabLightness(hex: string): number {
+  const r = parseInt(hex.slice(1, 3), 16);
+  const g = parseInt(hex.slice(3, 5), 16);
+  const b = parseInt(hex.slice(5, 7), 16);
+  const [x, y, z] = rgbToXyz(r, g, b);
+  const [l] = xyzToLab(x, y, z);
+  return l;
 }

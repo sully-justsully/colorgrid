@@ -1,19 +1,21 @@
 import {
   calculateContrastRatio,
   hexToHsb,
-  getRgbLabLightness,
+  hexToLabLightness,
 } from "./colorUtils";
+
+console.log("EVAL VERSION: 2024-06-09");
 
 export interface EvaluationResult {
   swatchCount: number;
   swatchCountScore: number;
   evennessScore: number;
   balanceScore: number;
+  symmetryScore: number;
   wcagAScore: number;
   wcagAAScore: number;
   normalizedContrastScore: number;
   visualQualityScore: number;
-  accessibilityScore: number;
   overallScore: number;
   details: string[];
 }
@@ -44,6 +46,42 @@ function gaussianIdealSteps(n: number): number[] {
   return steps.map((s) => (s * 100) / sum);
 }
 
+// Empirical best contrast scores for 1-20 swatches (from optimal ramp)
+const EMPIRICAL_BEST_CONTRAST: { [n: number]: number } = {
+  1: 0.0,
+  2: 1.0,
+  3: 0.8,
+  4: 0.567,
+  5: 0.54,
+  6: 0.507,
+  7: 0.486,
+  8: 0.429,
+  9: 0.444,
+  10: 0.462,
+  11: 0.422,
+  12: 0.433,
+  13: 0.413,
+  14: 0.42,
+  15: 0.404,
+  16: 0.41,
+  17: 0.409,
+  18: 0.4,
+  19: 0.406,
+  20: 0.395,
+};
+
+function getEmpiricalBestContrast(n: number): number {
+  if (EMPIRICAL_BEST_CONTRAST[n]) return EMPIRICAL_BEST_CONTRAST[n];
+  // Fallback: use the closest lower value
+  const keys = Object.keys(EMPIRICAL_BEST_CONTRAST)
+    .map(Number)
+    .sort((a, b) => a - b);
+  for (let i = keys.length - 1; i >= 0; i--) {
+    if (n > keys[i]) return EMPIRICAL_BEST_CONTRAST[keys[i]];
+  }
+  return EMPIRICAL_BEST_CONTRAST[1];
+}
+
 /**
  * Evaluate a color system based on swatch count, evenness of steps, balance around 50, and WCAG contrast combos.
  * @param swatches Array of hex color strings (e.g. ["#FFFFFF", "#000000"])
@@ -72,27 +110,25 @@ export function evaluateColorSystem(swatches: string[]): EvaluationResult {
   );
 
   // 2. Evenness of steps (Gaussian ideal)
-  const lValues = swatches.map((hex) => {
-    const r = parseInt(hex.slice(1, 3), 16);
-    const g = parseInt(hex.slice(3, 5), 16);
-    const b = parseInt(hex.slice(5, 7), 16);
-    return getRgbLabLightness(r, g, b);
-  });
+  const lValues = swatches.map((hex) => hexToLabLightness(hex));
   const steps = [];
   for (let i = 1; i < lValues.length; i++) {
     steps.push(Math.abs(lValues[i] - lValues[i - 1]));
   }
   const idealSteps = gaussianIdealSteps(swatchCount);
-  // Mean absolute error between actual and ideal steps
-  const meanAbsError =
-    steps.reduce((acc, s, i) => acc + Math.abs(s - idealSteps[i]), 0) /
-    steps.length;
+  // Exponential penalty for evenness: mean(exp(abs(step - ideal)/meanIdealStep))
   const meanIdealStep =
     idealSteps.reduce((a, b) => a + b, 0) / idealSteps.length;
-  let evennessScore = 1 - meanAbsError / meanIdealStep;
+  const expError =
+    steps.reduce(
+      (acc, s, i) =>
+        acc + Math.exp(Math.abs(s - idealSteps[i]) / meanIdealStep),
+      0
+    ) / steps.length;
+  let evennessScore = 1 / expError;
   evennessScore = Math.max(0, Math.min(1, evennessScore));
   details.push(
-    `Evenness of steps (Gaussian ideal): meanAbsError=${meanAbsError.toFixed(
+    `Evenness of steps (Gaussian ideal, exponential penalty): expError=${expError.toFixed(
       2
     )}, score=${evennessScore.toFixed(2)}`
   );
@@ -111,10 +147,50 @@ export function evaluateColorSystem(swatches: string[]): EvaluationResult {
     )}`
   );
 
+  // 3.5 Symmetry of steps around 50
+  let symmetricPairs = 0;
+  const processedIndices = new Set<number>();
+
+  for (let i = 0; i < lValues.length; i++) {
+    if (processedIndices.has(i)) continue;
+
+    const currentL = lValues[i];
+    if (currentL === 50) continue; // Skip the middle value
+
+    const targetL = 100 - currentL; // The symmetric value around 50
+    const tolerance = 1.0;
+
+    // Look for a symmetric pair
+    for (let j = 0; j < lValues.length; j++) {
+      if (i === j || processedIndices.has(j)) continue;
+
+      if (Math.abs(lValues[j] - targetL) <= tolerance) {
+        symmetricPairs++;
+        processedIndices.add(i);
+        processedIndices.add(j);
+        break;
+      }
+    }
+  }
+
+  // Calculate symmetry score based on how many pairs we found
+  const maxPossiblePairs = Math.floor(
+    (swatchCount - (lValues.includes(50) ? 1 : 0)) / 2
+  );
+  const symmetryScore =
+    maxPossiblePairs > 0 ? symmetricPairs / maxPossiblePairs : 0;
+
+  details.push(
+    `Symmetry of steps: found ${symmetricPairs} symmetric pairs out of ${maxPossiblePairs} possible (score: ${symmetryScore.toFixed(
+      2
+    )})`
+  );
+
   // 4. WCAG A combos (>=3:1), omitting same-color pairs
   let wcagAPassing = 0;
   let wcagAAPassing = 0;
   let totalCombos = 0;
+  const debugPairs: string[] = [];
   for (let i = 0; i < swatchCount; i++) {
     for (let j = 0; j < swatchCount; j++) {
       if (i === j) continue; // Omit same-color pairs
@@ -122,8 +198,15 @@ export function evaluateColorSystem(swatches: string[]): EvaluationResult {
       const bg = swatches[j];
       const ratio = calculateContrastRatio(fg, bg);
       totalCombos++;
-      if (ratio >= 3) wcagAPassing++;
-      if (ratio >= 4.5) wcagAAPassing++;
+      const passesA = ratio >= 3;
+      const passesAA = ratio >= 4.5;
+      if (passesA) wcagAPassing++;
+      if (passesAA) wcagAAPassing++;
+      debugPairs.push(
+        `${fg} on ${bg}: ratio=${ratio.toFixed(
+          2
+        )}, passesA=${passesA}, passesAA=${passesAA}`
+      );
     }
   }
   const wcagAScore = totalCombos > 0 ? wcagAPassing / totalCombos : 0;
@@ -138,18 +221,18 @@ export function evaluateColorSystem(swatches: string[]): EvaluationResult {
       wcagAAScore * 100
     ).toFixed(1)}%)`
   );
+  details.push("Debug pairs:");
+  debugPairs.forEach((pair) => details.push(pair));
 
   // 5. Weighted contrast score (60% AA, 40% A)
   const contrastScore = 0.6 * wcagAAScore + 0.4 * wcagAScore;
   // 6. Normalize contrast score by empirical best for this ramp size
-  const EMPIRICAL_BEST_CONTRAST_18 = 0.81; // Update if you find a better empirical value
-  const normalizedContrastScore = Math.min(
-    contrastScore / EMPIRICAL_BEST_CONTRAST_18,
-    1
-  );
+  const empiricalBest = getEmpiricalBestContrast(swatchCount);
+  const normalizedContrastScore =
+    empiricalBest > 0 ? Math.min(contrastScore / empiricalBest, 1) : 0;
   details.push(`Contrast score (60% AA, 40% A): ${contrastScore.toFixed(3)}`);
   details.push(
-    `Normalized contrast score (empirical best = ${EMPIRICAL_BEST_CONTRAST_18}): ${normalizedContrastScore.toFixed(
+    `Normalized contrast score (empirical best = ${empiricalBest}): ${normalizedContrastScore.toFixed(
       3
     )}`
   );
@@ -159,36 +242,37 @@ export function evaluateColorSystem(swatches: string[]): EvaluationResult {
 
   // Bundled scores
   const visualQualityScore =
-    ((swatchCountScore + evennessScore + balanceScore) / 3) * 100;
-  const accessibilityScore = normalizedContrastScore * 100;
+    (swatchCountScore * 0.25 +
+      evennessScore * 0.45 +
+      balanceScore * 0.1 +
+      symmetryScore * 0.2) *
+    100;
   details.push(`Visual Quality Score: ${visualQualityScore.toFixed(1)}`);
   details.push(
-    `Accessibility Score (normalized contrast): ${accessibilityScore.toFixed(
-      1
-    )}`
+    `Accessibility Score (normalized contrast): ${(
+      normalizedContrastScore * 100
+    ).toFixed(1)}`
   );
 
-  // 7. Overall score (average of swatchCountScore, evennessScore, balanceScore, normalizedContrastScore), multiplied by 100, capped at 100
-  const overallScore = Math.min(
-    ((swatchCountScore +
-      evennessScore +
-      balanceScore +
-      normalizedContrastScore) /
-      4) *
-      100,
-    100
-  );
+  // 7. Overall score (weighted average of all components), multiplied by 100
+  const overallScore =
+    (swatchCountScore * 0.15 +
+      evennessScore * 0.27 +
+      balanceScore * 0.06 +
+      symmetryScore * 0.12 +
+      normalizedContrastScore * 0.4) *
+    100;
 
   return {
     swatchCount,
     swatchCountScore,
     evennessScore,
     balanceScore,
+    symmetryScore,
     wcagAScore,
     wcagAAScore,
     normalizedContrastScore,
     visualQualityScore,
-    accessibilityScore,
     overallScore,
     details,
   };

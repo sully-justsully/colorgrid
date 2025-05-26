@@ -1,27 +1,35 @@
-const { evaluateColorSystem } = require("./evaluateColorSystem");
+import { evaluateColorSystem } from "./evaluateColorSystem";
+import { hexToLabLightness } from "./colorUtils";
 
 const palette = [
   "#FFFFFF",
-  "#F6F6F6",
-  "#F2F2F2",
-  "#ECECEC",
-  "#E4E4E4",
-  "#CDCDCD",
-  "#B5B5B5",
-  "#9F9F9F",
-  "#828282",
-  "#6B6B6B",
-  "#535353",
-  "#404040",
-  "#2D2D2D",
-  "#1C1C1C",
-  "#161616",
-  "#0E0E0E",
-  "#080808",
-  "#000000",
+  "#FFF7F7",
+  "#FFF0F0",
+  "#FFE8E8",
+  "#FFE0E0",
+  "#FFD9D9",
+  "#FFD1D1",
+  "#FFC9C9",
+  "#FFC2C2",
+  "#590000",
+  "#520000",
+  "#4A0000",
+  "#420000",
+  "#3B0000",
+  "#330000",
+  "#290000",
+  "#1C0000",
+  "#080000",
 ];
 
+console.log("Hex | L* (Lab)");
+palette.forEach((hex) => {
+  const lstar = hexToLabLightness(hex);
+  console.log(`${hex} | ${lstar.toFixed(2)}`);
+});
+
 const result = evaluateColorSystem(palette);
-console.log("Evaluation Result:", result);
+console.log("\nEvaluation Result:");
+console.log(JSON.stringify(result, null, 2));
 
 export {};

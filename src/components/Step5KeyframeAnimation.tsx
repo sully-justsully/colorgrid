@@ -300,7 +300,7 @@ const Step5KeyframeAnimation: React.FC = () => {
   });
 
   // For each group, fade in from left to right
-  const groupRects: JSX.Element[] = [];
+  const groupRects: React.ReactElement[] = [];
   for (let g = 0; g < GROUPS.length; g++) {
     const fade = frame > g ? 1 : frame === g ? progress : 0;
     for (let r = 0; r < GROUPS[g].length; r++) {

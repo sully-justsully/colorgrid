@@ -9,7 +9,7 @@ import { Dot, ColorCache } from "../types";
 import {
   hsbToRgb,
   rgbToHex,
-  getRgbLabLightness,
+  hexToLabLightness,
   calculateContrastRatio,
   hexToHsb,
 } from "../utils/colorUtils";
@@ -94,7 +94,7 @@ const ColorGrid: React.FC<ColorGridProps> = ({
       for (let saturation = 0; saturation <= 100; saturation++) {
         const [r, g, b] = hsbToRgb(hue, saturation, brightness);
         const hexColor = rgbToHex(r, g, b).toUpperCase();
-        const labLightness = Math.round(getRgbLabLightness(r, g, b));
+        const labLightness = Math.round(hexToLabLightness(hexColor));
         newColorCache[brightness][saturation] = {
           hexColor,
           labLightness,

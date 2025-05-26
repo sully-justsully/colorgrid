@@ -106,7 +106,7 @@
   background: var(--color-neutral-600);
 }
 .score-card--empty .score-card__icon {
-  color: var(--color-neutral-400);
+  color: var(--color-neutral-800);
   fill: currentColor;
 }
 .score-card--empty .score-card__label,

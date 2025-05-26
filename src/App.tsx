@@ -15,10 +15,10 @@ import { ColorSwatch as ColorSwatchType, Dot } from "./types";
 import {
   labToRgb,
   rgbToHex,
+  hexToLabLightness,
   calculateContrastRatio,
   rgbToHsb,
   hexToHsb,
-  getRgbLabLightness,
 } from "./utils/colorUtils";
 import "./App.css";
 import "./styles/variables.css";
@@ -79,10 +79,7 @@ const guideSvg = `<svg width="1110" height="1110" viewBox="0 0 1110 1110" preser
 const createInitialSwatches = (lValues: number[], hexCode?: string) => {
   if (hexCode) {
     // For Custom mode, create a single swatch with the L* value from the hex code
-    const r = parseInt(hexCode.slice(0, 2), 16);
-    const g = parseInt(hexCode.slice(2, 4), 16);
-    const b = parseInt(hexCode.slice(4, 6), 16);
-    const lValue = Math.round(getRgbLabLightness(r, g, b));
+    const lValue = Math.round(hexToLabLightness(`#${hexCode}`));
     return [
       {
         id: 1,
@@ -105,6 +102,16 @@ const createInitialSwatches = (lValues: number[], hexCode?: string) => {
     };
   });
 };
+
+interface Section {
+  title: string;
+  swatches: Array<{
+    lValue: number;
+    hexColor: string;
+    whiteContrast: number;
+    blackContrast: number;
+  }>;
+}
 
 const App: React.FC = () => {
   const [keyHexCode, setKeyHexCode] = useState(() => {
@@ -282,7 +289,7 @@ const App: React.FC = () => {
     const r = parseInt(keyHexCode.slice(0, 2), 16);
     const g = parseInt(keyHexCode.slice(2, 4), 16);
     const b = parseInt(keyHexCode.slice(4, 6), 16);
-    const lValue = Math.round(getRgbLabLightness(r, g, b));
+    const lValue = Math.round(hexToLabLightness(`#${keyHexCode}`));
 
     setSwatchesCustom((prevSwatches) => {
       // Update only the swatch with ID 1 (key hex code swatch)
@@ -588,10 +595,7 @@ const App: React.FC = () => {
         break;
       case "custom":
         // Reset to only show the key hex code ramp
-        const r = parseInt(keyHexCode.slice(0, 2), 16);
-        const g = parseInt(keyHexCode.slice(2, 4), 16);
-        const b = parseInt(keyHexCode.slice(4, 6), 16);
-        const lValue = Math.round(getRgbLabLightness(r, g, b));
+        const lValue = Math.round(hexToLabLightness(`#${keyHexCode}`));
         setSwatchesCustom([
           {
             id: 1,
@@ -622,12 +626,15 @@ const App: React.FC = () => {
     const swatchHeight = 120; // Height of each swatch
     const padding = 32; // Padding between columns
     const titleHeight = 48; // Height for section title
-    const sections = Object.entries(savedSwatches);
+    const sections: [string, Section["swatches"]][] =
+      Object.entries(savedSwatches);
     const totalWidth = (swatchWidth + padding) * sections.length - padding;
 
     // Calculate max height needed based on the longest palette
     const maxSwatches = Math.max(
-      ...sections.map(([_, swatches]) => swatches.length)
+      ...sections.map(
+        ([_, swatches]: [string, Section["swatches"]]) => swatches.length
+      )
     );
     const totalHeight = titleHeight + maxSwatches * swatchHeight;
 
@@ -679,7 +686,7 @@ const App: React.FC = () => {
       `;
 
       // Add swatches for this section
-      swatches.forEach((swatch, index) => {
+      swatches.forEach((swatch: Section["swatches"][0], index: number) => {
         const y = titleHeight + index * swatchHeight;
         const textColor = swatch.lValue >= 50 ? "#000000" : "#FFFFFF";
         const colorNumber = index * 50;
@@ -935,6 +942,11 @@ const App: React.FC = () => {
     });
   };
 
+  // Debug log: print savedSwatches when right drawer is open
+  if (isColorSystemOpen) {
+    console.log("Saved palettes (Color System):", savedSwatches);
+  }
+
   return (
     <div className="app">
       <MobileLayout />
@@ -1184,7 +1196,11 @@ const App: React.FC = () => {
                             label="Visual Quality:"
                           />
                           <ScorePill
-                            score={scores ? scores.accessibilityScore : NaN}
+                            score={
+                              scores
+                                ? scores.normalizedContrastScore * 100
+                                : NaN
+                            }
                             label="Accessibility:"
                           />
                         </div>
