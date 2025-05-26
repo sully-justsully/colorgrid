@@ -14,6 +14,7 @@ declare global {
       toBeLessThanOrEqual(value: number): R;
       toBeGreaterThanOrEqual(value: number): R;
       not: Matchers<R>;
+      toBeNaN(): R;
     }
   }
 }

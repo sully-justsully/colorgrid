@@ -1190,10 +1190,14 @@ const App: React.FC = () => {
                           <ScorePill
                             score={scores ? scores.overallScore : NaN}
                             label="Overall:"
+                            tooltipType="overall"
+                            scores={scores || undefined}
                           />
                           <ScorePill
                             score={scores ? scores.visualQualityScore : NaN}
                             label="Visual Quality:"
+                            tooltipType="visual"
+                            scores={scores || undefined}
                           />
                           <ScorePill
                             score={
@@ -1202,6 +1206,8 @@ const App: React.FC = () => {
                                 : NaN
                             }
                             label="Accessibility:"
+                            tooltipType="accessibility"
+                            scores={scores || undefined}
                           />
                         </div>
                       </div>

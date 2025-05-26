@@ -1,0 +1,45 @@
+.score-pill-tooltip {
+  position: absolute;
+  background: var(--color-neutral-800);
+  border: 1px solid var(--color-neutral-600);
+  border-radius: 4px;
+  padding: 12px;
+  min-width: 200px;
+  z-index: 1000;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+}
+
+.tooltip-content {
+  color: var(--color-neutral-200);
+  font-size: 12px;
+}
+
+.tooltip-content p {
+  margin: 0 0 8px 0;
+  font-weight: 500;
+}
+
+.tooltip-content ul {
+  margin: 0;
+  padding-left: 16px;
+}
+
+.tooltip-content li {
+  margin: 4px 0;
+}
+
+.tooltip-score-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin: 4px 0;
+}
+
+.tooltip-score-item span:first-child {
+  color: var(--color-neutral-300);
+}
+
+.tooltip-score-item span:last-child {
+  font-weight: 500;
+  color: var(--color-neutral-100);
+}

@@ -3,9 +3,10 @@ import { render, screen, fireEvent, act } from "@testing-library/react";
 import "@testing-library/jest-dom";
 import App from "./App";
 import { MemoryRouter } from "react-router-dom";
+import { jest } from "@jest/globals";
 
 // Mock URL.createObjectURL
-const mockCreateObjectURL = jest.fn();
+const mockCreateObjectURL = jest.fn(() => "mock-url");
 const mockRevokeObjectURL = jest.fn();
 global.URL.createObjectURL = mockCreateObjectURL;
 global.URL.revokeObjectURL = mockRevokeObjectURL;

@@ -242,10 +242,10 @@ export function evaluateColorSystem(swatches: string[]): EvaluationResult {
 
   // Bundled scores
   const visualQualityScore =
-    (swatchCountScore * 0.25 +
-      evennessScore * 0.45 +
-      balanceScore * 0.1 +
-      symmetryScore * 0.2) *
+    (swatchCountScore * 0.2 +
+      evennessScore * 0.5 +
+      balanceScore * 0.15 +
+      symmetryScore * 0.15) *
     100;
   details.push(`Visual Quality Score: ${visualQualityScore.toFixed(1)}`);
   details.push(
@@ -256,10 +256,10 @@ export function evaluateColorSystem(swatches: string[]): EvaluationResult {
 
   // 7. Overall score (weighted average of all components), multiplied by 100
   const overallScore =
-    (swatchCountScore * 0.15 +
-      evennessScore * 0.27 +
-      balanceScore * 0.06 +
-      symmetryScore * 0.12 +
+    (swatchCountScore * 0.12 +
+      evennessScore * 0.3 +
+      balanceScore * 0.09 +
+      symmetryScore * 0.09 +
       normalizedContrastScore * 0.4) *
     100;
 
