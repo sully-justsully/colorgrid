@@ -563,6 +563,10 @@ const App: React.FC = () => {
         ? setSwatchesAdvanced
         : setSwatchesCustom;
     setCurrentSwatches((prevSwatches) => {
+      // Check if we've reached the maximum limit of 20 swatches
+      if (prevSwatches.length >= 20) {
+        return prevSwatches;
+      }
       // Find the lowest and highest L* values in the current swatches
       const lValues = prevSwatches.map((swatch) => swatch.lValue);
       const lowestLValue = Math.min(...lValues);
@@ -1350,12 +1354,19 @@ const App: React.FC = () => {
                             display: "flex",
                             alignItems: "center",
                             justifyContent: "center",
-                            cursor: "pointer",
+                            cursor:
+                              swatchesCustom.length >= 20
+                                ? "not-allowed"
+                                : "pointer",
+                            opacity: swatchesCustom.length >= 20 ? 0.5 : 1,
                           }}
-                          onClick={() => handleAddRamp("top")}
+                          onClick={() =>
+                            swatchesCustom.length < 20 && handleAddRamp("top")
+                          }
                           tabIndex={0}
                           role="button"
                           aria-label="Add ramp at top"
+                          aria-disabled={swatchesCustom.length >= 20}
                         >
                           <AddIcon className="dashed-rectangle-add-icon" />
                         </div>

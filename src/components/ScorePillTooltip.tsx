@@ -10,6 +10,9 @@ interface ScorePillTooltipProps {
     symmetryScore: number;
     wcagAScore: number;
     wcagAAScore: number;
+    wcagAPassing: number;
+    wcagAAPassing: number;
+    totalCombos: number;
     normalizedContrastScore: number;
     visualQualityScore: number;
     overallScore: number;
@@ -25,36 +28,64 @@ const ScorePillTooltip: React.FC<ScorePillTooltipProps> = ({
   const renderContent = () => {
     switch (type) {
       case "overall":
+        const suggestions = [];
+        if (scores.swatchCountScore < 0.8) {
+          suggestions.push(
+            "Add more colors to your palette (aim for 16-20 colors)"
+          );
+        }
+        if (scores.evennessScore < 0.8) {
+          suggestions.push("Ensure even spacing between color steps");
+        }
+        if (scores.balanceScore < 0.8) {
+          suggestions.push("Balance light and dark colors around the middle");
+        }
+        if (scores.symmetryScore < 0.8) {
+          suggestions.push(
+            "Create symmetric pairs of colors around the middle"
+          );
+        }
+        if (scores.wcagAScore < 0.8) {
+          suggestions.push(
+            "Increase contrast between colors for better accessibility"
+          );
+        }
+
         return (
           <div className="tooltip-content">
-            <p>To improve your overall score:</p>
-            <ul>
-              <li>Add more colors to your palette (aim for 16-20 colors)</li>
-              <li>Ensure even spacing between color steps</li>
-              <li>Balance light and dark colors around the middle</li>
-              <li>Create symmetric pairs of colors around the middle</li>
-              <li>Increase contrast between colors for better accessibility</li>
-            </ul>
+            {suggestions.length > 0 ? (
+              <div>
+                {suggestions.map((suggestion, index) => (
+                  <div key={index} className="tooltip-suggestion">
+                    {suggestion}
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <div className="tooltip-suggestion">
+                Great job! Your palette meets all the key criteria.
+              </div>
+            )}
           </div>
         );
       case "visual":
         return (
           <div className="tooltip-content">
             <div className="tooltip-score-item">
-              <span>Swatch Count:</span>
-              <span>{(scores.swatchCountScore * 100).toFixed(1)}/100</span>
+              <span>Swatch Amount:</span>
+              <span>{Math.round(scores.swatchCountScore * 100)}/100</span>
             </div>
             <div className="tooltip-score-item">
-              <span>Evenness of Steps:</span>
-              <span>{(scores.evennessScore * 100).toFixed(1)}/100</span>
+              <span>Smoothness:</span>
+              <span>{Math.round(scores.evennessScore * 100)}/100</span>
             </div>
             <div className="tooltip-score-item">
-              <span>Balance of Light & Dark:</span>
-              <span>{(scores.balanceScore * 100).toFixed(1)}/100</span>
+              <span>Balance:</span>
+              <span>{Math.round(scores.balanceScore * 100)}/100</span>
             </div>
             <div className="tooltip-score-item">
-              <span>Symmetry of Ramps:</span>
-              <span>{(scores.symmetryScore * 100).toFixed(1)}/100</span>
+              <span>Symmetry:</span>
+              <span>{Math.round(scores.symmetryScore * 100)}/100</span>
             </div>
           </div>
         );
@@ -63,11 +94,15 @@ const ScorePillTooltip: React.FC<ScorePillTooltipProps> = ({
           <div className="tooltip-content">
             <div className="tooltip-score-item">
               <span>WCAG A Combos:</span>
-              <span>{(scores.wcagAScore * 100).toFixed(1)}%</span>
+              <span>
+                {scores.wcagAPassing} of {scores.totalCombos}
+              </span>
             </div>
             <div className="tooltip-score-item">
               <span>WCAG AA Combos:</span>
-              <span>{(scores.wcagAAScore * 100).toFixed(1)}%</span>
+              <span>
+                {scores.wcagAAPassing} of {scores.totalCombos}
+              </span>
             </div>
           </div>
         );

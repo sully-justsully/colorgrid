@@ -14,6 +14,9 @@ export interface EvaluationResult {
   symmetryScore: number;
   wcagAScore: number;
   wcagAAScore: number;
+  wcagAPassing: number;
+  wcagAAPassing: number;
+  totalCombos: number;
   normalizedContrastScore: number;
   visualQualityScore: number;
   overallScore: number;
@@ -29,45 +32,67 @@ function median(values: number[]): number {
     : (sorted[mid - 1] + sorted[mid]) / 2;
 }
 
-// Fit to [2, 2, 3, 3, 8, 9, 8, 11, 9, 10, 8, 9, 8, 3, 3, 2, 2]
-// Parameters found by curve fitting (approx): a=2, b=9, sigma=0.21
-function gaussianIdealSteps(n: number): number[] {
-  const a = 2;
-  const b = 9;
-  const sigma = 0.21;
-  const steps: number[] = [];
-  for (let i = 0; i < n - 1; i++) {
-    const x = i / (n - 2); // 0 to 1
-    const step = a + b * Math.exp(-Math.pow(x - 0.5, 2) / (2 * sigma * sigma));
-    steps.push(step);
-  }
-  // Normalize so sum = 100
-  const sum = steps.reduce((acc, s) => acc + s, 0);
-  return steps.map((s) => (s * 100) / sum);
+// Ideal L* values for different swatch counts
+const IDEAL_L_VALUES: { [n: number]: number[] } = {
+  10: [100, 93, 82, 71, 56, 43, 29, 18, 7, 0],
+  11: [100, 94, 85, 75, 63, 49, 37, 25, 15, 6, 0],
+  12: [100, 94, 87, 77, 67, 56, 44, 33, 23, 13, 6, 0],
+  13: [100, 95, 90, 82, 73, 61, 49, 38, 27, 18, 10, 5, 0],
+  14: [100, 96, 91, 84, 76, 66, 55, 43, 34, 24, 16, 9, 4, 0],
+  15: [100, 97, 93, 87, 77, 68, 58, 49, 41, 32, 23, 13, 7, 3, 0],
+  16: [100, 98, 95, 91, 81, 72, 65, 55, 44, 35, 28, 19, 9, 5, 2, 0],
+  17: [100, 98, 95, 91, 84, 77, 68, 59, 49, 41, 32, 23, 16, 9, 5, 2, 0],
+  18: [100, 98, 96, 93, 90, 82, 73, 65, 54, 45, 35, 27, 18, 10, 7, 4, 2, 0],
+  19: [100, 98, 96, 94, 91, 85, 78, 70, 60, 49, 40, 30, 22, 15, 9, 6, 4, 2, 0],
+  20: [
+    100, 98, 96, 94, 91, 85, 79, 72, 64, 55, 44, 36, 28, 21, 15, 9, 6, 4, 2, 0,
+  ],
+};
+
+function getIdealSteps(n: number): number[] {
+  if (IDEAL_L_VALUES[n]) return IDEAL_L_VALUES[n];
+
+  // For swatch counts outside 10-20, use the closest available count
+  const keys = Object.keys(IDEAL_L_VALUES)
+    .map(Number)
+    .sort((a, b) => a - b);
+  if (n < keys[0]) return IDEAL_L_VALUES[keys[0]];
+  if (n > keys[keys.length - 1]) return IDEAL_L_VALUES[keys[keys.length - 1]];
+
+  // Find the closest key
+  const closestKey = keys.reduce((prev, curr) => {
+    return Math.abs(curr - n) < Math.abs(prev - n) ? curr : prev;
+  });
+
+  return IDEAL_L_VALUES[closestKey];
 }
 
-// Empirical best contrast scores for 1-20 swatches (from optimal ramp)
+// Empirical best contrast scores for 1-24 swatches (from optimal ramp)
 const EMPIRICAL_BEST_CONTRAST: { [n: number]: number } = {
   1: 0.0,
-  2: 1.0,
-  3: 0.8,
-  4: 0.567,
-  5: 0.54,
-  6: 0.507,
-  7: 0.486,
-  8: 0.429,
-  9: 0.444,
-  10: 0.462,
-  11: 0.422,
-  12: 0.433,
-  13: 0.413,
-  14: 0.42,
-  15: 0.404,
-  16: 0.41,
-  17: 0.409,
-  18: 0.4,
-  19: 0.406,
-  20: 0.395,
+  2: 0.0,
+  3: 0.667,
+  4: 0.833,
+  5: 0.64,
+  6: 0.587,
+  7: 0.581,
+  8: 0.55,
+  9: 0.544,
+  10: 0.511,
+  11: 0.52,
+  12: 0.503,
+  13: 0.49,
+  14: 0.484,
+  15: 0.48,
+  16: 0.468,
+  17: 0.471,
+  18: 0.471,
+  19: 0.463,
+  20: 0.461,
+  21: 0.46,
+  22: 0.46,
+  23: 0.455,
+  24: 0.454,
 };
 
 function getEmpiricalBestContrast(n: number): number {
@@ -109,32 +134,37 @@ export function evaluateColorSystem(swatches: string[]): EvaluationResult {
     `Swatch count: ${swatchCount} (score: ${swatchCountScore.toFixed(2)})`
   );
 
-  // 2. Evenness of steps (Gaussian ideal)
+  // 2. Evenness of L* values (compare to ideal L* values)
   const lValues = swatches.map((hex) => hexToLabLightness(hex));
-  const steps = [];
-  for (let i = 1; i < lValues.length; i++) {
-    steps.push(Math.abs(lValues[i] - lValues[i - 1]));
-  }
-  const idealSteps = gaussianIdealSteps(swatchCount);
-  // Exponential penalty for evenness: mean(exp(abs(step - ideal)/meanIdealStep))
+  const idealLValues = getIdealSteps(swatchCount);
+  // Exponential penalty for evenness: mean(exp(abs(actual - ideal)/meanIdealStep))
   const meanIdealStep =
-    idealSteps.reduce((a, b) => a + b, 0) / idealSteps.length;
+    idealLValues.length > 1
+      ? Math.abs(idealLValues[0] - idealLValues[idealLValues.length - 1]) /
+        (idealLValues.length - 1)
+      : 1;
+  const PENALTY_FACTOR = 1.1;
   const expError =
-    steps.reduce(
-      (acc, s, i) =>
-        acc + Math.exp(Math.abs(s - idealSteps[i]) / meanIdealStep),
+    lValues.reduce(
+      (acc, l, i) =>
+        acc +
+        Math.exp(
+          (PENALTY_FACTOR * Math.abs(l - idealLValues[i])) / meanIdealStep
+        ),
       0
-    ) / steps.length;
+    ) / lValues.length;
   let evennessScore = 1 / expError;
   evennessScore = Math.max(0, Math.min(1, evennessScore));
   details.push(
-    `Evenness of steps (Gaussian ideal, exponential penalty): expError=${expError.toFixed(
+    `Evenness of L* values (exponential penalty): expError=${expError.toFixed(
       2
     )}, score=${evennessScore.toFixed(2)}`
   );
-  details.push(`Actual steps: [${steps.map((s) => s.toFixed(2)).join(", ")}]`);
   details.push(
-    `Ideal steps: [${idealSteps.map((s) => s.toFixed(2)).join(", ")}]`
+    `Actual L* values: [${lValues.map((l) => l.toFixed(2)).join(", ")}]`
+  );
+  details.push(
+    `Ideal L* values: [${idealLValues.map((l) => l.toFixed(2)).join(", ")}]`
   );
 
   // 3. Balance around 50
@@ -229,7 +259,7 @@ export function evaluateColorSystem(swatches: string[]): EvaluationResult {
   // 6. Normalize contrast score by empirical best for this ramp size
   const empiricalBest = getEmpiricalBestContrast(swatchCount);
   const normalizedContrastScore =
-    empiricalBest > 0 ? Math.min(contrastScore / empiricalBest, 1) : 0;
+    empiricalBest > 0 ? contrastScore / empiricalBest : 0;
   details.push(`Contrast score (60% AA, 40% A): ${contrastScore.toFixed(3)}`);
   details.push(
     `Normalized contrast score (empirical best = ${empiricalBest}): ${normalizedContrastScore.toFixed(
@@ -256,11 +286,11 @@ export function evaluateColorSystem(swatches: string[]): EvaluationResult {
 
   // 7. Overall score (weighted average of all components), multiplied by 100
   const overallScore =
-    (swatchCountScore * 0.12 +
-      evennessScore * 0.3 +
-      balanceScore * 0.09 +
-      symmetryScore * 0.09 +
-      normalizedContrastScore * 0.4) *
+    (swatchCountScore * 0.14 +
+      evennessScore * 0.35 +
+      balanceScore * 0.105 +
+      symmetryScore * 0.105 +
+      normalizedContrastScore * 0.3) *
     100;
 
   return {
@@ -271,6 +301,9 @@ export function evaluateColorSystem(swatches: string[]): EvaluationResult {
     symmetryScore,
     wcagAScore,
     wcagAAScore,
+    wcagAPassing,
+    wcagAAPassing,
+    totalCombos,
     normalizedContrastScore,
     visualQualityScore,
     overallScore,

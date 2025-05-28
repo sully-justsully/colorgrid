@@ -48,6 +48,21 @@ const palettes = [
     "#030303",
     "#000000",
   ],
+  [
+    // Blue palette from screenshot
+    "#FFFFFF",
+    "#E6EFFF",
+    "#C7DCFF",
+    "#9AC0FC",
+    "#70A5FA",
+    "#4185F2",
+    "#1662DB",
+    "#0747AD",
+    "#033280",
+    "#001F52",
+    "#001330",
+    "#000205",
+  ],
 ];
 
 palettes.forEach((palette, idx) => {

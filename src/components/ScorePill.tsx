@@ -20,6 +20,9 @@ interface ScorePillProps {
     symmetryScore: number;
     wcagAScore: number;
     wcagAAScore: number;
+    wcagAPassing: number;
+    wcagAAPassing: number;
+    totalCombos: number;
     normalizedContrastScore: number;
     visualQualityScore: number;
     overallScore: number;
@@ -28,8 +31,8 @@ interface ScorePillProps {
 
 function getVariant(score: number): ScorePillVariant {
   if (isNaN(score) || score === undefined) return "empty";
-  if (score >= 80) return "positive";
-  if (score >= 50) return "warning";
+  if (score >= 85) return "positive";
+  if (score >= 70) return "warning";
   return "negative";
 }
 
@@ -59,8 +62,8 @@ const ScorePill: React.FC<ScorePillProps> = ({
     if (pillRef.current) {
       const rect = pillRef.current.getBoundingClientRect();
       setTooltipPosition({
-        top: rect.bottom + window.scrollY + 8,
-        left: rect.left + window.scrollX,
+        top: rect.bottom + 8,
+        left: rect.left + rect.width / 2,
       });
     }
     setShowTooltip(true);
@@ -76,6 +79,7 @@ const ScorePill: React.FC<ScorePillProps> = ({
       ref={pillRef}
       onMouseEnter={handleMouseEnter}
       onMouseLeave={handleMouseLeave}
+      style={{ position: "relative" }}
     >
       <div className="score-card__icon-wrapper">{iconMap[v]}</div>
       <div className="score-card__content">
@@ -88,8 +92,10 @@ const ScorePill: React.FC<ScorePillProps> = ({
         <div
           style={{
             position: "absolute",
-            top: tooltipPosition.top,
-            left: tooltipPosition.left,
+            top: "calc(100% + 8px)",
+            left: "0%",
+            transform: "translateX(-50%)",
+            zIndex: 1000,
           }}
         >
           <ScorePillTooltip type={tooltipType} scores={scores} />
