@@ -6,8 +6,8 @@
   white-space: nowrap;
   pointer-events: none;
   padding: 8px 12px;
-  min-width: 200px;
-  max-width: 400px;
+  width: auto;
+  gap: 8px;
   z-index: 1000;
   box-shadow: 0 2px 8px var(--color-overlay-shadow);
 }
@@ -22,20 +22,12 @@
   font-weight: 400;
 }
 
-.tooltip-content ul {
-  margin: 0;
-  padding-left: 16px;
-}
-
-.tooltip-content li {
-  margin: 2px 0;
-}
-
 .tooltip-score-item {
   display: flex;
   justify-content: space-between;
   align-items: center;
   margin: 4px 0;
+  gap: 8px;
 }
 
 .tooltip-score-item span:first-child {

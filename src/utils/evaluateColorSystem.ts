@@ -207,8 +207,13 @@ export function evaluateColorSystem(swatches: string[]): EvaluationResult {
   const maxPossiblePairs = Math.floor(
     (swatchCount - (lValues.includes(50) ? 1 : 0)) / 2
   );
+
+  // Add symmetry penalty factor
+  const SYMMETRY_PENALTY_FACTOR = 0.5; // Adjust this value to control penalty curve
   const symmetryScore =
-    maxPossiblePairs > 0 ? symmetricPairs / maxPossiblePairs : 0;
+    maxPossiblePairs > 0
+      ? Math.pow(symmetricPairs / maxPossiblePairs, SYMMETRY_PENALTY_FACTOR)
+      : 0;
 
   details.push(
     `Symmetry of steps: found ${symmetricPairs} symmetric pairs out of ${maxPossiblePairs} possible (score: ${symmetryScore.toFixed(

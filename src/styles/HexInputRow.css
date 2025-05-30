@@ -1,0 +1,54 @@
+.hex-input-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+
+.hex-input-row .hex-input-group {
+  width: 90px !important;
+}
+
+.hex-input-row .color-swatch {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 120px;
+}
+
+.hex-input-row .swatch-color {
+  width: 32px;
+  height: 32px;
+  border-radius: 4px;
+  border: 1px solid var(--color-neutral-650);
+}
+
+.hex-input-row .swatch-info {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.hex-input-row .l-value {
+  font-size: 12px;
+  color: var(--color-neutral-00);
+  font-family: "Lato", sans-serif;
+}
+
+.hex-input-row .contrast-ratios {
+  display: flex;
+  gap: 8px;
+  font-size: 11px;
+  color: var(--color-neutral-400);
+  font-family: "Lato", sans-serif;
+}
+
+.hex-input-row .standard-input.error {
+  border-color: var(--color-error-450);
+}
+
+.hex-input-row .standard-input.error:focus {
+  border-color: var(--color-error-500);
+}
+
+/* Add any additional overrides or custom styles for HexInputRow below */

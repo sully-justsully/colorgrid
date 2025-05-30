@@ -153,18 +153,18 @@ describe("App Component", () => {
   });
 });
 
-describe("Custom Tab Color Ramp and L* Input", () => {
+describe("HEX Tab Color Ramp and L* Input", () => {
   beforeEach(() => {
     localStorage.clear();
   });
 
-  it("allows adding a new color ramp in the custom tab", () => {
+  it("allows adding a new color ramp in the hex tab", () => {
     render(
       <MemoryRouter>
         <App />
       </MemoryRouter>
     );
-    fireEvent.click(screen.getByText("Custom"));
+    fireEvent.click(screen.getByText("HEX"));
     const addRampButton = screen.getByLabelText("Add ramp at top");
     fireEvent.click(addRampButton);
     // Should be two or more color swatch inputs now
@@ -178,7 +178,7 @@ describe("Custom Tab Color Ramp and L* Input", () => {
         <App />
       </MemoryRouter>
     );
-    fireEvent.click(screen.getByText("Custom"));
+    fireEvent.click(screen.getByText("HEX"));
     const lInputs = screen.getAllByRole("spinbutton");
     // Try to set above 100
     fireEvent.change(lInputs[0], { target: { value: "150" } });
@@ -201,7 +201,7 @@ describe("Custom Tab Color Ramp and L* Input", () => {
         <App />
       </MemoryRouter>
     );
-    fireEvent.click(screen.getByText("Custom"));
+    fireEvent.click(screen.getByText("HEX"));
     const lInputs = screen.getAllByRole("spinbutton");
     fireEvent.change(lInputs[0], { target: { value: "" } });
     fireEvent.blur(lInputs[0]);

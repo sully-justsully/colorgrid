@@ -32,8 +32,9 @@ interface ColorGridProps {
   isPickingColor: boolean;
   activeLValue: number | null;
   clearActiveDotsSignal: number;
-  activeTab: "simple" | "advanced" | "custom";
+  activeTab: "simple" | "lightness" | "hex";
   activeSwatchId: number | null;
+  forceGrayscale?: boolean;
 }
 
 const ColorGrid: React.FC<ColorGridProps> = ({
@@ -51,6 +52,7 @@ const ColorGrid: React.FC<ColorGridProps> = ({
   clearActiveDotsSignal,
   activeTab,
   activeSwatchId,
+  forceGrayscale,
 }) => {
   const {
     handleDotClick: handleGridDotClick,
@@ -121,7 +123,7 @@ const ColorGrid: React.FC<ColorGridProps> = ({
   const dots = useMemo(() => {
     const newDots: Dot[] = [];
     const lValuesSet = new Set(lValues);
-    const keyHsb = keyHexCode ? hexToHsb(keyHexCode) : null;
+    const keyHsb = !forceGrayscale && keyHexCode ? hexToHsb(keyHexCode) : null;
 
     // Pre-calculate contrast thresholds
     const contrastThresholds = {
@@ -134,11 +136,20 @@ const ColorGrid: React.FC<ColorGridProps> = ({
     for (let row = 0; row < 101; row++) {
       for (let col = 0; col < 101; col++) {
         const brightness = 100 - row;
-        const saturation = col;
+        const saturation = forceGrayscale ? 0 : col;
         const cached = colorCache[brightness]?.[col];
 
         if (cached) {
+          // For HEX tab, always use grayscale color
+          let dotHexColor = cached.hexColor;
+          if (forceGrayscale) {
+            const [r, g, b] = hsbToRgb(hue, 0, brightness);
+            dotHexColor = rgbToHex(r, g, b).toUpperCase();
+          }
+
+          // In forceGrayscale mode, never show the key hex code dot
           const isActive =
+            !forceGrayscale &&
             keyHsb !== null &&
             Math.abs(keyHsb.h - hue) < 1 &&
             Math.abs(keyHsb.s - saturation) < 1 &&
@@ -163,7 +174,7 @@ const ColorGrid: React.FC<ColorGridProps> = ({
               !isFiltered &&
               (isATextContrast || isAATextContrast || isAAATextContrast)
             ) {
-              const contrastRatio = calculateContrastRatio(cached.hexColor);
+              const contrastRatio = calculateContrastRatio(dotHexColor);
               isFiltered =
                 contrastRatio <
                 Math.max(
@@ -178,15 +189,16 @@ const ColorGrid: React.FC<ColorGridProps> = ({
             }
           }
 
-          const isInActiveDots =
-            activeSwatchId !== null
-              ? isDotActive(dotKey, activeSwatchId)
-              : false;
+          const isInActiveDots = forceGrayscale
+            ? false
+            : activeSwatchId !== null
+            ? isDotActive(dotKey, activeSwatchId)
+            : false;
 
           const dot: Dot = {
             row,
             col,
-            hexColor: cached.hexColor,
+            hexColor: dotHexColor,
             labLightness: cached.labLightness,
             hsbText: cached.hsbText,
             isActive,
@@ -214,6 +226,7 @@ const ColorGrid: React.FC<ColorGridProps> = ({
     isDotActive,
     activeSwatchId,
     activeDots,
+    forceGrayscale,
   ]);
 
   const handleDotClick = useCallback(

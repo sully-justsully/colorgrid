@@ -75,11 +75,11 @@ const QuickGuideModal: React.FC<QuickGuideModalProps> = ({ onClose }) => {
                 Keep things easy with 12 swatches per family.
               </p>
               <p>
-                <strong>Advanced: </strong>
+                <strong>Lightness: </strong>
                 Make things robust with 18 swatches per family.
               </p>
               <p>
-                <strong>Custom: </strong>
+                <strong>HEX: </strong>
                 It's all up to you!
               </p>
             </div>
@@ -150,7 +150,7 @@ const QuickGuideModal: React.FC<QuickGuideModalProps> = ({ onClose }) => {
                 >
                   Design System Variables — Midnight v2.0
                 </a>{" "}
-                to use your custom color system with over 400+ ready-to-go color
+                to use your HEX color system with over 400+ ready-to-go color
                 variables.
               </p>
               <p>Enjoy!</p>

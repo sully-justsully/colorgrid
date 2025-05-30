@@ -1,7 +1,7 @@
 .tabs {
   display: flex;
   gap: 0px;
-  margin-bottom: 16px;
+  margin-bottom: 0px;
   padding: 0 4px;
 }
 

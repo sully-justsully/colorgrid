@@ -56,12 +56,14 @@ import QuickGuideModal from "./components/QuickGuideModal";
 import ScorePillDemo from "./pages/ScorePillDemo";
 import ScorePill from "./components/ScorePill";
 import { evaluateColorSystem } from "./utils/evaluateColorSystem";
+import HexInputRow from "./components/HexInputRow";
+import ResetRampsModal from "./components/ResetRampsModal";
+import "./styles/HexInputRow.css";
 
 const STORAGE_KEY = "colorGridSwatches";
 const HEX_STORAGE_KEY = "colorGridHexCode";
 const CUSTOM_RAMPS_STORAGE_KEY = "colorGridCustomRamps";
 
-const initialLValuesSimple = [100, 95, 85, 75, 65, 55, 45, 35, 25, 15, 5, 0];
 const initialLValuesAdvanced = [
   100, 98, 96, 93, 90, 82, 73, 65, 54, 45, 35, 27, 18, 10, 7, 4, 2, 0,
 ];
@@ -142,21 +144,19 @@ const App: React.FC = () => {
     null
   );
   const [showFiltersDropdown, setShowFiltersDropdown] = useState(false);
-  const [activeTab, setActiveTab] = useState<"simple" | "advanced" | "custom">(
-    "simple"
-  );
-  const [swatchesSimple, setSwatchesSimple] = useState<ColorSwatchType[]>(
+  const [activeTab, setActiveTab] = useState<"lightness" | "hex">("lightness");
+  const [swatchesAdvanced, setSwatchesAdvanced] = useState<ColorSwatchType[]>(
     () => {
-      const savedSwatches = localStorage.getItem(STORAGE_KEY + "_simple");
+      const savedSwatches = localStorage.getItem(STORAGE_KEY + "_advanced");
       if (savedSwatches) {
         try {
           return JSON.parse(savedSwatches);
         } catch (e) {
           console.error("Failed to parse saved swatches:", e);
-          return createInitialSwatches(initialLValuesSimple);
+          return createInitialSwatches(initialLValuesAdvanced);
         }
       }
-      return createInitialSwatches(initialLValuesSimple);
+      return createInitialSwatches(initialLValuesAdvanced);
     }
   );
   const [swatchesCustom, setSwatchesCustom] = useState<ColorSwatchType[]>(
@@ -171,20 +171,6 @@ const App: React.FC = () => {
         }
       }
       return createInitialSwatches([100], keyHexCode);
-    }
-  );
-  const [swatchesAdvanced, setSwatchesAdvanced] = useState<ColorSwatchType[]>(
-    () => {
-      const savedSwatches = localStorage.getItem(STORAGE_KEY + "_advanced");
-      if (savedSwatches) {
-        try {
-          return JSON.parse(savedSwatches);
-        } catch (e) {
-          console.error("Failed to parse saved swatches:", e);
-          return createInitialSwatches(initialLValuesAdvanced);
-        }
-      }
-      return createInitialSwatches(initialLValuesAdvanced);
     }
   );
   const [showToast, setShowToast] = useState(false);
@@ -234,18 +220,33 @@ const App: React.FC = () => {
     return savedTheme ? savedTheme === "dark" : false;
   });
   const [showQuickGuide, setShowQuickGuide] = useState(false);
+  const [showResetModal, setShowResetModal] = useState(false);
+  const [customHexCodes, setCustomHexCodes] = useState<string[]>(() => {
+    const savedCustomRamps = localStorage.getItem(CUSTOM_RAMPS_STORAGE_KEY);
+    if (savedCustomRamps) {
+      try {
+        const parsed = JSON.parse(savedCustomRamps);
+        return parsed.map((swatch: ColorSwatchType) =>
+          swatch.hexColor.slice(1)
+        );
+      } catch (e) {
+        console.error("Failed to parse saved custom ramps:", e);
+        return ["FFFFFF"];
+      }
+    }
+    return ["FFFFFF"];
+  });
+  const [pendingSwatchesToSave, setPendingSwatchesToSave] = useState<
+    ColorSwatchType[] | null
+  >(null);
 
   const dropdownRef = useRef<HTMLDivElement>(null);
   const location = useLocation();
   const cancelButtonRef = useRef<HTMLButtonElement>(null);
 
   const currentSwatches = useMemo(() => {
-    return activeTab === "simple"
-      ? swatchesSimple
-      : activeTab === "custom"
-      ? swatchesCustom
-      : swatchesAdvanced;
-  }, [activeTab, swatchesSimple, swatchesCustom, swatchesAdvanced]);
+    return activeTab === "lightness" ? swatchesAdvanced : swatchesCustom;
+  }, [activeTab, swatchesAdvanced, swatchesCustom]);
 
   // Swatch refs for keyboard navigation (must come after currentSwatches)
   const swatchRefs = useMemo(
@@ -268,13 +269,6 @@ const App: React.FC = () => {
       document.removeEventListener("mousedown", handleClickOutside);
     };
   }, []);
-
-  useEffect(() => {
-    localStorage.setItem(
-      STORAGE_KEY + "_simple",
-      JSON.stringify(swatchesSimple)
-    );
-  }, [swatchesSimple]);
 
   useEffect(() => {
     localStorage.setItem(
@@ -373,11 +367,7 @@ const App: React.FC = () => {
 
       // Get the correct swatch array based on active tab
       const swatchArray =
-        activeTab === "simple"
-          ? swatchesSimple
-          : activeTab === "advanced"
-          ? swatchesAdvanced
-          : swatchesCustom;
+        activeTab === "lightness" ? swatchesAdvanced : swatchesCustom;
 
       // Find the swatch with the matching ID
       const selectedSwatch = swatchArray.find((s) => s.id === id);
@@ -386,11 +376,7 @@ const App: React.FC = () => {
 
         // Store the original color when entering color picking mode
         const setCurrentSwatches =
-          activeTab === "simple"
-            ? setSwatchesSimple
-            : activeTab === "advanced"
-            ? setSwatchesAdvanced
-            : setSwatchesCustom;
+          activeTab === "lightness" ? setSwatchesAdvanced : setSwatchesCustom;
 
         setCurrentSwatches((prevSwatches) =>
           prevSwatches.map((swatch) =>
@@ -418,11 +404,7 @@ const App: React.FC = () => {
 
   const handleLValueChange = (id: number, value: number) => {
     const setCurrentSwatches =
-      activeTab === "simple"
-        ? setSwatchesSimple
-        : activeTab === "advanced"
-        ? setSwatchesAdvanced
-        : setSwatchesCustom;
+      activeTab === "lightness" ? setSwatchesAdvanced : setSwatchesCustom;
     setCurrentSwatches((prevSwatches) =>
       prevSwatches
         .map((swatch) => {
@@ -451,11 +433,7 @@ const App: React.FC = () => {
     (dot: Dot) => {
       if (isPickingColor && activeSwatchId !== null) {
         const setCurrentSwatches =
-          activeTab === "simple"
-            ? setSwatchesSimple
-            : activeTab === "advanced"
-            ? setSwatchesAdvanced
-            : setSwatchesCustom;
+          activeTab === "lightness" ? setSwatchesAdvanced : setSwatchesCustom;
 
         setCurrentSwatches((prevSwatches) =>
           prevSwatches.map((swatch) =>
@@ -512,11 +490,7 @@ const App: React.FC = () => {
     (dot: Dot | null) => {
       if (isPickingColor && activeSwatchId !== null) {
         const setCurrentSwatches =
-          activeTab === "simple"
-            ? setSwatchesSimple
-            : activeTab === "advanced"
-            ? setSwatchesAdvanced
-            : setSwatchesCustom;
+          activeTab === "lightness" ? setSwatchesAdvanced : setSwatchesCustom;
 
         setCurrentSwatches((prevSwatches) =>
           prevSwatches.map((swatch) => {
@@ -556,12 +530,15 @@ const App: React.FC = () => {
   );
 
   const handleAddRamp = (position = "bottom") => {
+    if (activeTab === "hex") {
+      setCustomHexCodes((prev) => {
+        if (prev.length >= 20) return prev;
+        return [...prev, "FFFFFF"];
+      });
+      return;
+    }
     const setCurrentSwatches =
-      activeTab === "simple"
-        ? setSwatchesSimple
-        : activeTab === "advanced"
-        ? setSwatchesAdvanced
-        : setSwatchesCustom;
+      activeTab === "lightness" ? setSwatchesAdvanced : setSwatchesCustom;
     setCurrentSwatches((prevSwatches) => {
       // Check if we've reached the maximum limit of 20 swatches
       if (prevSwatches.length >= 20) {
@@ -593,29 +570,38 @@ const App: React.FC = () => {
   };
 
   const handleResetRamps = () => {
-    switch (activeTab) {
-      case "simple":
-        setSwatchesSimple(createInitialSwatches(initialLValuesSimple));
-        break;
-      case "custom":
-        // Reset to only show the key hex code ramp
-        const lValue = Math.round(hexToLabLightness(`#${keyHexCode}`));
-        setSwatchesCustom([
-          {
-            id: 1,
-            lValue,
-            hexColor: `#${keyHexCode}`,
-            whiteContrast: calculateContrastRatio(`#${keyHexCode}`),
-            blackContrast: calculateContrastRatio(`#${keyHexCode}`, "#000000"),
-          },
-        ]);
-        break;
-      case "advanced":
-        setSwatchesAdvanced(createInitialSwatches(initialLValuesAdvanced));
-        break;
+    setShowResetModal(true);
+  };
+
+  const confirmResetRamps = () => {
+    if (activeTab === "hex") {
+      setCustomHexCodes([]);
+    } else if (activeTab === "lightness") {
+      setSwatchesAdvanced(createInitialSwatches(initialLValuesAdvanced));
     }
     setClearActiveDotsSignal((prev) => prev + 1);
+    setShowResetModal(false);
   };
+
+  // Ensure at least one ramp is present in customHexCodes
+  useEffect(() => {
+    if (customHexCodes.length === 0) {
+      setCustomHexCodes(["FFFFFF"]);
+    }
+  }, [customHexCodes]);
+
+  // Update swatchesCustom when customHexCodes changes
+  useEffect(() => {
+    const newSwatches = customHexCodes.map((hex, index) => ({
+      id: index + 1,
+      lValue: Math.round(hexToLabLightness(`#${hex}`)),
+      hexColor: `#${hex}`,
+      whiteContrast: calculateContrastRatio(`#${hex}`),
+      blackContrast: calculateContrastRatio(`#${hex}`, "#000000"),
+    }));
+    setSwatchesCustom(newSwatches);
+    localStorage.setItem(CUSTOM_RAMPS_STORAGE_KEY, JSON.stringify(newSwatches));
+  }, [customHexCodes]);
 
   const handleExportColors = () => {
     // Track the export event
@@ -760,7 +746,7 @@ const App: React.FC = () => {
     URL.revokeObjectURL(url);
   };
 
-  const handleTabChange = (tab: "simple" | "custom" | "advanced") => {
+  const handleTabChange = (tab: "lightness" | "hex") => {
     setActiveTab(tab);
   };
 
@@ -834,6 +820,28 @@ const App: React.FC = () => {
   };
 
   const handleSaveToColorSystem = () => {
+    let swatchesToSave = currentSwatches;
+    if (activeTab === "hex") {
+      // Sort customHexCodes by L* value (highest to lowest)
+      const sortedHexes = customHexCodes
+        .map((hex) => ({
+          hex,
+          lValue: hexToLabLightness(`#${hex}`),
+        }))
+        .sort((a, b) => b.lValue - a.lValue)
+        .map((item) => item.hex);
+      swatchesToSave = sortedHexes.map((hex, idx) => {
+        const lValue = Math.round(hexToLabLightness(`#${hex}`));
+        return {
+          id: idx + 1,
+          lValue,
+          hexColor: `#${hex}`,
+          whiteContrast: calculateContrastRatio(`#${hex}`),
+          blackContrast: calculateContrastRatio(`#${hex}`, "#000000"),
+        };
+      });
+    }
+    setPendingSwatchesToSave(swatchesToSave);
     setIsColorSystemOpen(true);
     setIsSavingMode(true);
     setPulsingRectangle("all");
@@ -847,12 +855,15 @@ const App: React.FC = () => {
     // Save the current swatches to this section
     setSavedSwatches((prev) => ({
       ...prev,
-      [sectionKey]: [...currentSwatches],
+      [sectionKey]: pendingSwatchesToSave
+        ? [...pendingSwatchesToSave]
+        : [...currentSwatches],
     }));
 
     // Exit saving mode and stop pulsing
     setIsSavingMode(false);
     setPulsingRectangle(null);
+    setPendingSwatchesToSave(null);
   };
 
   const handleRemovePalette = (sectionTitle: string) => {
@@ -951,6 +962,18 @@ const App: React.FC = () => {
     console.log("Saved palettes (Color System):", savedSwatches);
   }
 
+  const handleHexChange = (id: number, hex: string) => {
+    setCustomHexCodes((prev) => {
+      const newCodes = [...prev];
+      newCodes[id] = hex;
+      return newCodes;
+    });
+  };
+
+  const handleRemoveRamp = (id: number) => {
+    setCustomHexCodes((prev) => prev.filter((_, index) => index !== id));
+  };
+
   return (
     <div className="app">
       <MobileLayout />
@@ -978,11 +1001,7 @@ const App: React.FC = () => {
                       }
                       window.open(
                         `/contrast-grid?tab=${
-                          activeTab === "simple"
-                            ? "simple"
-                            : activeTab === "advanced"
-                            ? "advanced"
-                            : "custom"
+                          activeTab === "lightness" ? "lightness" : "hex"
                         }&swatches=${encodeURIComponent(
                           JSON.stringify(currentSwatches)
                         )}`,
@@ -1229,238 +1248,169 @@ const App: React.FC = () => {
               <div className="main-container">
                 <div className="left-drawer">
                   <div className="left-drawer-section">
-                    <h3>Key Hex Code</h3>
-                    <div className="hex-control">
-                      <div className="hex-input-group input-flex-center">
-                        <input
-                          type="color"
-                          value={`#${inputHexCode}`}
-                          onChange={(e) => {
-                            const newHex = e.target.value
-                              .slice(1)
-                              .toUpperCase();
-                            setInputHexCode(newHex);
-                            setIsHexValid(true);
-                            setIsHexDirty(newHex !== keyHexCode);
-                            if (newHex !== keyHexCode) {
-                              setKeyHexCode(newHex);
-                              const { h, s, b } = hexToHsb(newHex);
-                              setHslValues({ h, s, b });
-                              setHue(h);
-                            }
-                          }}
-                          className="color-picker"
-                          title="Pick a color"
-                        />
-                        <input
-                          type="text"
-                          value={inputHexCode}
-                          onChange={handleHexCodeChange}
-                          onKeyPress={handleKeyPress}
-                          placeholder="000000"
-                          className="standard-input input-prefix-hex"
-                        />
-                        <button
-                          onClick={updateHexCode}
-                          className={`btn-secondary btn-icon-only ${
-                            !isHexValid || !isHexDirty ? "disabled" : ""
-                          }`}
-                        >
-                          <ChevronRightIcon />
-                        </button>
-                      </div>
-                      <div className="hsv-inputs">
-                        <input
-                          type="number"
-                          value={hslValues.h}
-                          onChange={(e) =>
-                            handleHslChange("h", parseInt(e.target.value) || 0)
-                          }
-                          onKeyDown={(e) => handleHslKeyDown(e, "h")}
-                          min="0"
-                          max="360"
-                          className="standard-input input-prefix-h hsv-input"
-                        />
-                        <input
-                          type="number"
-                          value={hslValues.s}
-                          onChange={(e) =>
-                            handleHslChange("s", parseInt(e.target.value) || 0)
-                          }
-                          onKeyDown={(e) => handleHslKeyDown(e, "s")}
-                          min="0"
-                          max="100"
-                          className="standard-input input-prefix-s hsv-input"
-                        />
-                        <input
-                          type="number"
-                          value={hslValues.b}
-                          onChange={(e) =>
-                            handleHslChange("b", parseInt(e.target.value) || 0)
-                          }
-                          onKeyDown={(e) => handleHslKeyDown(e, "b")}
-                          min="0"
-                          max="100"
-                          className="standard-input input-prefix-b hsv-input"
-                        />
-                      </div>
-                    </div>
-                  </div>
-
-                  <div className="left-drawer-section">
-                    <div className="section-header">
-                      <h3>Filter by Color Ramp</h3>
-                      <label className="filter-toggle">
-                        <input
-                          type="checkbox"
-                          checked={isFiltering}
-                          onChange={handleFilterToggle}
-                          aria-label="Filter by Color Ramp"
-                        />
-                        <span className="toggle-slider" />
-                      </label>
-                    </div>
+                    <h3 className="hidden-section">Key Hex Code</h3>
                     <div className="tabs">
                       <button
                         className={`tab ${
-                          activeTab === "simple" ? "active" : ""
+                          activeTab === "lightness" ? "active" : ""
                         }`}
-                        onClick={() => handleTabChange("simple")}
+                        onClick={() => handleTabChange("lightness")}
                       >
-                        Simple
+                        Lightness Values
                       </button>
                       <button
-                        className={`tab ${
-                          activeTab === "advanced" ? "active" : ""
-                        }`}
-                        onClick={() => handleTabChange("advanced")}
+                        className={`tab ${activeTab === "hex" ? "active" : ""}`}
+                        onClick={() => handleTabChange("hex")}
                       >
-                        Advanced
-                      </button>
-                      <button
-                        className={`tab ${
-                          activeTab === "custom" ? "active" : ""
-                        }`}
-                        onClick={() => handleTabChange("custom")}
-                      >
-                        Custom
+                        HEX Codes
                       </button>
                     </div>
-                    <div className="color-ramps">
-                      {activeTab === "custom" && (
-                        <div
-                          className="dashed-rectangle"
-                          style={{
-                            display: "flex",
-                            alignItems: "center",
-                            justifyContent: "center",
-                            cursor:
-                              swatchesCustom.length >= 20
-                                ? "not-allowed"
-                                : "pointer",
-                            opacity: swatchesCustom.length >= 20 ? 0.5 : 1,
-                          }}
-                          onClick={() =>
-                            swatchesCustom.length < 20 && handleAddRamp("top")
-                          }
-                          tabIndex={0}
-                          role="button"
-                          aria-label="Add ramp at top"
-                          aria-disabled={swatchesCustom.length >= 20}
-                        >
-                          <AddIcon className="dashed-rectangle-add-icon" />
-                        </div>
-                      )}
-                      {activeTab === "simple"
-                        ? swatchesSimple.map((swatch, idx) => (
-                            <ColorSwatch
-                              key={swatch.id}
-                              swatch={swatch}
-                              isActive={swatch.id === activeSwatchId}
-                              onLValueChange={handleLValueChange}
-                              onClick={handleSwatchClick}
-                              ref={swatchRefs[idx] as RefObject<HTMLDivElement>}
-                              onSwatchKeyDown={(
-                                e: React.KeyboardEvent<HTMLDivElement>
-                              ) => {
-                                if (
-                                  e.key === "ArrowRight" &&
-                                  idx < swatchRefs.length - 1
-                                ) {
-                                  swatchRefs[idx + 1].current?.focus();
-                                } else if (e.key === "ArrowLeft" && idx > 0) {
-                                  swatchRefs[idx - 1].current?.focus();
-                                }
-                              }}
-                            />
-                          ))
-                        : activeTab === "custom"
-                        ? swatchesCustom.map((swatch, idx) => (
-                            <ColorSwatch
-                              key={swatch.id}
-                              swatch={swatch}
-                              isActive={swatch.id === activeSwatchId}
-                              onLValueChange={handleLValueChange}
-                              onClick={handleSwatchClick}
-                              isKeyHexCode={swatch.id === 1}
-                              removeButton={
-                                swatch.id !== 1 ? (
-                                  <button
-                                    className="btn btn-icon-only btn-destructive small"
-                                    onClick={() =>
-                                      handleRemoveCustomRamp(swatch.id)
-                                    }
-                                    aria-label="Remove ramp"
-                                  >
-                                    <RemoveIcon />
-                                  </button>
-                                ) : null
+                    {activeTab === "lightness" && (
+                      <div className="hex-control">
+                        <div className="hex-input-group input-flex-center">
+                          <input
+                            type="color"
+                            value={`#${inputHexCode}`}
+                            onChange={(e) => {
+                              const newHex = e.target.value
+                                .slice(1)
+                                .toUpperCase();
+                              setInputHexCode(newHex);
+                              setIsHexValid(true);
+                              setIsHexDirty(newHex !== keyHexCode);
+                              if (newHex !== keyHexCode) {
+                                setKeyHexCode(newHex);
+                                const { h, s, b } = hexToHsb(newHex);
+                                setHslValues({ h, s, b });
+                                setHue(h);
                               }
-                              ref={swatchRefs[idx] as RefObject<HTMLDivElement>}
-                              onSwatchKeyDown={(
-                                e: React.KeyboardEvent<HTMLDivElement>
-                              ) => {
-                                if (
-                                  e.key === "ArrowRight" &&
-                                  idx < swatchRefs.length - 1
-                                ) {
-                                  swatchRefs[idx + 1].current?.focus();
-                                } else if (e.key === "ArrowLeft" && idx > 0) {
-                                  swatchRefs[idx - 1].current?.focus();
-                                }
-                              }}
-                            />
-                          ))
-                        : swatchesAdvanced.map((swatch, idx) => (
-                            <ColorSwatch
-                              key={swatch.id}
-                              swatch={swatch}
-                              isActive={swatch.id === activeSwatchId}
-                              onLValueChange={handleLValueChange}
-                              onClick={handleSwatchClick}
-                              ref={swatchRefs[idx] as RefObject<HTMLDivElement>}
-                              onSwatchKeyDown={(
-                                e: React.KeyboardEvent<HTMLDivElement>
-                              ) => {
-                                if (
-                                  e.key === "ArrowRight" &&
-                                  idx < swatchRefs.length - 1
-                                ) {
-                                  swatchRefs[idx + 1].current?.focus();
-                                } else if (e.key === "ArrowLeft" && idx > 0) {
-                                  swatchRefs[idx - 1].current?.focus();
-                                }
-                              }}
-                            />
-                          ))}
+                            }}
+                            className="color-picker"
+                            title="Pick a color"
+                          />
+                          <input
+                            type="text"
+                            value={inputHexCode}
+                            onChange={handleHexCodeChange}
+                            onKeyPress={handleKeyPress}
+                            placeholder="000000"
+                            className="standard-input input-prefix-hex"
+                          />
+                          <button
+                            onClick={updateHexCode}
+                            className={`btn-secondary btn-icon-only ${
+                              !isHexValid || !isHexDirty ? "disabled" : ""
+                            }`}
+                          >
+                            <ChevronRightIcon />
+                          </button>
+                        </div>
+                        <div className="hsv-inputs">
+                          <input
+                            type="number"
+                            value={hslValues.h}
+                            onChange={(e) =>
+                              handleHslChange(
+                                "h",
+                                parseInt(e.target.value) || 0
+                              )
+                            }
+                            onKeyDown={(e) => handleHslKeyDown(e, "h")}
+                            min="0"
+                            max="360"
+                            className="standard-input input-prefix-h hsv-input"
+                          />
+                          <input
+                            type="number"
+                            value={hslValues.s}
+                            onChange={(e) =>
+                              handleHslChange(
+                                "s",
+                                parseInt(e.target.value) || 0
+                              )
+                            }
+                            onKeyDown={(e) => handleHslKeyDown(e, "s")}
+                            min="0"
+                            max="100"
+                            className="standard-input input-prefix-s hsv-input"
+                          />
+                          <input
+                            type="number"
+                            value={hslValues.b}
+                            onChange={(e) =>
+                              handleHslChange(
+                                "b",
+                                parseInt(e.target.value) || 0
+                              )
+                            }
+                            onKeyDown={(e) => handleHslKeyDown(e, "b")}
+                            min="0"
+                            max="100"
+                            className="standard-input input-prefix-b hsv-input"
+                          />
+                        </div>
+                      </div>
+                    )}
+                    <div className="color-ramps">
+                      {activeTab === "hex" ? (
+                        <>
+                          <div className="custom-ramps">
+                            {customHexCodes
+                              .map((hex, index) => ({
+                                hex,
+                                index,
+                                lValue: hexToLabLightness(`#${hex}`),
+                              }))
+                              .sort((a, b) => b.lValue - a.lValue)
+                              .map(({ hex, index }, sortedIdx) => (
+                                <HexInputRow
+                                  key={index}
+                                  id={index}
+                                  initialHex={hex}
+                                  onHexChange={handleHexChange}
+                                  onRemove={handleRemoveRamp}
+                                  isFirstRow={false}
+                                />
+                              ))}
+                            {customHexCodes.length < 20 && (
+                              <div
+                                className="dashed-rectangle"
+                                onClick={() => handleAddRamp()}
+                                tabIndex={0}
+                                role="button"
+                                aria-label="Add new color"
+                              >
+                                <AddIcon className="dashed-rectangle-add-icon" />
+                              </div>
+                            )}
+                          </div>
+                        </>
+                      ) : (
+                        swatchesAdvanced.map((swatch, idx) => (
+                          <ColorSwatch
+                            key={swatch.id}
+                            swatch={swatch}
+                            isActive={swatch.id === activeSwatchId}
+                            onLValueChange={handleLValueChange}
+                            onClick={handleSwatchClick}
+                            ref={swatchRefs[idx] as RefObject<HTMLDivElement>}
+                            onSwatchKeyDown={(
+                              e: React.KeyboardEvent<HTMLDivElement>
+                            ) => {
+                              if (
+                                e.key === "ArrowRight" &&
+                                idx < swatchRefs.length - 1
+                              ) {
+                                swatchRefs[idx + 1].current?.focus();
+                              } else if (e.key === "ArrowLeft" && idx > 0) {
+                                swatchRefs[idx - 1].current?.focus();
+                              }
+                            }}
+                          />
+                        ))
+                      )}
                     </div>
-                  </div>
-                  <div className="left-drawer-section">
-                    <div className="ramp-actions">
-                      {
-                        activeTab === "custom" &&
-                          false /* Remove Ramp button removed */
-                      }
+                    <div className="left-drawer-ctas">
                       <button
                         className="btn btn-secondary btn-full"
                         onClick={handleResetRamps}
@@ -1469,14 +1419,12 @@ const App: React.FC = () => {
                         <ResetIcon />
                         Reset Ramps
                       </button>
-                    </div>
-                    <div className="ramp-actions save-actions">
                       <button
                         className="btn btn-full"
                         onClick={handleSaveToColorSystem}
                       >
                         <ColorIcon />
-                        Save to Color System
+                        Save Palette
                       </button>
                     </div>
                   </div>
@@ -1485,7 +1433,7 @@ const App: React.FC = () => {
                 <div className="main-content">
                   <div className="grid-container">
                     <ColorGrid
-                      hue={hue}
+                      hue={activeTab === "hex" ? 210 : hue}
                       isFiltering={isFiltering}
                       isATextContrast={wcagLevel === "A"}
                       isAATextContrast={wcagLevel === "AA"}
@@ -1501,8 +1449,9 @@ const App: React.FC = () => {
                       activeSwatchId={
                         isPickingColor ? activeSwatchId : selectedSwatchId
                       }
+                      forceGrayscale={activeTab === "hex"}
                     />
-                    {isFiltering && (
+                    {isFiltering && activeTab !== "hex" && (
                       <div
                         className="guide-overlay"
                         dangerouslySetInnerHTML={{ __html: guideSvg }}
@@ -1536,10 +1485,9 @@ const App: React.FC = () => {
                     console.error("Failed to parse swatches:", e);
                   }
                 }
-                if (tab === "custom") return swatchesCustom;
-                if (tab === "simple") return swatchesSimple;
-                if (tab === "advanced") return swatchesAdvanced;
-                return swatchesSimple;
+                if (tab === "hex") return swatchesCustom;
+                if (tab === "lightness") return swatchesAdvanced;
+                return swatchesAdvanced;
               })()}
               title="Contrast Grid"
             />
@@ -1577,6 +1525,12 @@ const App: React.FC = () => {
             </button>
           </div>
         </AreYouSureModal>
+      )}
+      {showResetModal && (
+        <ResetRampsModal
+          onClose={() => setShowResetModal(false)}
+          onConfirm={confirmResetRamps}
+        />
       )}
       <button
         className="btn-fab"
