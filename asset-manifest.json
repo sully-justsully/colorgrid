@@ -1,9 +1,10 @@
 {
   "files": {
-    "main.css": "/static/css/main.32a21338.css",
-    "main.js": "/static/js/main.7ec19459.js",
+    "main.css": "/static/css/main.47d5d4be.css",
+    "main.js": "/static/js/main.b28d6e10.js",
     "static/js/488.f175d46f.chunk.js": "/static/js/488.f175d46f.chunk.js",
     "index.html": "/index.html",
+    "static/media/figma.svg": "/static/media/figma.954dea9eae6b3f161526cbae893c4076.svg",
     "static/media/color.svg": "/static/media/color.333639d2d109b95e41eef92ff3b4b126.svg",
     "static/media/warning.svg": "/static/media/warning.0125e3c602c3501b47eaec676dfd63f9.svg",
     "static/media/positive.svg": "/static/media/positive.a95744c859933c5deeadf02f540925f0.svg",
@@ -23,12 +24,12 @@
     "static/media/chevron-right.svg": "/static/media/chevron-right.3cc2b9302cc2c7364cc8cd67f57333ba.svg",
     "static/media/add-alt.svg": "/static/media/add-alt.29ecd500656399998d9f8ab69d564c09.svg",
     "static/media/remove.svg": "/static/media/remove.e9d075733e65b6e078a76e21b262772b.svg",
-    "main.32a21338.css.map": "/static/css/main.32a21338.css.map",
-    "main.7ec19459.js.map": "/static/js/main.7ec19459.js.map",
+    "main.47d5d4be.css.map": "/static/css/main.47d5d4be.css.map",
+    "main.b28d6e10.js.map": "/static/js/main.b28d6e10.js.map",
     "488.f175d46f.chunk.js.map": "/static/js/488.f175d46f.chunk.js.map"
   },
   "entrypoints": [
-    "static/css/main.32a21338.css",
-    "static/js/main.7ec19459.js"
+    "static/css/main.47d5d4be.css",
+    "static/js/main.b28d6e10.js"
   ]
 }
