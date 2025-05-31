@@ -5,7 +5,7 @@ import React, {
   useRef,
   useState,
 } from "react";
-import { Dot, ColorCache } from "../types";
+import { Dot, ColorCache, ColorSwatch as ColorSwatchType } from "../types";
 import {
   hsbToRgb,
   rgbToHex,
@@ -35,6 +35,7 @@ interface ColorGridProps {
   activeTab: "simple" | "lightness" | "hex";
   activeSwatchId: number | null;
   forceGrayscale?: boolean;
+  swatches: ColorSwatchType[];
 }
 
 const ColorGrid: React.FC<ColorGridProps> = ({
@@ -53,6 +54,7 @@ const ColorGrid: React.FC<ColorGridProps> = ({
   activeTab,
   activeSwatchId,
   forceGrayscale,
+  swatches,
 }) => {
   const {
     handleDotClick: handleGridDotClick,
@@ -123,7 +125,12 @@ const ColorGrid: React.FC<ColorGridProps> = ({
   const dots = useMemo(() => {
     const newDots: Dot[] = [];
     const lValuesSet = new Set(lValues);
-    const keyHsb = !forceGrayscale && keyHexCode ? hexToHsb(keyHexCode) : null;
+    const keyHsb =
+      activeTab === "hex"
+        ? null
+        : !forceGrayscale && keyHexCode
+        ? hexToHsb(keyHexCode)
+        : null;
 
     // Pre-calculate contrast thresholds
     const contrastThresholds = {
@@ -136,19 +143,20 @@ const ColorGrid: React.FC<ColorGridProps> = ({
     for (let row = 0; row < 101; row++) {
       for (let col = 0; col < 101; col++) {
         const brightness = 100 - row;
-        const saturation = forceGrayscale ? 0 : col;
+        const saturation = activeTab === "hex" ? 0 : forceGrayscale ? 0 : col;
         const cached = colorCache[brightness]?.[col];
 
         if (cached) {
           // For HEX tab, always use grayscale color
           let dotHexColor = cached.hexColor;
-          if (forceGrayscale) {
+          if (activeTab === "hex" || forceGrayscale) {
             const [r, g, b] = hsbToRgb(hue, 0, brightness);
             dotHexColor = rgbToHex(r, g, b).toUpperCase();
           }
 
-          // In forceGrayscale mode, never show the key hex code dot
+          // In forceGrayscale mode or hex tab, never show the key hex code dot
           const isActive =
+            activeTab !== "hex" &&
             !forceGrayscale &&
             keyHsb !== null &&
             Math.abs(keyHsb.h - hue) < 1 &&
@@ -229,28 +237,40 @@ const ColorGrid: React.FC<ColorGridProps> = ({
     activeDots,
     forceGrayscale,
     onDotHover,
+    activeTab,
   ]);
 
   const handleDotClick = useCallback(
     (dot: Dot) => {
-      if (isPickingColor && activeSwatchId !== null) {
-        handleGridDotClick(dot, activeSwatchId);
-        onDotClick(dot);
-      }
+      // Always use a valid swatch ID (default to 0 if null)
+      const swatchId = activeSwatchId ?? 0;
+      handleGridDotClick(dot, swatchId);
+      onDotClick(dot);
     },
-    [handleGridDotClick, onDotClick, isPickingColor, activeSwatchId]
+    [handleGridDotClick, onDotClick, activeSwatchId]
   );
+
+  // Precompute a map of swatch color to the first matching dot key
+  const swatchDotMap = useMemo(() => {
+    const map = new Map();
+    swatches.forEach((swatch) => {
+      const match = dots.find(
+        (d) => d.hexColor.toUpperCase() === swatch.hexColor.toUpperCase()
+      );
+      if (match) {
+        map.set(swatch.hexColor.toUpperCase(), `${match.row}-${match.col}`);
+      }
+    });
+    return map;
+  }, [swatches, dots]);
 
   // Memoize the rendered dots
   const renderedDots = useMemo(() => {
-    // Get all active dot keys
-    const activeDotKeys = new Set(Array.from(activeDots.values()));
     return dots.map((dot) => {
       const dotKey = `${dot.row}-${dot.col}`;
-      const isSelected = activeDotKeys.has(dotKey);
-      if (isSelected) {
-        console.log("Dot", dotKey, "isSelected for any swatch");
-      }
+      const isSelected =
+        swatchDotMap.has(dot.hexColor.toUpperCase()) &&
+        swatchDotMap.get(dot.hexColor.toUpperCase()) === dotKey;
       return (
         <div
           key={dotKey}
@@ -259,15 +279,7 @@ const ColorGrid: React.FC<ColorGridProps> = ({
             dot.isFiltered ? "filtered" : ""
           } ${isSelected ? "selected" : ""}`}
           style={{ backgroundColor: dot.hexColor }}
-          onClick={() => {
-            console.log("Dot clicked:", {
-              dotKey,
-              isPickingColor,
-              activeSwatchId,
-              dot,
-            });
-            handleDotClick(dot);
-          }}
+          onClick={() => handleDotClick(dot)}
           onMouseEnter={(e) => {
             setHoveredDot(dot);
             // Calculate position relative to grid
@@ -318,10 +330,10 @@ const ColorGrid: React.FC<ColorGridProps> = ({
   }, [
     dots,
     handleDotClick,
-    activeDots,
-    isPickingColor,
+    isDotActive,
     activeSwatchId,
     onDotHover,
+    swatchDotMap,
   ]);
 
   // Ref for tooltip to measure its size

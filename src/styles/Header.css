@@ -11,9 +11,16 @@
   right: 0;
   width: 100vw;
   z-index: 100;
+  gap: 8px;
 }
 
-.app-header h1 {
+.app-title {
+  display: flex;
+  align-items: center;
+  margin-right: auto;
+}
+
+.app-title h1 {
   margin: 0;
   font-size: 18px;
   font-weight: 500;
@@ -34,6 +41,7 @@
 
 .header-actions {
   display: flex;
+  align-items: center;
   gap: 8px;
 }
 
