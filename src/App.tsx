@@ -178,10 +178,10 @@ const App: React.FC = () => {
           return JSON.parse(savedCustomRamps);
         } catch (e) {
           console.error("Failed to parse saved custom ramps:", e);
-          return createInitialSwatches([100], keyHexCode);
+          return createInitialSwatches([100], "FFFFFF");
         }
       }
-      return createInitialSwatches([100], keyHexCode);
+      return createInitialSwatches([100], "FFFFFF");
     }
   );
   const [showToast, setShowToast] = useState(false);
@@ -293,29 +293,6 @@ const App: React.FC = () => {
 
   useEffect(() => {
     localStorage.setItem(HEX_STORAGE_KEY, keyHexCode);
-    // Always update Custom mode swatches when key hex code changes
-    const r = parseInt(keyHexCode.slice(0, 2), 16);
-    const g = parseInt(keyHexCode.slice(2, 4), 16);
-    const b = parseInt(keyHexCode.slice(4, 6), 16);
-    const lValue = Math.round(hexToLabLightness(`#${keyHexCode}`));
-
-    setSwatchesCustom((prevSwatches) => {
-      // Update only the swatch with ID 1 (key hex code swatch)
-      return prevSwatches.map((swatch) =>
-        swatch.id === 1
-          ? {
-              ...swatch,
-              lValue,
-              hexColor: `#${keyHexCode}`,
-              whiteContrast: calculateContrastRatio(`#${keyHexCode}`),
-              blackContrast: calculateContrastRatio(
-                `#${keyHexCode}`,
-                "#000000"
-              ),
-            }
-          : swatch
-      );
-    });
   }, [keyHexCode]);
 
   useEffect(() => {
@@ -566,23 +543,12 @@ const App: React.FC = () => {
           }
         }
       } else if (isPickingColor && activeSwatchId !== null) {
-        // Original behavior for hex tab
-        setSwatchesCustom((prevSwatches) =>
-          prevSwatches.map((swatch) =>
-            swatch.id === activeSwatchId
-              ? {
-                  ...swatch,
-                  hexColor: dot.hexColor,
-                  originalHexColor: undefined,
-                  whiteContrast: calculateContrastRatio(dot.hexColor),
-                  blackContrast: calculateContrastRatio(
-                    dot.hexColor,
-                    "#000000"
-                  ),
-                }
-              : swatch
-          )
-        );
+        // For hex tab, update the custom hex codes
+        setCustomHexCodes((prev) => {
+          const newCodes = [...prev];
+          newCodes[activeSwatchId] = dot.hexColor.slice(1);
+          return newCodes;
+        });
 
         setLastSelectedColor(dot.hexColor);
 
@@ -1146,6 +1112,18 @@ const App: React.FC = () => {
     [swatchesAdvanced]
   );
 
+  useEffect(() => {
+    if (
+      activeTab === "hex" &&
+      (customHexCodes.length !== 1 ||
+        customHexCodes[0].toUpperCase() !== "FFFFFF")
+    ) {
+      setCustomHexCodes(["FFFFFF"]);
+    }
+    // Only run on mount or when switching to hex tab
+    // eslint-disable-next-line
+  }, [activeTab]);
+
   return (
     <div className="app">
       <MobileLayout />
@@ -1625,13 +1603,16 @@ const App: React.FC = () => {
                       lValues={currentLValues}
                       onDotClick={handleDotClick}
                       onDotHover={handleDotHover}
-                      keyHexCode={keyHexCode}
+                      keyHexCode={activeTab === "hex" ? "" : keyHexCode}
                       isPickingColor={isPickingColor}
                       activeLValue={activeLValue}
                       clearActiveDotsSignal={clearActiveDotsSignal}
                       activeTab={activeTab}
                       activeSwatchId={activeSwatchId}
                       forceGrayscale={activeTab === "hex"}
+                      swatches={
+                        activeTab === "hex" ? swatchesCustom : currentSwatches
+                      }
                     />
                     {isFiltering && activeTab !== "hex" && (
                       <div
