@@ -153,7 +153,7 @@
   flex-direction: row;
   gap: 8px;
   border-top: 1px solid var(--color-neutral-650);
-  z-index: 1000;
+  z-index: 100000;
 }
 
 .left-drawer-ctas .btn,
