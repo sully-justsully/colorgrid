@@ -184,7 +184,8 @@ const ColorGrid: React.FC<ColorGridProps> = ({
                 );
             }
 
-            if (isPickingColor && activeLValue !== null) {
+            // Only filter by activeLValue when explicitly picking a color, not on hover
+            if (isPickingColor && activeLValue !== null && !onDotHover) {
               isFiltered = Math.abs(cached.labLightness - activeLValue) > 0.5;
             }
           }
@@ -227,6 +228,7 @@ const ColorGrid: React.FC<ColorGridProps> = ({
     activeSwatchId,
     activeDots,
     forceGrayscale,
+    onDotHover,
   ]);
 
   const handleDotClick = useCallback(

@@ -47,6 +47,7 @@ import { ReactComponent as ChevronRightIcon } from "./icons/chevron-right.svg";
 import { ReactComponent as CloseIcon } from "./icons/close.svg";
 import { ReactComponent as LightModeIcon } from "./icons/light_mode.svg";
 import { ReactComponent as DarkModeIcon } from "./icons/dark_mode.svg";
+import { ReactComponent as FigmaIcon } from "./icons/figma.svg";
 import "./styles/Ramp.css";
 import { ReactComponent as AddIcon } from "./icons/add-alt.svg";
 import { ReactComponent as ResetIcon } from "./icons/reset.svg";
@@ -113,6 +114,16 @@ interface Section {
     whiteContrast: number;
     blackContrast: number;
   }>;
+}
+
+interface Color {
+  id: string;
+  hex: string;
+  lightness: number;
+  saturation: number;
+  hue: number;
+  isActive: boolean;
+  isSelected: boolean;
 }
 
 const App: React.FC = () => {
@@ -239,6 +250,9 @@ const App: React.FC = () => {
   const [pendingSwatchesToSave, setPendingSwatchesToSave] = useState<
     ColorSwatchType[] | null
   >(null);
+  const [selectedColors, setSelectedColors] = useState<Color[]>([]);
+  const [toastMessage, setToastMessage] = useState("");
+  const [colors, setColors] = useState<Color[]>([]);
 
   const dropdownRef = useRef<HTMLDivElement>(null);
   const location = useLocation();
@@ -353,21 +367,13 @@ const App: React.FC = () => {
   };
 
   const handleSwatchClick = (id: number) => {
-    // For all tabs, toggle the active state
-    if (isPickingColor && activeSwatchId === id) {
-      // If clicking the same swatch while picking, deactivate it
-      setIsPickingColor(false);
-      setActiveSwatchId(null);
-      setActiveLValue(null);
-    } else {
-      // If clicking a different swatch or not picking, activate it
+    // For Lightness Values tab, always keep picking mode active
+    if (activeTab === "lightness") {
       setIsPickingColor(true);
       setActiveSwatchId(id);
-      // Do NOT update selectedSwatchId here
 
       // Get the correct swatch array based on active tab
-      const swatchArray =
-        activeTab === "lightness" ? swatchesAdvanced : swatchesCustom;
+      const swatchArray = swatchesAdvanced;
 
       // Find the swatch with the matching ID
       const selectedSwatch = swatchArray.find((s) => s.id === id);
@@ -375,10 +381,7 @@ const App: React.FC = () => {
         setActiveLValue(selectedSwatch.lValue);
 
         // Store the original color when entering color picking mode
-        const setCurrentSwatches =
-          activeTab === "lightness" ? setSwatchesAdvanced : setSwatchesCustom;
-
-        setCurrentSwatches((prevSwatches) =>
+        setSwatchesAdvanced((prevSwatches) =>
           prevSwatches.map((swatch) =>
             swatch.id === id
               ? {
@@ -397,6 +400,42 @@ const App: React.FC = () => {
             l_value: selectedSwatch.lValue,
             hex_color: selectedSwatch.hexColor,
           });
+        }
+      }
+    } else {
+      // For hex tab, keep the original toggle behavior
+      if (isPickingColor && activeSwatchId === id) {
+        setIsPickingColor(false);
+        setActiveSwatchId(null);
+        setActiveLValue(null);
+      } else {
+        setIsPickingColor(true);
+        setActiveSwatchId(id);
+        setSelectedSwatchId(null);
+
+        const selectedSwatch = swatchesCustom.find((s) => s.id === id);
+        if (selectedSwatch) {
+          setActiveLValue(selectedSwatch.lValue);
+
+          setSwatchesCustom((prevSwatches) =>
+            prevSwatches.map((swatch) =>
+              swatch.id === id
+                ? {
+                    ...swatch,
+                    originalHexColor: swatch.hexColor,
+                  }
+                : swatch
+            )
+          );
+
+          if (typeof window.gtag !== "undefined") {
+            window.gtag("event", "color_picker_activate", {
+              grid_size: activeTab,
+              swatch_id: id,
+              l_value: selectedSwatch.lValue,
+              hex_color: selectedSwatch.hexColor,
+            });
+          }
         }
       }
     }
@@ -429,19 +468,112 @@ const App: React.FC = () => {
     }
   };
 
+  const handleDotHover = useCallback(
+    (dot: Dot | null) => {
+      if (activeTab === "lightness") {
+        // In Lightness Values tab, directly update the swatch with matching L* value
+        if (dot) {
+          const matchingSwatch = swatchesAdvanced.find(
+            (swatch) =>
+              Math.round(swatch.lValue) === Math.round(dot.labLightness)
+          );
+
+          if (matchingSwatch) {
+            setActiveSwatchId(matchingSwatch.id);
+            setActiveLValue(matchingSwatch.lValue);
+            // Store original color if not already stored
+            setSwatchesAdvanced((prevSwatches) =>
+              prevSwatches.map((swatch) => {
+                if (swatch.id === matchingSwatch.id) {
+                  return {
+                    ...swatch,
+                    originalHexColor:
+                      swatch.originalHexColor || swatch.hexColor,
+                    hexColor: dot.hexColor,
+                    whiteContrast: calculateContrastRatio(dot.hexColor),
+                    blackContrast: calculateContrastRatio(
+                      dot.hexColor,
+                      "#000000"
+                    ),
+                  };
+                }
+                return swatch;
+              })
+            );
+          }
+        } else {
+          // When hovering off, restore original colors
+          setActiveSwatchId(null);
+          setActiveLValue(null);
+          setSwatchesAdvanced((prevSwatches) =>
+            prevSwatches.map((swatch) => ({
+              ...swatch,
+              hexColor: swatch.originalHexColor || swatch.hexColor,
+              whiteContrast: calculateContrastRatio(
+                swatch.originalHexColor || swatch.hexColor
+              ),
+              blackContrast: calculateContrastRatio(
+                swatch.originalHexColor || swatch.hexColor,
+                "#000000"
+              ),
+            }))
+          );
+        }
+      }
+    },
+    [activeTab, swatchesAdvanced]
+  );
+
   const handleDotClick = useCallback(
     (dot: Dot) => {
-      if (isPickingColor && activeSwatchId !== null) {
-        const setCurrentSwatches =
-          activeTab === "lightness" ? setSwatchesAdvanced : setSwatchesCustom;
+      if (activeTab === "lightness") {
+        // In Lightness Values tab, directly update the swatch with matching L* value
+        const matchingSwatch = swatchesAdvanced.find(
+          (swatch) => Math.round(swatch.lValue) === Math.round(dot.labLightness)
+        );
 
-        setCurrentSwatches((prevSwatches) =>
+        if (matchingSwatch) {
+          setActiveSwatchId(matchingSwatch.id);
+          setActiveLValue(matchingSwatch.lValue);
+          setSelectedSwatchId(matchingSwatch.id);
+
+          setSwatchesAdvanced((prevSwatches) =>
+            prevSwatches.map((swatch) =>
+              swatch.id === matchingSwatch.id
+                ? {
+                    ...swatch,
+                    hexColor: dot.hexColor,
+                    originalHexColor: undefined,
+                    whiteContrast: calculateContrastRatio(dot.hexColor),
+                    blackContrast: calculateContrastRatio(
+                      dot.hexColor,
+                      "#000000"
+                    ),
+                  }
+                : swatch
+            )
+          );
+
+          // Track color selection
+          if (typeof window.gtag !== "undefined") {
+            window.gtag("event", "color_selected", {
+              grid_size: activeTab,
+              swatch_id: matchingSwatch.id,
+              selected_hex: dot.hexColor,
+              l_value: dot.labLightness,
+              hsb_text: dot.hsbText,
+            });
+          }
+        }
+      } else if (isPickingColor && activeSwatchId !== null) {
+        // Original behavior for hex tab
+        setSwatchesCustom((prevSwatches) =>
           prevSwatches.map((swatch) =>
             swatch.id === activeSwatchId
               ? {
                   ...swatch,
                   hexColor: dot.hexColor,
-                  originalHexColor: swatch.hexColor,
+                  originalHexColor: undefined,
                   whiteContrast: calculateContrastRatio(dot.hexColor),
                   blackContrast: calculateContrastRatio(
                     dot.hexColor,
@@ -452,10 +584,8 @@ const App: React.FC = () => {
           )
         );
 
-        // Update last selected color
         setLastSelectedColor(dot.hexColor);
 
-        // Track color selection
         if (typeof window.gtag !== "undefined") {
           window.gtag("event", "color_selected", {
             grid_size: activeTab,
@@ -473,7 +603,6 @@ const App: React.FC = () => {
 
       // Copy hex code to clipboard
       navigator.clipboard.writeText(dot.hexColor).then(() => {
-        // Track color copy
         if (typeof window.gtag !== "undefined") {
           window.gtag("event", "color_copied", {
             hex_color: dot.hexColor,
@@ -483,90 +612,39 @@ const App: React.FC = () => {
         }
       });
     },
-    [isPickingColor, activeSwatchId, activeTab]
+    [isPickingColor, activeSwatchId, activeTab, swatchesAdvanced]
   );
 
-  const handleDotHover = useCallback(
-    (dot: Dot | null) => {
-      if (isPickingColor && activeSwatchId !== null) {
-        const setCurrentSwatches =
-          activeTab === "lightness" ? setSwatchesAdvanced : setSwatchesCustom;
-
-        setCurrentSwatches((prevSwatches) =>
-          prevSwatches.map((swatch) => {
-            if (swatch.id === activeSwatchId) {
-              // If we have a dot, use its color
-              if (dot) {
-                return {
-                  ...swatch,
-                  hexColor: dot.hexColor,
-                  whiteContrast: calculateContrastRatio(dot.hexColor),
-                  blackContrast: calculateContrastRatio(
-                    dot.hexColor,
-                    "#000000"
-                  ),
-                };
-              }
-
-              // If no dot (hovering off), restore to original color
-              return {
-                ...swatch,
-                hexColor: swatch.originalHexColor || swatch.hexColor,
-                whiteContrast: calculateContrastRatio(
-                  swatch.originalHexColor || swatch.hexColor
-                ),
-                blackContrast: calculateContrastRatio(
-                  swatch.originalHexColor || swatch.hexColor,
-                  "#000000"
-                ),
-              };
-            }
-            return swatch;
-          })
-        );
-      }
-    },
-    [isPickingColor, activeSwatchId, activeTab]
-  );
-
-  const handleAddRamp = (position = "bottom") => {
+  const handleAddRamp = () => {
     if (activeTab === "hex") {
       setCustomHexCodes((prev) => {
         if (prev.length >= 20) return prev;
-        return [...prev, "FFFFFF"];
+        return [...prev, "000000"];
       });
-      return;
+    } else {
+      const setCurrentSwatches = setSwatchesAdvanced;
+      setCurrentSwatches((prevSwatches) => {
+        // Check if we've reached the maximum limit of 20 swatches
+        if (prevSwatches.length >= 20) {
+          return prevSwatches;
+        }
+        // Find the lowest and highest L* values in the current swatches
+        const lValues = prevSwatches.map((swatch) => swatch.lValue);
+        const lowestLValue = Math.min(...lValues);
+        const highestLValue = Math.max(...lValues);
+        const newLValue = Math.max(0, lowestLValue - 1);
+        const [r, g, b] = labToRgb(newLValue);
+        const hexColor = rgbToHex(r, g, b);
+        const newRamp = {
+          id: prevSwatches.length + 1,
+          lValue: newLValue,
+          hexColor,
+          whiteContrast: calculateContrastRatio(hexColor),
+          blackContrast: calculateContrastRatio(hexColor, "#000000"),
+        };
+        return [...prevSwatches, newRamp];
+      });
     }
-    const setCurrentSwatches =
-      activeTab === "lightness" ? setSwatchesAdvanced : setSwatchesCustom;
-    setCurrentSwatches((prevSwatches) => {
-      // Check if we've reached the maximum limit of 20 swatches
-      if (prevSwatches.length >= 20) {
-        return prevSwatches;
-      }
-      // Find the lowest and highest L* values in the current swatches
-      const lValues = prevSwatches.map((swatch) => swatch.lValue);
-      const lowestLValue = Math.min(...lValues);
-      const highestLValue = Math.max(...lValues);
-      let newLValue;
-      if (position === "top") {
-        newLValue = Math.min(100, highestLValue + 1);
-      } else {
-        newLValue = Math.max(0, lowestLValue - 1);
-      }
-      const [r, g, b] = labToRgb(newLValue);
-      const hexColor = rgbToHex(r, g, b);
-      const newRamp = {
-        id: prevSwatches.length + 1,
-        lValue: newLValue,
-        hexColor,
-        whiteContrast: calculateContrastRatio(hexColor),
-        blackContrast: calculateContrastRatio(hexColor, "#000000"),
-      };
-      return position === "top"
-        ? [newRamp, ...prevSwatches]
-        : [...prevSwatches, newRamp];
-    });
   };
 
   const handleResetRamps = () => {
@@ -974,6 +1052,100 @@ const App: React.FC = () => {
     setCustomHexCodes((prev) => prev.filter((_, index) => index !== id));
   };
 
+  // Add this effect after the other useEffect hooks
+  useEffect(() => {
+    if (activeTab === "lightness") {
+      setIsPickingColor(true);
+    } else {
+      setIsPickingColor(false);
+    }
+  }, [activeTab]);
+
+  const handleLightnessDotClick = useCallback(
+    (dot: Dot) => {
+      const matchingSwatch = swatchesAdvanced.find(
+        (swatch) => Math.round(swatch.lValue) === Math.round(dot.labLightness)
+      );
+
+      if (matchingSwatch) {
+        setActiveSwatchId(matchingSwatch.id);
+        setActiveLValue(matchingSwatch.lValue);
+        setSelectedSwatchId(matchingSwatch.id);
+
+        setSwatchesAdvanced((prevSwatches) =>
+          prevSwatches.map((swatch) =>
+            swatch.id === matchingSwatch.id
+              ? {
+                  ...swatch,
+                  hexColor: dot.hexColor,
+                  whiteContrast: calculateContrastRatio(dot.hexColor),
+                  blackContrast: calculateContrastRatio(
+                    dot.hexColor,
+                    "#000000"
+                  ),
+                }
+              : swatch
+          )
+        );
+
+        // Track color selection
+        if (typeof window.gtag !== "undefined") {
+          window.gtag("event", "color_selected", {
+            grid_size: activeTab,
+            swatch_id: matchingSwatch.id,
+            selected_hex: dot.hexColor,
+            l_value: dot.labLightness,
+            hsb_text: dot.hsbText,
+          });
+        }
+      }
+
+      // Copy hex code to clipboard
+      navigator.clipboard.writeText(dot.hexColor).then(() => {
+        if (typeof window.gtag !== "undefined") {
+          window.gtag("event", "color_copied", {
+            hex_color: dot.hexColor,
+            l_value: dot.labLightness,
+            hsb_text: dot.hsbText,
+          });
+        }
+      });
+    },
+    [activeTab, swatchesAdvanced]
+  );
+
+  const handleLightnessDotHover = useCallback(
+    (dot: Dot | null) => {
+      if (!dot) return;
+
+      const matchingSwatch = swatchesAdvanced.find(
+        (swatch) => Math.round(swatch.lValue) === Math.round(dot.labLightness)
+      );
+
+      if (matchingSwatch) {
+        setActiveSwatchId(matchingSwatch.id);
+        setActiveLValue(matchingSwatch.lValue);
+
+        setSwatchesAdvanced((prevSwatches) =>
+          prevSwatches.map((swatch) =>
+            swatch.id === matchingSwatch.id
+              ? {
+                  ...swatch,
+                  hexColor: dot.hexColor,
+                  whiteContrast: calculateContrastRatio(dot.hexColor),
+                  blackContrast: calculateContrastRatio(
+                    dot.hexColor,
+                    "#000000"
+                  ),
+                }
+              : swatch
+          )
+        );
+      }
+    },
+    [swatchesAdvanced]
+  );
+
   return (
     <div className="app">
       <MobileLayout />
@@ -983,13 +1155,36 @@ const App: React.FC = () => {
           element={
             <>
               <header className="app-header">
-                <h1>
-                  Color Grid Tool
-                  <span className="version-number">
-                    v.{packageJson.version}
-                  </span>
-                </h1>
+                <button
+                  className="btn btn-secondary btn-icon-only"
+                  onClick={toggleTheme}
+                  aria-label={
+                    isDarkMode ? "Switch to light mode" : "Switch to dark mode"
+                  }
+                >
+                  {isDarkMode ? <LightModeIcon /> : <DarkModeIcon />}
+                </button>
+                <div className="app-title">
+                  <h1>
+                    Color Grid Tool
+                    <span className="version-number">
+                      v.{packageJson.version}
+                    </span>
+                  </h1>
+                </div>
                 <div className="header-actions">
+                  <button
+                    onClick={() => {
+                      window.open(
+                        "https://www.figma.com/community/file/1428517491497047139/design-system-variables-midnight-v-2-0",
+                        "_blank"
+                      );
+                    }}
+                    className="btn btn-secondary"
+                  >
+                    <FigmaIcon />
+                    Get Figma File
+                  </button>
                   <button
                     onClick={() => {
                       // Track contrast grid view
@@ -1079,17 +1274,6 @@ const App: React.FC = () => {
                   >
                     <ColorIcon />
                     Color System
-                  </button>
-                  <button
-                    className="btn btn-secondary btn-icon-only"
-                    onClick={toggleTheme}
-                    aria-label={
-                      isDarkMode
-                        ? "Switch to light mode"
-                        : "Switch to dark mode"
-                    }
-                  >
-                    {isDarkMode ? <LightModeIcon /> : <DarkModeIcon />}
                   </button>
                 </div>
               </header>
@@ -1446,9 +1630,7 @@ const App: React.FC = () => {
                       activeLValue={activeLValue}
                       clearActiveDotsSignal={clearActiveDotsSignal}
                       activeTab={activeTab}
-                      activeSwatchId={
-                        isPickingColor ? activeSwatchId : selectedSwatchId
-                      }
+                      activeSwatchId={activeSwatchId}
                       forceGrayscale={activeTab === "hex"}
                     />
                     {isFiltering && activeTab !== "hex" && (
