@@ -49,7 +49,7 @@ const ContrastGrid: React.FC<{
   title?: string;
 }> = ({ swatches }) => {
   const getContrastText = (contrast: number) => {
-    return contrast.toFixed(1);
+    return contrast.toFixed(2);
   };
 
   return (
