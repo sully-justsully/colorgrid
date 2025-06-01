@@ -18,6 +18,7 @@ interface ScorePillTooltipProps {
     normalizedContrastScore: number;
     visualQualityScore: number;
     overallScore: number;
+    hueVarianceScore?: number;
   };
 }
 
@@ -173,6 +174,15 @@ const ScorePillTooltip: React.FC<ScorePillTooltipProps> = ({
             <div className="tooltip-score-item">
               <span>Smoothness:</span>
               <span>{Math.round(scores.evennessScore * 100)}/100</span>
+            </div>
+            <div className="tooltip-score-item">
+              <span>Hue Variance:</span>
+              <span>
+                {scores.hueVarianceScore !== undefined
+                  ? Math.round(scores.hueVarianceScore * 100)
+                  : "-"}
+                /100
+              </span>
             </div>
           </div>
         );
