@@ -24,6 +24,7 @@ export interface EvaluationResult {
   normalizedContrastScore: number;
   colorRangeScore: number;
   lightDarkScore: number;
+  hueVarianceScore: number;
   overallScore?: number;
   details: string[];
 }
@@ -275,10 +276,73 @@ export function evaluateColorSystem(swatches: string[]): EvaluationResult {
   //   `Note: 1.0 means as good as mathematically possible for a full-range ramp of this size.`
   // );
 
-  // Bundled scores
-  const colorRangeScore = 0.33 * swatchCountScore + 0.67 * evennessScore;
-  const lightDarkScore = 0.5 * balanceScore + 0.5 * symmetryScore;
+  // --- HUE VARIANCE (NEW SUB-CATEGORY CRITERION) ---
+  // Extract hue and saturation for each swatch
+  const hsbValues = swatches.map((hex) => hexToHsb(hex));
+  const huesRaw = hsbValues.map((hsb) => hsb.h);
+  const sats = hsbValues.map((hsb) => hsb.s);
+
+  // Assign low-saturation swatches the hue of the nearest non-gray swatch
+  const hues = huesRaw.slice();
+  for (let i = 0; i < hues.length; i++) {
+    if (sats[i] < 5) {
+      // Find nearest swatch with S >= 5
+      let nearest = -1;
+      let minDist = Infinity;
+      for (let j = 0; j < hues.length; j++) {
+        if (sats[j] >= 5 && Math.abs(j - i) < minDist) {
+          nearest = j;
+          minDist = Math.abs(j - i);
+        }
+      }
+      if (nearest !== -1) {
+        hues[i] = hues[nearest];
+      }
+    }
+  }
+
+  // Part 1: Stepwise hue differences (0º = 1, 1º = 0.75, 2º = 0.5, 3º = 0.25, 4º+ = 0)
+  let stepScores: number[] = [];
+  for (let i = 1; i < hues.length; i++) {
+    const diff = Math.abs(hues[i] - hues[i - 1]);
+    let score = 0;
+    if (diff === 0) score = 1;
+    else if (diff === 1) score = 0.75;
+    else if (diff === 2) score = 0.5;
+    else if (diff === 3) score = 0.25;
+    else score = 0;
+    stepScores.push(score);
+  }
+  const part1 =
+    stepScores.length > 0
+      ? stepScores.reduce((a, b) => a + b, 0) / stepScores.length
+      : 1;
+
+  // Part 2: Total hue difference between first and last swatch
+  // maxAllowed = (# of swatches - 1) * 3
+  const totalHueDiff = Math.abs(hues[0] - hues[hues.length - 1]);
+  const maxAllowed = (swatchCount - 1) * 3;
+  let part2 = 1 - totalHueDiff / maxAllowed;
+  part2 = Math.max(0, Math.min(1, part2));
+
+  // Final Hue Variance score
+  const hueVarianceScore = 0.4 * part1 + 0.6 * part2;
+  details.push(
+    `Hue Variance: step avg=${part1.toFixed(
+      2
+    )}, total diff=${totalHueDiff.toFixed(
+      2
+    )}, max allowed=${maxAllowed}, score=${hueVarianceScore.toFixed(2)}`
+  );
+
+  // --- COLOR RANGE BUNDLED SCORE (NEW WEIGHTS) ---
+  // Swatch Amount: 20%, Smoothness: 50%, Hue Variance: 30%
+  const colorRangeScore =
+    0.2 * swatchCountScore + 0.5 * evennessScore + 0.3 * hueVarianceScore;
   details.push(`Color Range Score: ${(colorRangeScore * 100).toFixed(1)}`);
+
+  // Bundled scores
+  const lightDarkScore = 0.5 * balanceScore + 0.5 * symmetryScore;
   details.push(`Light v Dark Score: ${(lightDarkScore * 100).toFixed(1)}`);
 
   // 7. Overall score (weighted average of all components), multiplied by 100
@@ -308,6 +372,7 @@ export function evaluateColorSystem(swatches: string[]): EvaluationResult {
     normalizedContrastScore,
     colorRangeScore,
     lightDarkScore,
+    hueVarianceScore,
     // overallScore, // Commented out since the pill is hidden in the UI for now
     details,
   };
