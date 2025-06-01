@@ -1662,16 +1662,9 @@ const App: React.FC = () => {
           onConfirm={confirmResetRamps}
         />
       )}
-      <button
-        className="btn-fab"
-        onClick={() => setShowQuickGuide(true)}
-        aria-label="Quick Guide"
-      >
-        <InfoIcon />
-        Quick Guide
-      </button>
-      {showQuickGuide && (
-        <QuickGuideModal onClose={() => setShowQuickGuide(false)} />
+      {/* Show overlay when in Save Palette mode, behind the right drawer */}
+      {isSavingMode && (
+        <div className="modal-backdrop open" style={{ zIndex: 2199 }} />
       )}
       {isColorSystemOpen && (
         <div className="right-drawer open">
