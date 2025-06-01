@@ -46,7 +46,8 @@ body.drawer-open {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 16px;
+  gap: 16px;
+  padding: 20px;
   border-bottom: 1px solid var(--color-neutral-700);
 }
 
@@ -202,7 +203,7 @@ body.drawer-open {
 .drawer-actions {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 16px;
 }
 
 .score-pill-row {
