@@ -152,11 +152,7 @@ const App: React.FC = () => {
   );
   const [isPickingColor, setIsPickingColor] = useState(false);
   const [activeSwatchId, setActiveSwatchId] = useState<number | null>(null);
-  const [selectedSwatchId, setSelectedSwatchId] = useState<number | null>(null);
   const [activeLValue, setActiveLValue] = useState<number | null>(null);
-  const [lastSelectedColor, setLastSelectedColor] = useState<string | null>(
-    null
-  );
   const [showFiltersDropdown, setShowFiltersDropdown] = useState(false);
   const [activeTab, setActiveTab] = useState<"lightness" | "hex">("lightness");
   const [swatchesAdvanced, setSwatchesAdvanced] = useState<ColorSwatchType[]>(
@@ -253,9 +249,6 @@ const App: React.FC = () => {
   const [pendingSwatchesToSave, setPendingSwatchesToSave] = useState<
     ColorSwatchType[] | null
   >(null);
-  const [selectedColors, setSelectedColors] = useState<Color[]>([]);
-  const [toastMessage, setToastMessage] = useState("");
-  const [colors, setColors] = useState<Color[]>([]);
   const [showLightnessMessage, setShowLightnessMessage] = useState(() => {
     return localStorage.getItem("lightnessMessageDismissed") !== "true";
   });
@@ -398,7 +391,6 @@ const App: React.FC = () => {
       } else {
         setIsPickingColor(true);
         setActiveSwatchId(id);
-        setSelectedSwatchId(null);
 
         const selectedSwatch = swatchesCustom.find((s) => s.id === id);
         if (selectedSwatch) {
@@ -522,7 +514,6 @@ const App: React.FC = () => {
         if (matchingSwatch) {
           setActiveSwatchId(matchingSwatch.id);
           setActiveLValue(matchingSwatch.lValue);
-          setSelectedSwatchId(matchingSwatch.id);
 
           setSwatchesAdvanced((prevSwatches) =>
             prevSwatches.map((swatch) =>
@@ -560,20 +551,7 @@ const App: React.FC = () => {
           return newCodes;
         });
 
-        setLastSelectedColor(dot.hexColor);
-
-        if (typeof window.gtag !== "undefined") {
-          window.gtag("event", "color_selected", {
-            grid_size: activeTab,
-            swatch_id: activeSwatchId,
-            selected_hex: dot.hexColor,
-            l_value: dot.labLightness,
-            hsb_text: dot.hsbText,
-          });
-        }
-
         setIsPickingColor(false);
-        setSelectedSwatchId(activeSwatchId);
         setActiveSwatchId(null);
       }
 
@@ -983,24 +961,6 @@ const App: React.FC = () => {
     return () => clearTimeout(timer);
   }, []);
 
-  // Add a handler to remove a ramp by id
-  const handleRemoveCustomRamp = (id: number) => {
-    setSwatchesCustom((prevSwatches) =>
-      prevSwatches.filter((swatch) => swatch.id !== id)
-    );
-  };
-
-  useEffect(() => {
-    if (isColorSystemOpen) {
-      document.body.classList.add("drawer-open");
-    } else {
-      document.body.classList.remove("drawer-open");
-    }
-    return () => {
-      document.body.classList.remove("drawer-open");
-    };
-  }, [isColorSystemOpen]);
-
   useEffect(() => {
     document.documentElement.setAttribute(
       "data-theme",
@@ -1042,103 +1002,6 @@ const App: React.FC = () => {
     } else {
       setIsPickingColor(false);
     }
-  }, [activeTab]);
-
-  const handleLightnessDotClick = useCallback(
-    (dot: Dot) => {
-      const matchingSwatch = swatchesAdvanced.find(
-        (swatch) => Math.round(swatch.lValue) === Math.round(dot.labLightness)
-      );
-
-      if (matchingSwatch) {
-        setActiveSwatchId(matchingSwatch.id);
-        setActiveLValue(matchingSwatch.lValue);
-        setSelectedSwatchId(matchingSwatch.id);
-
-        setSwatchesAdvanced((prevSwatches) =>
-          prevSwatches.map((swatch) =>
-            swatch.id === matchingSwatch.id
-              ? {
-                  ...swatch,
-                  hexColor: dot.hexColor,
-                  whiteContrast: calculateContrastRatio(dot.hexColor),
-                  blackContrast: calculateContrastRatio(
-                    dot.hexColor,
-                    "#000000"
-                  ),
-                }
-              : swatch
-          )
-        );
-
-        // Track color selection
-        if (typeof window.gtag !== "undefined") {
-          window.gtag("event", "color_selected", {
-            grid_size: activeTab,
-            swatch_id: matchingSwatch.id,
-            selected_hex: dot.hexColor,
-            l_value: dot.labLightness,
-            hsb_text: dot.hsbText,
-          });
-        }
-      }
-
-      // Copy hex code to clipboard
-      navigator.clipboard.writeText(dot.hexColor).then(() => {
-        if (typeof window.gtag !== "undefined") {
-          window.gtag("event", "color_copied", {
-            hex_color: dot.hexColor,
-            l_value: dot.labLightness,
-            hsb_text: dot.hsbText,
-          });
-        }
-      });
-    },
-    [activeTab, swatchesAdvanced]
-  );
-
-  const handleLightnessDotHover = useCallback(
-    (dot: Dot | null) => {
-      if (!dot) return;
-
-      const matchingSwatch = swatchesAdvanced.find(
-        (swatch) => Math.round(swatch.lValue) === Math.round(dot.labLightness)
-      );
-
-      if (matchingSwatch) {
-        setActiveSwatchId(matchingSwatch.id);
-        setActiveLValue(matchingSwatch.lValue);
-
-        setSwatchesAdvanced((prevSwatches) =>
-          prevSwatches.map((swatch) =>
-            swatch.id === matchingSwatch.id
-              ? {
-                  ...swatch,
-                  hexColor: dot.hexColor,
-                  whiteContrast: calculateContrastRatio(dot.hexColor),
-                  blackContrast: calculateContrastRatio(
-                    dot.hexColor,
-                    "#000000"
-                  ),
-                }
-              : swatch
-          )
-        );
-      }
-    },
-    [swatchesAdvanced]
-  );
-
-  useEffect(() => {
-    if (
-      activeTab === "hex" &&
-      (customHexCodes.length !== 1 ||
-        customHexCodes[0].toUpperCase() !== "FFFFFF")
-    ) {
-      setCustomHexCodes(["FFFFFF"]);
-    }
-    // Only run on mount or when switching to hex tab
-    // eslint-disable-next-line
   }, [activeTab]);
 
   const handleDismissLightnessMessage = () => {
