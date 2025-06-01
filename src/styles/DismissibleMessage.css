@@ -1,0 +1,66 @@
+.dismissible-message {
+  background: var(--color-primary-500);
+  color: var(--color-neutral-00);
+  border-radius: 8px;
+  padding: 16px;
+  margin: 16px 0 0 0;
+  font-family: "Lato", sans-serif;
+  max-width: 480px;
+  position: relative;
+  height: auto;
+}
+
+.dismissible-message-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+
+.icon-wrapper {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--color-primary-550);
+  border-radius: 50%;
+  width: 24px;
+  height: 24px;
+}
+
+.icon-wrapper svg {
+  width: 16px;
+  height: 16px;
+  display: block;
+}
+
+.dismissible-message-title {
+  font-size: 16px;
+  font-weight: 500;
+  color: var(--color-primary-00);
+  font-family: "Lato", sans-serif;
+}
+
+.dismissible-message-body {
+  font-size: 14px;
+  color: var(--color-primary-00);
+  margin-bottom: 12px;
+  font-family: "Lato", sans-serif;
+  line-height: 1.525;
+}
+
+.dismissible-message-dismiss {
+  background: none;
+  display: flex;
+  margin-left: auto;
+  border: none;
+  color: var(--color-primary-00);
+  font-size: 14px;
+  font-family: "Lato", sans-serif;
+  cursor: pointer;
+  padding: 0;
+}
+
+.dismissible-message-dismiss:hover {
+  color: var(--color-primary-100);
+  text-decoration: underline;
+}

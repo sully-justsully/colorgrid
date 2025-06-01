@@ -12,7 +12,12 @@ interface ScorePillProps {
   score: number;
   type?: ScorePillVariant;
   label: string;
-  tooltipType?: "overall" | "visual" | "accessibility";
+  tooltipType?:
+    | "overall"
+    | "visual"
+    | "accessibility"
+    | "colorRange"
+    | "colorBalance";
   scores?: {
     swatchCountScore: number;
     evennessScore: number;
@@ -23,6 +28,8 @@ interface ScorePillProps {
     wcagAPassing: number;
     wcagAAPassing: number;
     totalCombos: number;
+    empiricalBestACombos: number;
+    empiricalBestAACombos: number;
     normalizedContrastScore: number;
     visualQualityScore: number;
     overallScore: number;

@@ -49,3 +49,25 @@
   background: var(--color-primary-500);
   border-radius: 2px 2px 0 0;
 }
+
+.tab-info-icon {
+  width: 16px;
+  height: 16px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  margin-left: 0px;
+  cursor: pointer;
+  transition: color 0.15s;
+}
+
+.tab-info-icon:hover,
+.tab-info-icon:focus {
+  /* color removed to inherit from parent */
+}
+
+.tab-info-icon svg {
+  width: 16px;
+  height: 16px;
+  display: block;
+}

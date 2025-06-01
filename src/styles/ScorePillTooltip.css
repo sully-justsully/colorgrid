@@ -1,25 +1,26 @@
 .score-pill-tooltip {
   position: absolute;
-  background-color: var(--color-neutral-750);
+  width: auto;
+  background-color: var(--color-neutral-600);
   border-radius: 4px;
   font-size: 12px;
-  white-space: nowrap;
   pointer-events: none;
-  padding: 8px 12px;
-  width: auto;
+  padding: 4px 12px;
   gap: 8px;
   z-index: 1000;
   box-shadow: 0 2px 8px var(--color-overlay-shadow);
 }
 
 .tooltip-content {
-  color: var(--color-neutral-200);
+  color: var(--color-neutral-100);
   font-size: 12px;
+  white-space: nowrap;
 }
 
 .tooltip-content p {
   margin: 0 0 8px 0;
   font-weight: 400;
+  white-space: nowrap;
 }
 
 .tooltip-score-item {
@@ -28,21 +29,24 @@
   align-items: center;
   margin: 4px 0;
   gap: 8px;
+  width: auto;
 }
 
 .tooltip-score-item span:first-child {
-  color: var(--color-neutral-300);
+  color: var(--color-neutral-00);
 }
 
 .tooltip-score-item span:last-child {
   font-weight: 400;
-  color: var(--color-neutral-100);
+  color: var(--color-neutral-00);
 }
 
 .tooltip-suggestion {
   margin: 4px 0;
-  color: var(--color-neutral-200);
+  color: var(--color-neutral-00);
   font-size: 12px;
+  line-height: 1.4;
+  width: auto;
 }
 
 .tooltip-suggestion:first-child {

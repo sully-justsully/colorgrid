@@ -84,3 +84,38 @@
     box-shadow: 0 0 0px 0px rgba(35, 127, 247, 0);
   }
 }
+
+.input-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.btn-icon-only {
+  padding: 4px;
+  min-width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--color-neutral-700);
+  border: 1px solid var(--color-neutral-600);
+  border-radius: 4px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.btn-icon-only:hover {
+  background: var(--color-neutral-600);
+  border-color: var(--color-neutral-500);
+}
+
+.btn-icon-only svg {
+  width: 16px;
+  height: 16px;
+  fill: var(--color-neutral-400);
+}
+
+.btn-icon-only:hover svg {
+  fill: var(--color-neutral-200);
+}

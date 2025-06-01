@@ -60,6 +60,8 @@ import { evaluateColorSystem } from "./utils/evaluateColorSystem";
 import HexInputRow from "./components/HexInputRow";
 import ResetRampsModal from "./components/ResetRampsModal";
 import "./styles/HexInputRow.css";
+import DismissibleMessage from "./components/DismissibleMessage";
+import HexTabMessage from "./components/HexTabMessage";
 
 const STORAGE_KEY = "colorGridSwatches";
 const HEX_STORAGE_KEY = "colorGridHexCode";
@@ -253,6 +255,12 @@ const App: React.FC = () => {
   const [selectedColors, setSelectedColors] = useState<Color[]>([]);
   const [toastMessage, setToastMessage] = useState("");
   const [colors, setColors] = useState<Color[]>([]);
+  const [showLightnessMessage, setShowLightnessMessage] = useState(() => {
+    return localStorage.getItem("lightnessMessageDismissed") !== "true";
+  });
+  const [showHexMessage, setShowHexMessage] = useState(() => {
+    return localStorage.getItem("hexMessageDismissed") !== "true";
+  });
 
   const dropdownRef = useRef<HTMLDivElement>(null);
   const location = useLocation();
@@ -581,6 +589,18 @@ const App: React.FC = () => {
     [isPickingColor, activeSwatchId, activeTab, swatchesAdvanced]
   );
 
+  const handleRemoveLightnessRamp = (id: number) => {
+    if (swatchesAdvanced.length <= 1) return; // Don't remove if only one ramp left
+    setSwatchesAdvanced((prevSwatches) => {
+      const newSwatches = prevSwatches.filter((swatch) => swatch.id !== id);
+      // Reorder IDs
+      return newSwatches.map((swatch, index) => ({
+        ...swatch,
+        id: index + 1,
+      }));
+    });
+  };
+
   const handleAddRamp = () => {
     if (activeTab === "hex") {
       setCustomHexCodes((prev) => {
@@ -588,22 +608,17 @@ const App: React.FC = () => {
         return [...prev, "000000"];
       });
     } else {
-      const setCurrentSwatches = setSwatchesAdvanced;
-      setCurrentSwatches((prevSwatches) => {
+      setSwatchesAdvanced((prevSwatches) => {
         // Check if we've reached the maximum limit of 20 swatches
         if (prevSwatches.length >= 20) {
           return prevSwatches;
         }
-        // Find the lowest and highest L* values in the current swatches
-        const lValues = prevSwatches.map((swatch) => swatch.lValue);
-        const lowestLValue = Math.min(...lValues);
-        const highestLValue = Math.max(...lValues);
-        const newLValue = Math.max(0, lowestLValue - 1);
-        const [r, g, b] = labToRgb(newLValue);
+        // Add new ramp with L* value of 0
+        const [r, g, b] = labToRgb(0);
         const hexColor = rgbToHex(r, g, b);
         const newRamp = {
           id: prevSwatches.length + 1,
-          lValue: newLValue,
+          lValue: 0,
           hexColor,
           whiteContrast: calculateContrastRatio(hexColor),
           blackContrast: calculateContrastRatio(hexColor, "#000000"),
@@ -1124,6 +1139,16 @@ const App: React.FC = () => {
     // eslint-disable-next-line
   }, [activeTab]);
 
+  const handleDismissLightnessMessage = () => {
+    setShowLightnessMessage(false);
+    localStorage.setItem("lightnessMessageDismissed", "true");
+  };
+
+  const handleDismissHexMessage = () => {
+    setShowHexMessage(false);
+    localStorage.setItem("hexMessageDismissed", "true");
+  };
+
   return (
     <div className="app">
       <MobileLayout />
@@ -1373,15 +1398,15 @@ const App: React.FC = () => {
                         {/* Score Pills Row */}
                         <div className="score-pill-row">
                           <ScorePill
-                            score={scores ? scores.overallScore : NaN}
-                            label="Overall:"
-                            tooltipType="overall"
+                            score={scores ? scores.colorRangeScore * 100 : NaN}
+                            label="Color Range:"
+                            tooltipType="colorRange"
                             scores={scores || undefined}
                           />
                           <ScorePill
-                            score={scores ? scores.visualQualityScore : NaN}
-                            label="Visual Quality:"
-                            tooltipType="visual"
+                            score={scores ? scores.lightDarkScore * 100 : NaN}
+                            label="Light v Dark:"
+                            tooltipType="colorBalance"
                             scores={scores || undefined}
                           />
                           <ScorePill
@@ -1419,14 +1444,74 @@ const App: React.FC = () => {
                         onClick={() => handleTabChange("lightness")}
                       >
                         Lightness Values
+                        <span
+                          className="tab-info-icon"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setShowLightnessMessage(true);
+                          }}
+                          title="Show info"
+                          tabIndex={0}
+                          role="button"
+                          aria-label="Show info about Lightness Values"
+                          onKeyDown={(e) => {
+                            if (e.key === "Enter" || e.key === " ") {
+                              setShowLightnessMessage(true);
+                            }
+                          }}
+                          style={{
+                            marginLeft: 6,
+                            display: "inline-flex",
+                            alignItems: "center",
+                            cursor: "pointer",
+                          }}
+                        >
+                          <InfoIcon
+                            style={{ width: 12, height: 12, display: "block" }}
+                          />
+                        </span>
                       </button>
                       <button
                         className={`tab ${activeTab === "hex" ? "active" : ""}`}
                         onClick={() => handleTabChange("hex")}
                       >
                         HEX Codes
+                        <span
+                          className="tab-info-icon"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setShowHexMessage(true);
+                          }}
+                          title="Show info"
+                          tabIndex={0}
+                          role="button"
+                          aria-label="Show info about HEX Codes"
+                          onKeyDown={(e) => {
+                            if (e.key === "Enter" || e.key === " ") {
+                              setShowHexMessage(true);
+                            }
+                          }}
+                          style={{
+                            marginLeft: 6,
+                            display: "inline-flex",
+                            alignItems: "center",
+                            cursor: "pointer",
+                          }}
+                        >
+                          <InfoIcon
+                            style={{ width: 12, height: 12, display: "block" }}
+                          />
+                        </span>
                       </button>
                     </div>
+                    {activeTab === "lightness" && showLightnessMessage && (
+                      <DismissibleMessage
+                        onDismiss={handleDismissLightnessMessage}
+                      />
+                    )}
+                    {activeTab === "hex" && showHexMessage && (
+                      <HexTabMessage onDismiss={handleDismissHexMessage} />
+                    )}
                     {activeTab === "lightness" && (
                       <div className="hex-control">
                         <div className="hex-input-group input-flex-center">
@@ -1548,28 +1633,55 @@ const App: React.FC = () => {
                           </div>
                         </>
                       ) : (
-                        swatchesAdvanced.map((swatch, idx) => (
-                          <ColorSwatch
-                            key={swatch.id}
-                            swatch={swatch}
-                            isActive={swatch.id === activeSwatchId}
-                            onLValueChange={handleLValueChange}
-                            onClick={handleSwatchClick}
-                            ref={swatchRefs[idx] as RefObject<HTMLDivElement>}
-                            onSwatchKeyDown={(
-                              e: React.KeyboardEvent<HTMLDivElement>
-                            ) => {
-                              if (
-                                e.key === "ArrowRight" &&
-                                idx < swatchRefs.length - 1
-                              ) {
-                                swatchRefs[idx + 1].current?.focus();
-                              } else if (e.key === "ArrowLeft" && idx > 0) {
-                                swatchRefs[idx - 1].current?.focus();
+                        <>
+                          {swatchesAdvanced.map((swatch, idx) => (
+                            <ColorSwatch
+                              key={swatch.id}
+                              swatch={swatch}
+                              isActive={swatch.id === activeSwatchId}
+                              onLValueChange={handleLValueChange}
+                              onClick={handleSwatchClick}
+                              ref={swatchRefs[idx] as RefObject<HTMLDivElement>}
+                              onSwatchKeyDown={(
+                                e: React.KeyboardEvent<HTMLDivElement>
+                              ) => {
+                                if (
+                                  e.key === "ArrowRight" &&
+                                  idx < swatchRefs.length - 1
+                                ) {
+                                  swatchRefs[idx + 1].current?.focus();
+                                } else if (e.key === "ArrowLeft" && idx > 0) {
+                                  swatchRefs[idx - 1].current?.focus();
+                                }
+                              }}
+                              removeButton={
+                                swatchesAdvanced.length > 1 && (
+                                  <button
+                                    className="btn btn-icon-only btn-destructive small"
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      handleRemoveLightnessRamp(swatch.id);
+                                    }}
+                                    aria-label="Remove color ramp"
+                                  >
+                                    <RemoveIcon />
+                                  </button>
+                                )
                               }
-                            }}
-                          />
-                        ))
+                            />
+                          ))}
+                          {swatchesAdvanced.length < 20 && (
+                            <div
+                              className="dashed-rectangle"
+                              onClick={() => handleAddRamp()}
+                              tabIndex={0}
+                              role="button"
+                              aria-label="Add new color"
+                            >
+                              <AddIcon className="dashed-rectangle-add-icon" />
+                            </div>
+                          )}
+                        </>
                       )}
                     </div>
                     <div className="left-drawer-ctas">

@@ -3,16 +3,18 @@ import ScorePill from "../components/ScorePill";
 
 const mockScores = {
   swatchCountScore: 0.8,
-  evennessScore: 0.75,
+  evennessScore: 0.7,
   balanceScore: 0.9,
   symmetryScore: 0.85,
-  wcagAScore: 0.7,
-  wcagAAScore: 0.6,
-  wcagAPassing: 70,
-  wcagAAPassing: 60,
-  totalCombos: 100,
-  normalizedContrastScore: 0.65,
-  visualQualityScore: 80,
+  wcagAScore: 0.75,
+  wcagAAScore: 0.65,
+  wcagAPassing: 15,
+  wcagAAPassing: 12,
+  totalCombos: 20,
+  empiricalBestACombos: 20,
+  empiricalBestAACombos: 16,
+  normalizedContrastScore: 0.7,
+  visualQualityScore: 0.8,
   overallScore: 75,
 };
 
