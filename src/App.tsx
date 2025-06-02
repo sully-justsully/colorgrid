@@ -62,6 +62,8 @@ import HexTabMessage from "./components/HexTabMessage";
 import ScoresModal from "./components/ScoresModal";
 import { ReactComponent as InfoIcon } from "./icons/info.svg";
 import Toast from "./components/Toast";
+import { ReactComponent as EditIcon } from "./icons/edit.svg";
+import ReplaceModal from "./components/ReplaceModal";
 
 const STORAGE_KEY = "colorGridSwatches";
 const HEX_STORAGE_KEY = "colorGridHexCode";
@@ -1025,6 +1027,9 @@ const App: React.FC = () => {
     };
   }, []);
 
+  const [showReplaceModal, setShowReplaceModal] = useState(false);
+  const [sectionToReplace, setSectionToReplace] = useState<string | null>(null);
+
   return (
     <div className={`app ${isDarkMode ? "dark" : ""}`}>
       <MobileLayout />
@@ -1564,7 +1569,7 @@ const App: React.FC = () => {
             {[
               {
                 title: "Brand Primary",
-                text: "This is your main brand color used for primary actions and highlights.",
+                text: "This is your main color used for primary actions and highlights.",
               },
               {
                 title: "Brand Secondary",
@@ -1572,27 +1577,27 @@ const App: React.FC = () => {
               },
               {
                 title: "Neutral",
-                text: "Neutral colors are used for backgrounds, surfaces, and less prominent elements.",
+                text: "Colors used for surfaces, text, and less prominent elements.",
               },
               {
                 title: "Success",
-                text: "Success colors indicate positive actions or states.",
+                text: "Colors to indicate positive actions or success states.",
               },
               {
                 title: "Error",
-                text: "Error colors are used for destructive actions or error states.",
+                text: "Colors to indicate destructive actions or error states.",
               },
               {
                 title: "Custom 1",
-                text: "Custom 1 section for additional color swatches.",
+                text: "Additional section for more color palettes.",
               },
               {
                 title: "Custom 2",
-                text: "Custom 2 section for additional color swatches.",
+                text: "Additional section for more color palettes.",
               },
               {
                 title: "Custom 3",
-                text: "Custom 3 section for additional color swatches.",
+                text: "Additional section for more color palettes.",
               },
             ].map((section, idx) => {
               const sectionKey = section.title
@@ -1636,6 +1641,17 @@ const App: React.FC = () => {
                     </div>
                     <div style={{ display: "flex", gap: "4px" }}>
                       <button
+                        className="btn btn-secondary btn-icon-only"
+                        aria-label="Edit"
+                        disabled={!savedSwatches[sectionKey]}
+                        onClick={() => {
+                          setSectionToReplace(sectionKey);
+                          setShowReplaceModal(true);
+                        }}
+                      >
+                        <EditIcon />
+                      </button>
+                      <button
                         className="btn btn-destructive btn-icon-only"
                         aria-label="Remove"
                         onClick={() => handleRemovePalette(section.title)}
@@ -1678,6 +1694,27 @@ const App: React.FC = () => {
         isOpen={showScoresModal}
         onClose={() => setShowScoresModal(false)}
       />
+      <ReplaceModal
+        isOpen={showReplaceModal}
+        onClose={() => setShowReplaceModal(false)}
+        onConfirm={() => {
+          if (sectionToReplace) {
+            const swatches = savedSwatches[sectionToReplace] || [];
+            setSwatchesAdvanced(swatches);
+            localStorage.setItem(
+              STORAGE_KEY + "_advanced",
+              JSON.stringify(swatches)
+            );
+            setActiveTab("lightness");
+          }
+          setShowReplaceModal(false);
+          setSectionToReplace(null);
+        }}
+        title="Replace Lightness Values?"
+      >
+        Editing this palette will replace the current lightness value swatches.
+        This action cannot be undone.
+      </ReplaceModal>
     </div>
   );
 };

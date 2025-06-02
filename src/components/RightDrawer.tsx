@@ -1,4 +1,6 @@
 import React from "react";
+import { ReactComponent as TrashIcon } from "../icons/trash.svg";
+import { ReactComponent as EditIcon } from "../icons/edit.svg";
 
 interface RightDrawerProps {
   isOpen: boolean;

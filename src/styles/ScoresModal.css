@@ -26,11 +26,6 @@
   color: var(--color-neutral-400);
 }
 
-.modal-content-message {
-  color: var(--color-neutral-900);
-  /* Add any other modal-specific styles here */
-}
-
 .mb-4 {
   margin-bottom: 16px;
   margin-top: 8px;
