@@ -8,6 +8,9 @@ import {
 
 console.log("EVAL VERSION: 2024-06-09");
 
+// =====================
+// Types
+// =====================
 export interface EvaluationResult {
   swatchCount: number;
   swatchCountScore: number;
@@ -29,6 +32,9 @@ export interface EvaluationResult {
   details: string[];
 }
 
+// =====================
+// Utility Functions
+// =====================
 function median(values: number[]): number {
   if (values.length === 0) return 0;
   const sorted = [...values].sort((a, b) => a - b);
@@ -38,7 +44,9 @@ function median(values: number[]): number {
     : (sorted[mid - 1] + sorted[mid]) / 2;
 }
 
-// Ideal L* values for different swatch counts
+// =====================
+// Ideal L* Values for Swatch Counts
+// =====================
 const IDEAL_L_VALUES: { [n: number]: number[] } = {
   10: [100, 93, 82, 71, 56, 43, 29, 18, 7, 0],
   11: [100, 94, 85, 75, 63, 49, 37, 25, 15, 6, 0],
@@ -57,23 +65,20 @@ const IDEAL_L_VALUES: { [n: number]: number[] } = {
 
 function getIdealSteps(n: number): number[] {
   if (IDEAL_L_VALUES[n]) return IDEAL_L_VALUES[n];
-
-  // For swatch counts outside 10-20, use the closest available count
   const keys = Object.keys(IDEAL_L_VALUES)
     .map(Number)
     .sort((a, b) => a - b);
   if (n < keys[0]) return IDEAL_L_VALUES[keys[0]];
   if (n > keys[keys.length - 1]) return IDEAL_L_VALUES[keys[keys.length - 1]];
-
-  // Find the closest key
   const closestKey = keys.reduce((prev, curr) => {
     return Math.abs(curr - n) < Math.abs(prev - n) ? curr : prev;
   });
-
   return IDEAL_L_VALUES[closestKey];
 }
 
-// Empirical best combo counts for 3:1 and 4.5:1 ratios
+// =====================
+// Empirical Best Combo Counts for WCAG
+// =====================
 const EMPIRICAL_BEST_COMBOS: { [n: number]: { a: number; aa: number } } = {
   1: { a: 0, aa: 0 },
   2: { a: 2, aa: 2 },
@@ -99,24 +104,21 @@ const EMPIRICAL_BEST_COMBOS: { [n: number]: { a: number; aa: number } } = {
 
 function getEmpiricalBestCombos(n: number): { a: number; aa: number } {
   if (EMPIRICAL_BEST_COMBOS[n]) return EMPIRICAL_BEST_COMBOS[n];
-  // For n > 20, use the last known values
   return EMPIRICAL_BEST_COMBOS[20];
 }
 
-/**
- * Evaluate a color system based on swatch count, evenness of steps, balance around 50, and WCAG contrast combos.
- * @param swatches Array of hex color strings (e.g. ["#FFFFFF", "#000000"])
- */
+// =====================
+// Main Evaluation Function
+// =====================
 export function evaluateColorSystem(swatches: string[]): EvaluationResult {
   const details: string[] = [];
 
-  // 1. Swatch count
+  // --- Swatch Count ---
   const swatchCount = swatches.length;
   let swatchCountScore = 0;
   if (swatchCount <= 9) swatchCountScore = 0;
   else if (swatchCount >= 10 && swatchCount <= 20) swatchCountScore = 1;
   else if (swatchCount >= 21) swatchCountScore = 0.3;
-  // Bonus for 16+ swatches (diminishing returns), but only allow perfect for 18, 19, 20
   if (swatchCount >= 16) {
     if (swatchCount === 16) swatchCountScore += 0.05;
     else if (swatchCount === 17) swatchCountScore += 0.08;
@@ -124,16 +126,15 @@ export function evaluateColorSystem(swatches: string[]): EvaluationResult {
     else if (swatchCount === 19) swatchCountScore += 0.11;
     else if (swatchCount === 20) swatchCountScore += 0.12;
     else if (swatchCount >= 21)
-      swatchCountScore = Math.min(swatchCountScore, 0.95); // cap for 21+
+      swatchCountScore = Math.min(swatchCountScore, 0.95);
   }
   details.push(
     `Swatch count: ${swatchCount} (score: ${swatchCountScore.toFixed(2)})`
   );
 
-  // 2. Evenness of L* values (compare to ideal L* values)
+  // --- Evenness of L* Values ---
   const lValues = swatches.map((hex) => hexToLabLightness(hex));
   const idealLValues = getIdealSteps(swatchCount);
-  // Exponential penalty for evenness: mean(exp(abs(actual - ideal)/meanIdealStep))
   const meanIdealStep =
     idealLValues.length > 1
       ? Math.abs(idealLValues[0] - idealLValues[idealLValues.length - 1]) /
@@ -163,7 +164,7 @@ export function evaluateColorSystem(swatches: string[]): EvaluationResult {
     `Ideal L* values: [${idealLValues.map((l) => l.toFixed(2)).join(", ")}]`
   );
 
-  // 3. Balance around 50 (Light v Dark)
+  // --- Balance Around 50 (Light vs Dark) ---
   const lightCount = lValues.filter((l) => l > 50).length;
   const darkCount = lValues.filter((l) => l < 50).length;
   const balanceScore = 1 - Math.abs(lightCount - darkCount) / swatchCount;
@@ -173,23 +174,17 @@ export function evaluateColorSystem(swatches: string[]): EvaluationResult {
     )}`
   );
 
-  // 3.5 Pairings of steps around 50
+  // --- Symmetry (Pairings Around 50) ---
   let symmetricPairs = 0;
   const processedIndices = new Set<number>();
-
   for (let i = 0; i < lValues.length; i++) {
     if (processedIndices.has(i)) continue;
-
     const currentL = lValues[i];
-    if (currentL === 50) continue; // Skip the middle value
-
-    const targetL = 100 - currentL; // The symmetric value around 50
+    if (currentL === 50) continue;
+    const targetL = 100 - currentL;
     const tolerance = 1.0;
-
-    // Look for a symmetric pair
     for (let j = 0; j < lValues.length; j++) {
       if (i === j || processedIndices.has(j)) continue;
-
       if (Math.abs(lValues[j] - targetL) <= tolerance) {
         symmetricPairs++;
         processedIndices.add(i);
@@ -198,33 +193,27 @@ export function evaluateColorSystem(swatches: string[]): EvaluationResult {
       }
     }
   }
-
-  // Calculate pairings score based on how many pairs we found
   const maxPossiblePairs = Math.floor(
     (swatchCount - (lValues.includes(50) ? 1 : 0)) / 2
   );
-
-  // Add pairings penalty factor
-  const PAIRINGS_PENALTY_FACTOR = 0.5; // Adjust this value to control penalty curve
+  const PAIRINGS_PENALTY_FACTOR = 0.5;
   const symmetryScore =
     maxPossiblePairs > 0
       ? Math.pow(symmetricPairs / maxPossiblePairs, PAIRINGS_PENALTY_FACTOR)
       : 0;
-
   details.push(
     `Pairings of steps: found ${symmetricPairs} pairs out of ${maxPossiblePairs} possible (score: ${symmetryScore.toFixed(
       2
     )})`
   );
 
-  // 4. WCAG A combos (>=3:1), omitting same-color pairs
+  // --- WCAG Contrast Combos ---
   let wcagAPassing = 0;
   let wcagAAPassing = 0;
   let totalCombos = 0;
-  const debugPairs: string[] = [];
   for (let i = 0; i < swatchCount; i++) {
     for (let j = 0; j < swatchCount; j++) {
-      if (i === j) continue; // Omit same-color pairs
+      if (i === j) continue;
       const fg = swatches[i];
       const bg = swatches[j];
       const ratio = calculateContrastRatio(fg, bg);
@@ -233,24 +222,15 @@ export function evaluateColorSystem(swatches: string[]): EvaluationResult {
       const passesAA = ratio >= 4.5;
       if (passesA) wcagAPassing++;
       if (passesAA) wcagAAPassing++;
-      debugPairs.push(
-        `${fg} on ${bg}: ratio=${ratio.toFixed(
-          2
-        )}, passesA=${passesA}, passesAA=${passesAA}`
-      );
     }
   }
-
-  // Get empirical best combo counts for this swatch count
   const empiricalBestCombos = getEmpiricalBestCombos(swatchCount);
   const empiricalBestACombos = empiricalBestCombos.a;
   const empiricalBestAACombos = empiricalBestCombos.aa;
-
   const wcagAScore =
     empiricalBestACombos > 0 ? wcagAPassing / empiricalBestACombos : 0;
   const wcagAAScore =
     empiricalBestAACombos > 0 ? wcagAAPassing / empiricalBestAACombos : 0;
-
   details.push(
     `3:1 combos: ${wcagAPassing}/${empiricalBestACombos} (${(
       wcagAScore * 100
@@ -262,31 +242,18 @@ export function evaluateColorSystem(swatches: string[]): EvaluationResult {
     ).toFixed(1)}%)`
   );
 
-  // 5. Weighted contrast score (60% AA, 40% A)
+  // --- Weighted Contrast Score ---
   const contrastScore = 0.6 * wcagAAScore + 0.4 * wcagAScore;
-  // Remove normalization by empirical best contrast
-  // const empiricalBest = getEmpiricalBestContrast(swatchCount);
-  // const normalizedContrastScore = empiricalBest > 0 ? contrastScore / empiricalBest : 0;
   const normalizedContrastScore = contrastScore;
   details.push(`Contrast score (60% AA, 40% A): ${contrastScore.toFixed(3)}`);
-  // details.push(
-  //   `Normalized contrast score (empirical best = ${empiricalBest}): ${normalizedContrastScore.toFixed(3)}`
-  // );
-  // details.push(
-  //   `Note: 1.0 means as good as mathematically possible for a full-range ramp of this size.`
-  // );
 
-  // --- HUE VARIANCE (NEW SUB-CATEGORY CRITERION) ---
-  // Extract hue and saturation for each swatch
+  // --- Hue Variance ---
   const hsbValues = swatches.map((hex) => hexToHsb(hex));
   const huesRaw = hsbValues.map((hsb) => hsb.h);
   const sats = hsbValues.map((hsb) => hsb.s);
-
-  // Assign low-saturation swatches the hue of the nearest non-gray swatch
   const hues = huesRaw.slice();
   for (let i = 0; i < hues.length; i++) {
     if (sats[i] < 5) {
-      // Find nearest swatch with S >= 5
       let nearest = -1;
       let minDist = Infinity;
       for (let j = 0; j < hues.length; j++) {
@@ -300,8 +267,6 @@ export function evaluateColorSystem(swatches: string[]): EvaluationResult {
       }
     }
   }
-
-  // Part 1: Stepwise hue differences (0º = 1, 1º = 0.75, 2º = 0.5, 3º = 0.25, 4º+ = 0)
   let stepScores: number[] = [];
   for (let i = 1; i < hues.length; i++) {
     const diff = Math.abs(hues[i] - hues[i - 1]);
@@ -317,15 +282,10 @@ export function evaluateColorSystem(swatches: string[]): EvaluationResult {
     stepScores.length > 0
       ? stepScores.reduce((a, b) => a + b, 0) / stepScores.length
       : 1;
-
-  // Part 2: Total hue difference between first and last swatch
-  // maxAllowed = (# of swatches - 1) * 3
   const totalHueDiff = Math.abs(hues[0] - hues[hues.length - 1]);
   const maxAllowed = (swatchCount - 1) * 3;
   let part2 = 1 - totalHueDiff / maxAllowed;
   part2 = Math.max(0, Math.min(1, part2));
-
-  // Final Hue Variance score
   const hueVarianceScore = 0.4 * part1 + 0.6 * part2;
   details.push(
     `Hue Variance: step avg=${part1.toFixed(
@@ -335,26 +295,14 @@ export function evaluateColorSystem(swatches: string[]): EvaluationResult {
     )}, max allowed=${maxAllowed}, score=${hueVarianceScore.toFixed(2)}`
   );
 
-  // --- COLOR RANGE BUNDLED SCORE (NEW WEIGHTS) ---
-  // Swatch Amount: 20%, Smoothness: 50%, Hue Variance: 30%
+  // --- Color Range Bundled Score ---
   const colorRangeScore =
-    0.2 * swatchCountScore + 0.5 * evennessScore + 0.3 * hueVarianceScore;
+    0.1 * swatchCountScore + 0.45 * evennessScore + 0.45 * hueVarianceScore;
   details.push(`Color Range Score: ${(colorRangeScore * 100).toFixed(1)}`);
 
-  // Bundled scores
+  // --- Light vs Dark Bundled Score ---
   const lightDarkScore = 0.5 * balanceScore + 0.5 * symmetryScore;
   details.push(`Light v Dark Score: ${(lightDarkScore * 100).toFixed(1)}`);
-
-  // 7. Overall score (weighted average of all components), multiplied by 100
-  /*
-  const overallScore =
-    (swatchCountScore * 0.14 +
-      evennessScore * 0.35 +
-      balanceScore * 0.105 +
-      symmetryScore * 0.105 +
-      normalizedContrastScore * 0.3) *
-    100;
-  */
 
   return {
     swatchCount,
@@ -373,12 +321,13 @@ export function evaluateColorSystem(swatches: string[]): EvaluationResult {
     colorRangeScore,
     lightDarkScore,
     hueVarianceScore,
-    // overallScore, // Commented out since the pill is hidden in the UI for now
     details,
   };
 }
 
-// Utility to generate ideal L* values for 1-9 swatches (evenly spaced from 100 to 0)
+// =====================
+// Utility: Generate Ideal L* Values for 1-9 Swatches
+// =====================
 function generateIdealLValues(n: number): number[] {
   if (n === 1) return [100];
   if (n === 2) return [100, 0];
@@ -386,7 +335,9 @@ function generateIdealLValues(n: number): number[] {
   return Array.from({ length: n }, (_, i) => Math.round(100 - i * step));
 }
 
-// Generate a full mapping of ideal L* values for 1-20 swatches
+// =====================
+// Utility: Generate Full Mapping of Ideal L* Values for 1-20 Swatches
+// =====================
 const FULL_IDEAL_L_VALUES: { [n: number]: number[] } = {};
 for (let n = 1; n <= 20; n++) {
   if (IDEAL_L_VALUES[n]) {
@@ -396,12 +347,13 @@ for (let n = 1; n <= 20; n++) {
   }
 }
 
-// Function to compute empirical best combos for 3:1 and 4.5:1 ratios
+// =====================
+// Utility: Compute Empirical Best Combos for 3:1 and 4.5:1 Ratios
+// =====================
 function computeEmpiricalBestCombos() {
   const combos: { [n: number]: { a: number; aa: number } } = {};
   for (let n = 1; n <= 20; n++) {
     const lValues = FULL_IDEAL_L_VALUES[n];
-    // Convert L* to hex
     const hexes = lValues.map((l) => {
       const [r, g, b] = labToRgb(l);
       return rgbToHex(r, g, b);
