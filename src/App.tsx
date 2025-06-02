@@ -9,7 +9,6 @@ import React, {
 } from "react";
 import ColorGrid from "./components/ColorGrid";
 import ColorSwatch from "./components/ColorSwatch";
-import Toast from "./components/Toast";
 import MobileLayout from "./components/MobileLayout";
 import { ColorSwatch as ColorSwatchType, Dot } from "./types";
 import {
@@ -52,8 +51,6 @@ import "./styles/Ramp.css";
 import { ReactComponent as AddIcon } from "./icons/add-alt.svg";
 import { ReactComponent as ResetIcon } from "./icons/reset.svg";
 import ButtonDemo from "./ButtonDemo";
-import { ReactComponent as InfoIcon } from "./icons/info.svg";
-import QuickGuideModal from "./components/QuickGuideModal";
 import ScorePillDemo from "./pages/ScorePillDemo";
 import ScorePill from "./components/ScorePill";
 import { evaluateColorSystem } from "./utils/evaluateColorSystem";
@@ -63,6 +60,8 @@ import "./styles/HexInputRow.css";
 import DismissibleMessage from "./components/DismissibleMessage";
 import HexTabMessage from "./components/HexTabMessage";
 import ScoresModal from "./components/ScoresModal";
+import { ReactComponent as InfoIcon } from "./icons/info.svg";
+import Toast from "./components/Toast";
 
 const STORAGE_KEY = "colorGridSwatches";
 const HEX_STORAGE_KEY = "colorGridHexCode";
@@ -183,8 +182,6 @@ const App: React.FC = () => {
       return createInitialSwatches([100], "FFFFFF");
     }
   );
-  const [showToast, setShowToast] = useState(false);
-  const [toastHexCode, setToastHexCode] = useState("#333");
   const [isHexValid, setIsHexValid] = useState(true);
   const [isHexDirty, setIsHexDirty] = useState(false);
   const [clearActiveDotsSignal, setClearActiveDotsSignal] = useState(0);
@@ -256,6 +253,11 @@ const App: React.FC = () => {
     return localStorage.getItem("hexMessageDismissed") !== "true";
   });
   const [showScoresModal, setShowScoresModal] = useState(false);
+  const [toast, setToast] = useState<{
+    message: string;
+    backgroundColor: string;
+  } | null>(null);
+  const toastTimerRef = useRef<NodeJS.Timeout | null>(null);
 
   const dropdownRef = useRef<HTMLDivElement>(null);
   const location = useLocation();
@@ -347,40 +349,24 @@ const App: React.FC = () => {
   };
 
   const handleSwatchClick = (id: number) => {
-    // For Lightness Values tab, always keep picking mode active
     if (activeTab === "lightness") {
-      setIsPickingColor(true);
-      setActiveSwatchId(id);
-
-      // Get the correct swatch array based on active tab
       const swatchArray = swatchesAdvanced;
-
-      // Find the swatch with the matching ID
       const selectedSwatch = swatchArray.find((s) => s.id === id);
       if (selectedSwatch) {
-        setActiveLValue(selectedSwatch.lValue);
-
-        // Store the original color when entering color picking mode
-        setSwatchesAdvanced((prevSwatches) =>
-          prevSwatches.map((swatch) =>
-            swatch.id === id
-              ? {
-                  ...swatch,
-                  originalHexColor: swatch.hexColor,
-                }
-              : swatch
-          )
-        );
-
-        // Track color picker activation
-        if (typeof window.gtag !== "undefined") {
-          window.gtag("event", "color_picker_activate", {
-            grid_size: activeTab,
-            swatch_id: id,
-            l_value: selectedSwatch.lValue,
-            hex_color: selectedSwatch.hexColor,
-          });
+        navigator.clipboard.writeText(selectedSwatch.hexColor);
+        // Clear any existing toast timer
+        if (toastTimerRef.current) {
+          clearTimeout(toastTimerRef.current);
         }
+        // Show new toast
+        setToast({
+          message: `${selectedSwatch.hexColor.toUpperCase()} copied to your clipboard!`,
+          backgroundColor: selectedSwatch.hexColor,
+        });
+        // Set timer to hide toast
+        toastTimerRef.current = setTimeout(() => {
+          setToast(null);
+        }, 3000);
       }
     } else {
       // For hex tab, keep the original toggle behavior
@@ -1018,6 +1004,15 @@ const App: React.FC = () => {
     handleExportColors();
   };
 
+  // Cleanup toast timer on unmount
+  useEffect(() => {
+    return () => {
+      if (toastTimerRef.current) {
+        clearTimeout(toastTimerRef.current);
+      }
+    };
+  }, []);
+
   return (
     <div className={`app ${isDarkMode ? "dark" : ""}`}>
       <MobileLayout />
@@ -1356,13 +1351,15 @@ const App: React.FC = () => {
                             <ColorSwatch
                               key={swatch.id}
                               swatch={swatch}
-                              isActive={swatch.id === activeSwatchId}
+                              isActive={
+                                activeTab === "lightness"
+                                  ? false
+                                  : swatch.id === activeSwatchId
+                              }
                               onLValueChange={handleLValueChange}
                               onClick={handleSwatchClick}
                               ref={swatchRefs[idx] as RefObject<HTMLDivElement>}
-                              onSwatchKeyDown={(
-                                e: React.KeyboardEvent<HTMLDivElement>
-                              ) => {
+                              onSwatchKeyDown={(e) => {
                                 if (
                                   e.key === "ArrowRight" &&
                                   idx < swatchRefs.length - 1
@@ -1453,11 +1450,10 @@ const App: React.FC = () => {
                   </div>
                 </div>
               </div>
-              {showToast && (
+              {toast && (
                 <Toast
-                  message="Hex code copied to clipboard!"
-                  onClose={() => setShowToast(false)}
-                  backgroundColor={toastHexCode}
+                  message={toast.message}
+                  backgroundColor={toast.backgroundColor}
                 />
               )}
             </>

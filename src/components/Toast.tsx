@@ -1,36 +1,23 @@
-import React, { useEffect } from "react";
+import React from "react";
+import { hexToLabLightness } from "../utils/colorUtils";
 import "../styles/Toast.css";
-import { calculateContrastRatio } from "../utils/colorUtils";
 
 interface ToastProps {
   message: string;
-  duration?: number;
-  onClose: () => void;
-  backgroundColor?: string;
+  backgroundColor: string;
 }
 
-const Toast: React.FC<ToastProps> = ({
-  message,
-  duration = 3000,
-  onClose,
-  backgroundColor = "#000",
-}) => {
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      onClose();
-    }, duration);
-
-    return () => clearTimeout(timer);
-  }, [duration, onClose]);
-
-  // Calculate contrast ratio with white to determine text color
-  const contrastWithWhite = calculateContrastRatio(backgroundColor);
-  const textColor = contrastWithWhite >= 4.5 ? "#FFFFFF" : "#000000";
+const Toast: React.FC<ToastProps> = ({ message, backgroundColor }) => {
+  const lValue = hexToLabLightness(backgroundColor);
+  const textColor = lValue >= 50 ? "#000000" : "#FFFFFF";
 
   return (
     <div
       className="toast"
-      style={{ backgroundColor, color: textColor }}
+      style={{
+        backgroundColor,
+        color: textColor,
+      }}
       role="alert"
       aria-live="polite"
       aria-atomic="true"
