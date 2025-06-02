@@ -248,33 +248,23 @@ export function evaluateColorSystem(swatches: string[]): EvaluationResult {
   details.push(`Contrast score (60% AA, 40% A): ${contrastScore.toFixed(3)}`);
 
   // --- Hue Variance ---
-  const hsbValues = swatches.map((hex) => hexToHsb(hex));
-  const huesRaw = hsbValues.map((hsb) => hsb.h);
-  const sats = hsbValues.map((hsb) => hsb.s);
-  const hues = huesRaw.slice();
-  for (let i = 0; i < hues.length; i++) {
-    if (sats[i] < 5) {
-      let nearest = -1;
-      let minDist = Infinity;
-      for (let j = 0; j < hues.length; j++) {
-        if (sats[j] >= 5 && Math.abs(j - i) < minDist) {
-          nearest = j;
-          minDist = Math.abs(j - i);
-        }
-      }
-      if (nearest !== -1) {
-        hues[i] = hues[nearest];
-      }
-    }
-  }
+  const filteredSwatches = swatches.filter((hex) => {
+    const l = hexToLabLightness(hex);
+    return l >= 10.1 && l <= 89.9;
+  });
+  const hues = filteredSwatches.map((hex) => hexToHsb(hex).h);
   let stepScores: number[] = [];
+  let autoFail = false;
   for (let i = 1; i < hues.length; i++) {
     const diff = Math.abs(hues[i] - hues[i - 1]);
+    const circularDiff = Math.min(diff, 360 - diff);
+    if (circularDiff >= 6) {
+      autoFail = true;
+    }
     let score = 0;
-    if (diff === 0) score = 1;
-    else if (diff === 1) score = 0.75;
-    else if (diff === 2) score = 0.5;
-    else if (diff === 3) score = 0.25;
+    if (circularDiff >= 0 && circularDiff <= 3) score = 1;
+    else if (circularDiff === 4) score = 0.5;
+    else if (circularDiff === 5) score = 0.25;
     else score = 0;
     stepScores.push(score);
   }
@@ -282,17 +272,13 @@ export function evaluateColorSystem(swatches: string[]): EvaluationResult {
     stepScores.length > 0
       ? stepScores.reduce((a, b) => a + b, 0) / stepScores.length
       : 1;
-  const totalHueDiff = Math.abs(hues[0] - hues[hues.length - 1]);
-  const maxAllowed = (swatchCount - 1) * 3;
-  let part2 = 1 - totalHueDiff / maxAllowed;
-  part2 = Math.max(0, Math.min(1, part2));
-  const hueVarianceScore = 0.4 * part1 + 0.6 * part2;
+  const hueVarianceScore = autoFail ? 0 : part1;
   details.push(
     `Hue Variance: step avg=${part1.toFixed(
       2
-    )}, total diff=${totalHueDiff.toFixed(
-      2
-    )}, max allowed=${maxAllowed}, score=${hueVarianceScore.toFixed(2)}`
+    )}, score=${hueVarianceScore.toFixed(2)}${
+      autoFail ? " (auto-fail: step >= 6)" : ""
+    } (L* 10.1-89.9 only, stepwise only)`
   );
 
   // --- Color Range Bundled Score ---
