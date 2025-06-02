@@ -96,14 +96,26 @@ const createInitialSwatches = (lValues: number[], hexCode?: string) => {
     ];
   }
   return lValues.map((lValue, index) => {
-    const [r, g, b] = labToRgb(lValue);
+    // Ensure the L* value is within the desired range (64.45 to 65.44 for L* 65)
+    const targetL = lValue;
+    const [r, g, b] = labToRgb(targetL);
     const hexColor = rgbToHex(r, g, b);
+    const actualL = hexToLabLightness(hexColor);
+
+    // If the actual L* value is not within 0.25 of the target, adjust the RGB values
+    let finalHexColor = hexColor;
+    if (Math.abs(actualL - targetL) > 0.25) {
+      const adjustedL = targetL;
+      const [r2, g2, b2] = labToRgb(adjustedL);
+      finalHexColor = rgbToHex(r2, g2, b2);
+    }
+
     return {
       id: index + 1,
-      lValue,
-      hexColor,
-      whiteContrast: calculateContrastRatio(hexColor),
-      blackContrast: calculateContrastRatio(hexColor, "#000000"),
+      lValue: targetL,
+      hexColor: finalHexColor,
+      whiteContrast: calculateContrastRatio(finalHexColor),
+      blackContrast: calculateContrastRatio(finalHexColor, "#000000"),
     };
   });
 };

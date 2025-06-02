@@ -1,17 +1,15 @@
 .left-drawer {
   width: 400px;
-  background-color: var(--color-neutral-750);
-  border-right: 1px solid var(--color-neutral-650);
-  overflow-y: auto;
   overflow-x: hidden;
   position: fixed;
-  top: 81px;
-  bottom: 0;
   left: 0;
   height: calc(100vh - 81px);
   scrollbar-width: thin;
   scrollbar-color: var(--color-neutral-700) transparent;
+  background: var(--color-neutral-750);
   z-index: 100;
+  overflow-y: auto;
+  box-sizing: border-box;
 }
 
 .left-drawer::-webkit-scrollbar {
@@ -36,6 +34,7 @@
 }
 
 .left-drawer-section {
+  width: auto;
   padding: 20px 20px 0 20px;
   /* border-bottom: 1px solid var(--color-neutral-650); */
 }
@@ -160,4 +159,11 @@
 .left-drawer-ctas .btn-full {
   flex: 1 1 0;
   margin: 0;
+}
+
+.left-drawer-content {
+  min-width: 0;
+  padding: 16px;
+  overflow-x: hidden;
+  box-sizing: border-box;
 }

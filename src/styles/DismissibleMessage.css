@@ -1,11 +1,15 @@
 .dismissible-message {
+  display: block;
+  width: 100%;
+  max-width: 100%;
+  box-sizing: border-box;
+  overflow-x: hidden;
   background: var(--color-primary-500);
   color: var(--color-neutral-00);
   border-radius: 8px;
   padding: 16px;
   margin: 16px 0 0 0;
   font-family: "Lato", sans-serif;
-  max-width: 480px;
   position: relative;
   height: auto;
 }

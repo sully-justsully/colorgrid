@@ -1,3 +1,6 @@
+// Moving the contents of Colors.ts to utils/colors.ts
+// This file will contain color-related utility functions and constants
+
 /**
  * Color scale values available in the design system.
  * Each color has a scale from 00 (lightest) to 850 (darkest).

@@ -1,0 +1,20 @@
+/* MainContent styles. Add actual styles here as needed. */
+
+.main-content {
+  flex: 1;
+  padding: 1.5rem;
+  background-color: #f9fafb;
+  min-height: 100vh;
+}
+
+.main-content-container {
+  max-width: 80rem;
+  margin: 0 auto;
+}
+
+.main-content-inner {
+  background-color: white;
+  border-radius: 0.5rem;
+  box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+  padding: 1.5rem;
+}
