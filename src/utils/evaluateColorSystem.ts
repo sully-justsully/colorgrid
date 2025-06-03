@@ -250,7 +250,7 @@ export function evaluateColorSystem(swatches: string[]): EvaluationResult {
   // --- Hue Variance ---
   const filteredSwatches = swatches.filter((hex) => {
     const l = hexToLabLightness(hex);
-    return l >= 10.1 && l <= 89.9;
+    return l >= 5.1 && l <= 94.9;
   });
   const hues = filteredSwatches.map((hex) => hexToHsb(hex).h);
   let stepScores: number[] = [];
