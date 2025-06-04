@@ -664,6 +664,7 @@ const App: React.FC = () => {
     const swatchHeight = 120; // Height of each swatch
     const padding = 32; // Padding between columns
     const titleHeight = 48; // Height for section title
+    const footerHeight = 40; // Height for footer text
     const sections: [string, Section["swatches"]][] =
       Object.entries(savedSwatches);
     const totalWidth = (swatchWidth + padding) * sections.length - padding;
@@ -674,10 +675,10 @@ const App: React.FC = () => {
         ([_, swatches]: [string, Section["swatches"]]) => swatches.length
       )
     );
-    const totalHeight = titleHeight + maxSwatches * swatchHeight;
+    const totalHeight = titleHeight + maxSwatches * swatchHeight + footerHeight;
 
     let svgContent = `
-      <svg width="${totalWidth}" height="${totalHeight}" viewBox="0 0 ${totalWidth} ${totalHeight}" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <svg width="${totalWidth}" height="${totalHeight}" viewBox="0 0 ${totalWidth} ${totalHeight}" fill="none" xmlns="http://www.w3.org/2000/svg" class="export-svg">
         <defs>
           <style>
             @font-face {
@@ -718,7 +719,7 @@ const App: React.FC = () => {
 
       // Add section title
       svgContent += `
-        <text x="${columnX + 16}" y="32" class="title" fill="#000000">
+        <text x="${columnX + 16}" y="32" class="title" fill="#757575">
           ${sectionTitle}
         </text>
       `;
@@ -779,6 +780,14 @@ const App: React.FC = () => {
         `;
       });
     });
+
+    // Add footer text with link
+    const footerY = totalHeight - 16;
+    svgContent += `
+      <text x="16" y="${footerY}" fill="#757575">
+        Download this Figma file to use your color system with 450+ ready-to-go variables. <a href="https://www.figma.com/community/file/1428517491497047139/design-system-variables-midnight-v-2-0"><tspan fill="#0066FF" text-decoration="underline">Design System Variables</tspan></a>
+      </text>
+    `;
 
     svgContent += `</svg>`;
 

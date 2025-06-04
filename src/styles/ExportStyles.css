@@ -34,3 +34,15 @@
   rx: 4px;
   ry: 4px;
 }
+
+.export-svg .footer-text {
+  font-family: "Lato", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  font-size: 14px;
+  fill: #757575;
+}
+
+.export-svg .footer-link {
+  fill: #0066ff;
+  text-decoration: underline;
+  cursor: pointer;
+}
