@@ -3,6 +3,7 @@ import { ReactComponent as TrashIcon } from "../icons/trash.svg";
 import { ReactComponent as EditIcon } from "../icons/edit.svg";
 import { ReactComponent as DownloadIcon } from "../icons/download.svg";
 import { ReactComponent as CloseIcon } from "../icons/close.svg";
+import { trackEvent, AnalyticsEvents } from "../utils/analytics";
 
 interface RightDrawerProps {
   isOpen: boolean;
@@ -23,12 +24,21 @@ export const RightDrawer: React.FC<RightDrawerProps> = ({
     <div className={`right-drawer ${isOpen ? "open" : ""}`}>
       <div className="drawer-header">
         <div className="drawer-actions">
-          <button onClick={handleDownload} className="btn">
+          <button
+            onClick={() => {
+              handleDownload();
+              trackEvent(AnalyticsEvents.DOWNLOAD_SYSTEM);
+            }}
+            className="btn"
+          >
             <DownloadIcon />
             Download System
           </button>
           <button
-            onClick={() => setShowScoresModal(true)}
+            onClick={() => {
+              setShowScoresModal(true);
+              trackEvent(AnalyticsEvents.VIEW_SCORES);
+            }}
             className="btn btn-secondary"
           >
             Scores Explained

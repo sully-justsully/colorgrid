@@ -65,6 +65,7 @@ import Toast from "./components/Toast";
 import { ReactComponent as EditIcon } from "./icons/edit.svg";
 import ReplaceModal from "./components/ReplaceModal";
 import { RightDrawer } from "./components/RightDrawer";
+import { trackEvent, AnalyticsEvents } from "./utils/analytics";
 
 const STORAGE_KEY = "colorGridSwatches";
 const HEX_STORAGE_KEY = "colorGridHexCode";
@@ -1084,7 +1085,12 @@ const App: React.FC = () => {
               <header className="app-header">
                 <button
                   className="btn btn-secondary btn-icon-only"
-                  onClick={toggleTheme}
+                  onClick={() => {
+                    toggleTheme();
+                    trackEvent(AnalyticsEvents.THEME_TOGGLE, {
+                      new_theme: isDarkMode ? "light" : "dark",
+                    });
+                  }}
                   aria-label={
                     isDarkMode ? "Switch to light mode" : "Switch to dark mode"
                   }
@@ -1102,6 +1108,7 @@ const App: React.FC = () => {
                 <div className="header-actions">
                   <button
                     onClick={() => {
+                      trackEvent(AnalyticsEvents.GET_FIGMA_FILE);
                       window.open(
                         "https://www.figma.com/community/file/1428517491497047139/design-system-variables-midnight-v-2-0",
                         "_blank"
@@ -1114,13 +1121,10 @@ const App: React.FC = () => {
                   </button>
                   <button
                     onClick={() => {
-                      // Track contrast grid view
-                      if (typeof window.gtag !== "undefined") {
-                        window.gtag("event", "view_contrast_grid", {
-                          grid_size: activeTab,
-                          color_count: currentSwatches.length,
-                        });
-                      }
+                      trackEvent(AnalyticsEvents.VIEW_CONTRAST_GRID, {
+                        grid_size: activeTab,
+                        color_count: currentSwatches.length,
+                      });
                       window.open(
                         `/contrast-grid?tab=${
                           activeTab === "lightness" ? "lightness" : "hex"
@@ -1137,9 +1141,12 @@ const App: React.FC = () => {
                   </button>
                   <div className="filters-dropdown" ref={dropdownRef}>
                     <button
-                      onClick={() =>
-                        setShowFiltersDropdown(!showFiltersDropdown)
-                      }
+                      onClick={() => {
+                        setShowFiltersDropdown(!showFiltersDropdown);
+                        trackEvent(AnalyticsEvents.WCAG_FILTER_CHANGE, {
+                          current_level: wcagLevel,
+                        });
+                      }}
                       className="btn btn-secondary"
                     >
                       <EyeIcon />
@@ -1197,7 +1204,10 @@ const App: React.FC = () => {
                   </div>
                   <button
                     className="btn"
-                    onClick={() => setIsColorSystemOpen(true)}
+                    onClick={() => {
+                      setIsColorSystemOpen(true);
+                      trackEvent(AnalyticsEvents.VIEW_SCORES);
+                    }}
                   >
                     <ColorIcon />
                     Color System
@@ -1478,7 +1488,16 @@ const App: React.FC = () => {
                     <div className="left-drawer-ctas">
                       <button
                         className="btn btn-secondary btn-full"
-                        onClick={handleResetRamps}
+                        onClick={() => {
+                          handleResetRamps();
+                          trackEvent(AnalyticsEvents.RESET_RAMPS, {
+                            tab: activeTab,
+                            ramp_count:
+                              activeTab === "hex"
+                                ? customHexCodes.length
+                                : swatchesAdvanced.length,
+                          });
+                        }}
                         title="Reset to default ramps"
                       >
                         <ResetIcon />
@@ -1490,7 +1509,13 @@ const App: React.FC = () => {
                       </button>
                       <button
                         className="btn btn-full"
-                        onClick={handleSaveToColorSystem}
+                        onClick={() => {
+                          handleSaveToColorSystem();
+                          trackEvent(AnalyticsEvents.SAVE_PALETTE, {
+                            tab: activeTab,
+                            color_count: currentSwatches.length,
+                          });
+                        }}
                       >
                         <ColorIcon />
                         Save Palette
@@ -1698,6 +1723,9 @@ const App: React.FC = () => {
                       onClick={() => {
                         setSectionToReplace(sectionKey);
                         setShowReplaceModal(true);
+                        trackEvent(AnalyticsEvents.EDIT_PALETTE, {
+                          section: section.title,
+                        });
                       }}
                     >
                       <EditIcon />
@@ -1705,7 +1733,12 @@ const App: React.FC = () => {
                     <button
                       className="btn btn-destructive btn-icon-only"
                       aria-label="Remove"
-                      onClick={() => handleRemovePalette(section.title)}
+                      onClick={() => {
+                        handleRemovePalette(section.title);
+                        trackEvent(AnalyticsEvents.REMOVE_PALETTE, {
+                          section: section.title,
+                        });
+                      }}
                       disabled={!savedSwatches[sectionKey]}
                     >
                       <TrashIcon />

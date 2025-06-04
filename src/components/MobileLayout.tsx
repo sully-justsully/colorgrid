@@ -1,6 +1,7 @@
 import React from "react";
 import "../styles/Mobile.css";
 import { ReactComponent as ShareIcon } from "../icons/share.svg";
+import { trackEvent, AnalyticsEvents } from "../utils/analytics";
 
 const MobileLayout: React.FC = () => {
   const handleShare = async () => {
@@ -10,6 +11,9 @@ const MobileLayout: React.FC = () => {
           title: "Color Grid Tool",
           text: "Check out this Color Grid Tool for creating beautiful color palettes!",
           url: window.location.href,
+        });
+        trackEvent(AnalyticsEvents.SHARE_APP, {
+          method: "native_share",
         });
       } catch (error) {
         console.error("Error sharing:", error);

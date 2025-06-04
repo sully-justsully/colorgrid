@@ -1,6 +1,7 @@
 import React, { useState, useEffect, forwardRef } from "react";
 import { ColorSwatch as ColorSwatchType } from "../types";
 import "../styles/ColorSwatch.css";
+import { trackEvent, AnalyticsEvents } from "../utils/analytics";
 
 interface ColorSwatchProps {
   swatch: ColorSwatchType;
@@ -123,7 +124,15 @@ const ColorSwatch = forwardRef<HTMLDivElement, ColorSwatchProps>(
               <div
                 className={`color-swatch ${isActive ? "active" : ""}`}
                 style={{ backgroundColor: swatch.hexColor }}
-                onClick={() => onClick(swatch.id)}
+                onClick={() => {
+                  onClick(swatch.id);
+                  trackEvent(AnalyticsEvents.COLOR_SWATCH_CLICK, {
+                    hex_color: swatch.hexColor,
+                    l_value: swatch.lValue,
+                    white_contrast: swatch.whiteContrast,
+                    black_contrast: swatch.blackContrast,
+                  });
+                }}
                 role="button"
                 aria-label={`Color swatch ${swatch.hexColor}`}
                 tabIndex={0}
