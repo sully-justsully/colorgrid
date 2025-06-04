@@ -145,9 +145,12 @@
   position: sticky;
   bottom: 0;
   left: 0;
-  width: 380px;
-  background: var(--color-neutral-750);
-  padding: 20px 20px 20px 0;
+  width: 400px;
+  margin-left: -20px;
+  background: var(--color-overlay-background-light);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  padding: 20px;
   display: flex;
   flex-direction: row;
   gap: 8px;

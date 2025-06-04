@@ -22,7 +22,9 @@ const ReplaceModal: React.FC<ReplaceModalProps> = ({
 
   return (
     <AreYouSureModal onClose={onClose} initialFocusRef={cancelButtonRef}>
-      <h2 className="modal-header">{title}</h2>
+      <div className="modal-header">
+        <h2 className="heading-lg">{title}</h2>
+      </div>
       <div className="body-lg modal-content-message">{children}</div>
       <div className="modal-actions">
         <button

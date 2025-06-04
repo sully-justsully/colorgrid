@@ -64,6 +64,7 @@ import { ReactComponent as InfoIcon } from "./icons/info.svg";
 import Toast from "./components/Toast";
 import { ReactComponent as EditIcon } from "./icons/edit.svg";
 import ReplaceModal from "./components/ReplaceModal";
+import { RightDrawer } from "./components/RightDrawer";
 
 const STORAGE_KEY = "colorGridSwatches";
 const HEX_STORAGE_KEY = "colorGridHexCode";
@@ -167,7 +168,10 @@ const App: React.FC = () => {
   const [activeSwatchId, setActiveSwatchId] = useState<number | null>(null);
   const [activeLValue, setActiveLValue] = useState<number | null>(null);
   const [showFiltersDropdown, setShowFiltersDropdown] = useState(false);
-  const [activeTab, setActiveTab] = useState<"lightness" | "hex">("lightness");
+  const [activeTab, setActiveTab] = useState<"lightness" | "hex">(() => {
+    const savedTab = localStorage.getItem("colorGridActiveTab");
+    return savedTab === "hex" ? "hex" : "lightness";
+  });
   const [swatchesAdvanced, setSwatchesAdvanced] = useState<ColorSwatchType[]>(
     () => {
       const savedSwatches = localStorage.getItem(STORAGE_KEY + "_advanced");
@@ -261,10 +265,14 @@ const App: React.FC = () => {
     ColorSwatchType[] | null
   >(null);
   const [showLightnessMessage, setShowLightnessMessage] = useState(() => {
-    return localStorage.getItem("lightnessMessageDismissed") !== "true";
+    const saved = localStorage.getItem("lightnessMessageDismissed");
+    console.log("Initial lightness message state:", saved);
+    return saved !== "true";
   });
   const [showHexMessage, setShowHexMessage] = useState(() => {
-    return localStorage.getItem("hexMessageDismissed") !== "true";
+    const saved = localStorage.getItem("hexMessageDismissed");
+    console.log("Initial hex message state:", saved);
+    return saved !== "true";
   });
   const [showScoresModal, setShowScoresModal] = useState(false);
   const [toast, setToast] = useState<{
@@ -787,6 +795,7 @@ const App: React.FC = () => {
 
   const handleTabChange = (tab: "lightness" | "hex") => {
     setActiveTab(tab);
+    localStorage.setItem("colorGridActiveTab", tab);
   };
 
   // Add new function to handle HSL changes
@@ -1004,14 +1013,29 @@ const App: React.FC = () => {
     }
   }, [activeTab]);
 
-  const handleDismissLightnessMessage = () => {
-    setShowLightnessMessage(false);
-    localStorage.setItem("lightnessMessageDismissed", "true");
-  };
+  // Add effect to sync state with localStorage
+  useEffect(() => {
+    console.log("showLightnessMessage changed to:", showLightnessMessage);
+    if (!showLightnessMessage) {
+      localStorage.setItem("lightnessMessageDismissed", "true");
+      console.log("Set lightnessMessageDismissed to true");
+    }
+  }, [showLightnessMessage]);
 
-  const handleDismissHexMessage = () => {
-    setShowHexMessage(false);
-    localStorage.setItem("hexMessageDismissed", "true");
+  useEffect(() => {
+    console.log("showHexMessage changed to:", showHexMessage);
+    if (!showHexMessage) {
+      localStorage.setItem("hexMessageDismissed", "true");
+      console.log("Set hexMessageDismissed to true");
+    }
+  }, [showHexMessage]);
+
+  // Add function to reset dismissible messages
+  const resetDismissibleMessages = () => {
+    localStorage.removeItem("lightnessMessageDismissed");
+    localStorage.removeItem("hexMessageDismissed");
+    setShowLightnessMessage(true);
+    setShowHexMessage(true);
   };
 
   const handleDownload = () => {
@@ -1029,6 +1053,25 @@ const App: React.FC = () => {
 
   const [showReplaceModal, setShowReplaceModal] = useState(false);
   const [sectionToReplace, setSectionToReplace] = useState<string | null>(null);
+
+  const handleDismissLightnessMessage = () => {
+    console.log("Dismissing lightness message");
+    setShowLightnessMessage(false);
+  };
+
+  const handleDismissHexMessage = () => {
+    console.log("Dismissing hex message");
+    setShowHexMessage(false);
+  };
+
+  useEffect(() => {
+    if (isColorSystemOpen || showResetModal) {
+      document.body.classList.add("modal-open");
+    } else {
+      document.body.classList.remove("modal-open");
+    }
+    return () => document.body.classList.remove("modal-open");
+  }, [isColorSystemOpen, showResetModal]);
 
   return (
     <div className={`app ${isDarkMode ? "dark" : ""}`}>
@@ -1179,6 +1222,10 @@ const App: React.FC = () => {
                           onClick={(e) => {
                             e.stopPropagation();
                             setShowLightnessMessage(true);
+                            localStorage.setItem(
+                              "lightnessMessageDismissed",
+                              "false"
+                            );
                           }}
                           title="Show info"
                           tabIndex={0}
@@ -1187,6 +1234,10 @@ const App: React.FC = () => {
                           onKeyDown={(e) => {
                             if (e.key === "Enter" || e.key === " ") {
                               setShowLightnessMessage(true);
+                              localStorage.setItem(
+                                "lightnessMessageDismissed",
+                                "false"
+                              );
                             }
                           }}
                           style={{
@@ -1211,6 +1262,10 @@ const App: React.FC = () => {
                           onClick={(e) => {
                             e.stopPropagation();
                             setShowHexMessage(true);
+                            localStorage.setItem(
+                              "hexMessageDismissed",
+                              "false"
+                            );
                           }}
                           title="Show info"
                           tabIndex={0}
@@ -1219,6 +1274,10 @@ const App: React.FC = () => {
                           onKeyDown={(e) => {
                             if (e.key === "Enter" || e.key === " ") {
                               setShowHexMessage(true);
+                              localStorage.setItem(
+                                "hexMessageDismissed",
+                                "false"
+                              );
                             }
                           }}
                           style={{
@@ -1423,7 +1482,11 @@ const App: React.FC = () => {
                         title="Reset to default ramps"
                       >
                         <ResetIcon />
-                        Reset Ramps
+                        Reset{" "}
+                        {activeTab === "hex"
+                          ? customHexCodes.length
+                          : swatchesAdvanced.length}{" "}
+                        Ramps
                       </button>
                       <button
                         className="btn btn-full"
@@ -1543,153 +1606,138 @@ const App: React.FC = () => {
         <div className="modal-backdrop open" style={{ zIndex: 2199 }} />
       )}
       {isColorSystemOpen && (
-        <div className="right-drawer open">
-          <div className="drawer-header">
-            <div className="drawer-actions">
-              <button onClick={handleDownload} className="btn">
-                <DownloadIcon />
-                Download System
-              </button>
-              <button
-                onClick={() => setShowScoresModal(true)}
-                className="btn btn-secondary"
-              >
-                Scores Explained
-              </button>
-            </div>
-            <button
-              onClick={handleDrawerClose}
-              className="btn btn-icon-only btn-secondary"
-              aria-label="Close"
-            >
-              <CloseIcon />
-            </button>
-          </div>
-          <div className="drawer-sections">
-            {[
-              {
-                title: "Brand Primary",
-                text: "This is your main color used for primary actions and highlights.",
-              },
-              {
-                title: "Brand Secondary",
-                text: "A secondary color to complement your primary brand color.",
-              },
-              {
-                title: "Neutral",
-                text: "Colors used for surfaces, text, and less prominent elements.",
-              },
-              {
-                title: "Success",
-                text: "Colors to indicate positive actions or success states.",
-              },
-              {
-                title: "Error",
-                text: "Colors to indicate destructive actions or error states.",
-              },
-              {
-                title: "Custom 1",
-                text: "Additional section for more color palettes.",
-              },
-              {
-                title: "Custom 2",
-                text: "Additional section for more color palettes.",
-              },
-              {
-                title: "Custom 3",
-                text: "Additional section for more color palettes.",
-              },
-            ].map((section, idx) => {
-              const sectionKey = section.title
-                .toLowerCase()
-                .replace(/\s+/g, "-");
-              const palette = savedSwatches[sectionKey] || [];
-              // Extract hex colors for evaluation
-              const hexColors = palette.map((swatch) => swatch.hexColor);
-              let scores = null;
-              if (hexColors.length > 0) {
-                scores = evaluateColorSystem(hexColors);
-              }
-              return (
-                <div className="right-drawer-section" key={section.title}>
-                  <div className="section-title">{section.title}</div>
-                  <div className="section-desc">{section.text}</div>
-                  <div className="section-row">
-                    <div
-                      className={
-                        savedSwatches[sectionKey]
-                          ? `filled-state${
-                              isSavingMode ? " saving-mode pulsing" : ""
-                            }`
-                          : `empty-state${
-                              pulsingRectangle === "all" ? " pulsing" : ""
-                            }${isSavingMode ? " saving-mode" : ""}`
-                      }
-                      onClick={() => handleRectangleClick(section.title)}
-                    >
-                      {palette.map((swatch) => (
-                        <div
-                          key={swatch.id}
-                          className="color-swatch"
-                          style={{
-                            backgroundColor: swatch.hexColor,
-                            height: "100%",
-                            border: "1px solid #222",
-                          }}
-                        />
-                      ))}
-                    </div>
-                    <div style={{ display: "flex", gap: "4px" }}>
-                      <button
-                        className="btn btn-secondary btn-icon-only"
-                        aria-label="Edit"
-                        disabled={!savedSwatches[sectionKey]}
-                        onClick={() => {
-                          setSectionToReplace(sectionKey);
-                          setShowReplaceModal(true);
+        <div
+          className="modal-backdrop open"
+          style={{ zIndex: 2199 }}
+          onClick={handleDrawerClose}
+        />
+      )}
+      <RightDrawer
+        isOpen={isColorSystemOpen}
+        onClose={handleDrawerClose}
+        handleDownload={handleDownload}
+        setShowScoresModal={setShowScoresModal}
+      >
+        <div className="drawer-sections">
+          {[
+            {
+              title: "Brand Primary",
+              text: "This is your main color used for primary actions and highlights.",
+            },
+            {
+              title: "Brand Secondary",
+              text: "A secondary color to complement your primary brand color.",
+            },
+            {
+              title: "Neutral",
+              text: "Colors used for surfaces, text, and less prominent elements.",
+            },
+            {
+              title: "Success",
+              text: "Colors to indicate positive actions or success states.",
+            },
+            {
+              title: "Error",
+              text: "Colors to indicate destructive actions or error states.",
+            },
+            {
+              title: "Custom 1",
+              text: "Additional section for more color palettes.",
+            },
+            {
+              title: "Custom 2",
+              text: "Additional section for more color palettes.",
+            },
+            {
+              title: "Custom 3",
+              text: "Additional section for more color palettes.",
+            },
+          ].map((section, idx) => {
+            const sectionKey = section.title.toLowerCase().replace(/\s+/g, "-");
+            const palette = savedSwatches[sectionKey] || [];
+            // Extract hex colors for evaluation
+            const hexColors = palette.map((swatch) => swatch.hexColor);
+            let scores = null;
+            if (hexColors.length > 0) {
+              scores = evaluateColorSystem(hexColors);
+            }
+            return (
+              <div className="right-drawer-section" key={section.title}>
+                <div className="section-title">{section.title}</div>
+                <div className="section-desc">{section.text}</div>
+                <div className="section-row">
+                  <div
+                    className={
+                      savedSwatches[sectionKey]
+                        ? `filled-state${
+                            isSavingMode ? " saving-mode pulsing" : ""
+                          }`
+                        : `empty-state${
+                            pulsingRectangle === "all" ? " pulsing" : ""
+                          }${isSavingMode ? " saving-mode" : ""}`
+                    }
+                    onClick={() => handleRectangleClick(section.title)}
+                  >
+                    {palette.map((swatch) => (
+                      <div
+                        key={swatch.id}
+                        className="color-swatch"
+                        style={{
+                          backgroundColor: swatch.hexColor,
+                          height: "100%",
+                          border: "1px solid #222",
                         }}
-                      >
-                        <EditIcon />
-                      </button>
-                      <button
-                        className="btn btn-destructive btn-icon-only"
-                        aria-label="Remove"
-                        onClick={() => handleRemovePalette(section.title)}
-                        disabled={!savedSwatches[sectionKey]}
-                      >
-                        <TrashIcon />
-                      </button>
-                    </div>
+                      />
+                    ))}
                   </div>
-                  {/* Score Pills Row */}
-                  <div className="score-pill-row">
-                    <ScorePill
-                      score={scores ? scores.colorRangeScore * 100 : NaN}
-                      label="Color Range:"
-                      tooltipType="colorRange"
-                      scores={scores || undefined}
-                    />
-                    <ScorePill
-                      score={scores ? scores.lightDarkScore * 100 : NaN}
-                      label="Light v Dark:"
-                      tooltipType="colorBalance"
-                      scores={scores || undefined}
-                    />
-                    <ScorePill
-                      score={
-                        scores ? scores.normalizedContrastScore * 100 : NaN
-                      }
-                      label="Accessibility:"
-                      tooltipType="accessibility"
-                      scores={scores || undefined}
-                    />
+                  <div style={{ display: "flex", gap: "4px" }}>
+                    <button
+                      className="btn btn-secondary btn-icon-only"
+                      aria-label="Edit"
+                      disabled={!savedSwatches[sectionKey]}
+                      onClick={() => {
+                        setSectionToReplace(sectionKey);
+                        setShowReplaceModal(true);
+                      }}
+                    >
+                      <EditIcon />
+                    </button>
+                    <button
+                      className="btn btn-destructive btn-icon-only"
+                      aria-label="Remove"
+                      onClick={() => handleRemovePalette(section.title)}
+                      disabled={!savedSwatches[sectionKey]}
+                    >
+                      <TrashIcon />
+                    </button>
                   </div>
                 </div>
-              );
-            })}
-          </div>
+                {/* Score Pills Row */}
+                <div className="score-pill-row">
+                  <ScorePill
+                    score={scores ? scores.colorRangeScore * 100 : NaN}
+                    label="Color Range:"
+                    tooltipType="colorRange"
+                    scores={scores || undefined}
+                  />
+                  <ScorePill
+                    score={scores ? scores.lightDarkScore * 100 : NaN}
+                    label="Light v Dark:"
+                    tooltipType="colorBalance"
+                    scores={scores || undefined}
+                  />
+                  <ScorePill
+                    score={scores ? scores.normalizedContrastScore * 100 : NaN}
+                    label="Accessibility:"
+                    tooltipType="accessibility"
+                    scores={scores || undefined}
+                  />
+                </div>
+              </div>
+            );
+          })}
         </div>
-      )}
+      </RightDrawer>
       <ScoresModal
         isOpen={showScoresModal}
         onClose={() => setShowScoresModal(false)}

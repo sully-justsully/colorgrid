@@ -1,6 +1,8 @@
 import React from "react";
 import { ReactComponent as TrashIcon } from "../icons/trash.svg";
 import { ReactComponent as EditIcon } from "../icons/edit.svg";
+import { ReactComponent as DownloadIcon } from "../icons/download.svg";
+import { ReactComponent as CloseIcon } from "../icons/close.svg";
 
 interface RightDrawerProps {
   isOpen: boolean;
@@ -18,14 +20,11 @@ export const RightDrawer: React.FC<RightDrawerProps> = ({
   setShowScoresModal,
 }) => {
   return (
-    <div
-      className={`fixed right-0 top-0 h-full w-80 bg-white shadow-lg transform ${
-        isOpen ? "translate-x-0" : "translate-x-full"
-      } transition-transform duration-300 ease-in-out z-50 p-4`}
-    >
-      <div className="drawer-header flex justify-between items-center mb-4 border-b pb-2">
-        <div className="flex space-x-2">
+    <div className={`right-drawer ${isOpen ? "open" : ""}`}>
+      <div className="drawer-header">
+        <div className="drawer-actions">
           <button onClick={handleDownload} className="btn">
+            <DownloadIcon />
             Download System
           </button>
           <button
@@ -40,7 +39,7 @@ export const RightDrawer: React.FC<RightDrawerProps> = ({
           className="btn btn-icon-only btn-secondary"
           aria-label="Close"
         >
-          X
+          <CloseIcon />
         </button>
       </div>
       {children}

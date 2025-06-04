@@ -18,19 +18,19 @@
 
 .dot.active {
   z-index: 2;
-  border: 0.1px solid rgba(125, 125, 125, 1);
+  border: 0.1px solid rgba(255, 0, 0, 1);
   animation: 1.5s activePulse 0.5s ease-out infinite;
 }
 
 .dot.selected {
   z-index: 4;
-  border: 0.1px solid rgba(125, 125, 125, 1);
+  border: 0.1px solid rgba(255, 0, 0, 1);
   animation: 1.5s selectedPulse 0.5s ease-out infinite;
 }
 
 .dot.selected.active {
   z-index: 5;
-  border: 0.1px solid rgba(125, 125, 125, 1);
+  border: 0.1px solid rgba(255, 0, 0, 1);
   animation: 1.5s selectedActivePulse 0.5s ease-out infinite;
 }
 

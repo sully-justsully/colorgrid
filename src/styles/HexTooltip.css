@@ -1,5 +1,4 @@
 .hex-tooltip {
-  background-color: var(--color-neutral-750);
   border-radius: 4px;
   font-size: 12px;
   white-space: nowrap;
@@ -8,6 +7,18 @@
   box-shadow: 0 2px 8px var(--color-overlay-shadow);
   min-width: 120px;
   padding: 8px 12px;
+}
+
+.hex-tooltip.light-text .hex-value,
+.hex-tooltip.light-text .lab-value,
+.hex-tooltip.light-text .hsb-value {
+  color: var(--color-neutral-00-light);
+}
+
+.hex-tooltip.dark-text .hex-value,
+.hex-tooltip.dark-text .lab-value,
+.hex-tooltip.dark-text .hsb-value {
+  color: var(--color-neutral-00-dark);
 }
 
 .hex-value {
@@ -22,7 +33,7 @@
 
 .lab-value,
 .hsb-value {
-  color: var(--color-neutral-350);
+  color: var(--color-neutral-00);
   font-size: 14px;
   font-family: "Lato", sans-serif;
   font-weight: 400;

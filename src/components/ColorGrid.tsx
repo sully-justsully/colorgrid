@@ -379,13 +379,16 @@ const ColorGrid: React.FC<ColorGridProps> = ({
       {hoveredDot && tooltipPos && (
         <div
           ref={tooltipRef}
-          className={`hex-tooltip ${tooltipPositionClass}`}
+          className={`hex-tooltip ${
+            hoveredDot.labLightness < 50 ? "light-text" : "dark-text"
+          }`}
           style={{
             position: "absolute",
             left: tooltipPos.left,
             top: tooltipPos.top,
             pointerEvents: "none",
             minWidth: 100,
+            backgroundColor: hoveredDot.hexColor,
           }}
         >
           <div className="hex-value">{hoveredDot.hexColor}</div>

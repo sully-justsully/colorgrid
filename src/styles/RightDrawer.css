@@ -4,10 +4,12 @@
   right: -640px;
   width: 640px;
   height: 100vh;
-  background-color: var(--color-neutral-750);
+  background: var(--color-overlay-background-light);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
   border-left: 1px solid var(--color-neutral-700);
   z-index: 2200;
-  transition: right 0.3s ease-in-out;
+  transition: right 0.24s ease-out;
   box-shadow: -2px 0 8px var(--color-overlay-shadow);
   display: flex;
   flex-direction: column;

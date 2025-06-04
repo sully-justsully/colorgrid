@@ -250,7 +250,7 @@ export function evaluateColorSystem(swatches: string[]): EvaluationResult {
   // --- Hue Variance ---
   const filteredSwatches = swatches.filter((hex) => {
     const l = hexToLabLightness(hex);
-    return l >= 5.1 && l <= 94.9;
+    return l >= 10.1 && l <= 89.9;
   });
   const hues = filteredSwatches.map((hex) => hexToHsb(hex).h);
   let stepScores: number[] = [];
@@ -277,7 +277,7 @@ export function evaluateColorSystem(swatches: string[]): EvaluationResult {
     `Hue Variance: step avg=${part1.toFixed(
       2
     )}, score=${hueVarianceScore.toFixed(2)}${
-      autoFail ? " (auto-fail: step >= 6)" : ""
+      autoFail ? " (auto-fail: step >= 10)" : ""
     } (L* 10.1-89.9 only, stepwise only)`
   );
 
