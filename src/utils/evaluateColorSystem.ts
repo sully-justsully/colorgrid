@@ -33,18 +33,6 @@ export interface EvaluationResult {
 }
 
 // =====================
-// Utility Functions
-// =====================
-function median(values: number[]): number {
-  if (values.length === 0) return 0;
-  const sorted = [...values].sort((a, b) => a - b);
-  const mid = Math.floor(sorted.length / 2);
-  return sorted.length % 2 !== 0
-    ? sorted[mid]
-    : (sorted[mid - 1] + sorted[mid]) / 2;
-}
-
-// =====================
 // Ideal L* Values for Swatch Counts
 // =====================
 const IDEAL_L_VALUES: { [n: number]: number[] } = {
@@ -332,32 +320,3 @@ for (let n = 1; n <= 20; n++) {
     FULL_IDEAL_L_VALUES[n] = generateIdealLValues(n);
   }
 }
-
-// =====================
-// Utility: Compute Empirical Best Combos for 3:1 and 4.5:1 Ratios
-// =====================
-function computeEmpiricalBestCombos() {
-  const combos: { [n: number]: { a: number; aa: number } } = {};
-  for (let n = 1; n <= 20; n++) {
-    const lValues = FULL_IDEAL_L_VALUES[n];
-    const hexes = lValues.map((l) => {
-      const [r, g, b] = labToRgb(l);
-      return rgbToHex(r, g, b);
-    });
-    let a = 0;
-    let aa = 0;
-    for (let i = 0; i < n; i++) {
-      for (let j = 0; j < n; j++) {
-        if (i === j) continue;
-        const ratio = calculateContrastRatio(hexes[i], hexes[j]);
-        if (ratio >= 3) a++;
-        if (ratio >= 4.5) aa++;
-      }
-    }
-    combos[n] = { a, aa };
-  }
-  return combos;
-}
-
-// Uncomment to print the mapping for copy-paste
-// console.log(JSON.stringify(computeEmpiricalBestCombos(), null, 2));

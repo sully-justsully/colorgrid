@@ -40,10 +40,7 @@ import { ReactComponent as ColorIcon } from "./icons/color.svg";
 import { ReactComponent as EyeIcon } from "./icons/eye.svg";
 import { ReactComponent as GridIcon } from "./icons/grid.svg";
 import { ReactComponent as RemoveIcon } from "./icons/remove.svg";
-import { ReactComponent as TrashIcon } from "./icons/trash.svg";
-import { ReactComponent as DownloadIcon } from "./icons/download.svg";
 import { ReactComponent as ChevronRightIcon } from "./icons/chevron-right.svg";
-import { ReactComponent as CloseIcon } from "./icons/close.svg";
 import { ReactComponent as LightModeIcon } from "./icons/light_mode.svg";
 import { ReactComponent as DarkModeIcon } from "./icons/dark_mode.svg";
 import { ReactComponent as FigmaIcon } from "./icons/figma.svg";
@@ -60,12 +57,13 @@ import "./styles/HexInputRow.css";
 import DismissibleMessage from "./components/DismissibleMessage";
 import HexTabMessage from "./components/HexTabMessage";
 import ScoresModal from "./components/ScoresModal";
-import { ReactComponent as InfoIcon } from "./icons/info.svg";
 import Toast from "./components/Toast";
-import { ReactComponent as EditIcon } from "./icons/edit.svg";
-import ReplaceModal from "./components/ReplaceModal";
 import { RightDrawer } from "./components/RightDrawer";
 import { trackEvent, AnalyticsEvents } from "./utils/analytics";
+import { ReactComponent as InfoIcon } from "./icons/info.svg";
+import { ReactComponent as EditIcon } from "./icons/edit.svg";
+import { ReactComponent as TrashIcon } from "./icons/trash.svg";
+import ReplaceModal from "./components/ReplaceModal";
 
 const STORAGE_KEY = "colorGridSwatches";
 const HEX_STORAGE_KEY = "colorGridHexCode";
@@ -203,7 +201,6 @@ const App: React.FC = () => {
   );
   const [isHexValid, setIsHexValid] = useState(true);
   const [isHexDirty, setIsHexDirty] = useState(false);
-  const [clearActiveDotsSignal, setClearActiveDotsSignal] = useState(0);
   const [isColorSystemOpen, setIsColorSystemOpen] = useState(false);
   const [pulsingRectangle, setPulsingRectangle] = useState<string | null>(null);
   const [savedSwatches, setSavedSwatches] = useState<{
@@ -295,6 +292,8 @@ const App: React.FC = () => {
     () => currentSwatches.map(() => createRef<HTMLDivElement>()),
     [currentSwatches.length]
   );
+
+  const colorGridRef = useRef<{ clearActiveDots: () => void }>(null);
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -612,18 +611,14 @@ const App: React.FC = () => {
 
   const confirmResetRamps = () => {
     if (activeTab === "hex") {
-      // Reset to a single white color ramp
       setCustomHexCodes(["FFFFFF"]);
-      // Clear active dots
-      setClearActiveDotsSignal((prev) => prev + 1);
+      // No active dots to clear in hex tab
     } else if (activeTab === "lightness") {
-      // Reset to initial lightness ramps
       const initialSwatches = createInitialSwatches(initialLValuesAdvanced);
       setSwatchesAdvanced(initialSwatches);
-      // Clear active dots
-      setClearActiveDotsSignal((prev) => prev + 1);
+      // Clear active dots directly
+      colorGridRef.current?.clearActiveDots();
     }
-
     setShowResetModal(false);
   };
 
@@ -1532,6 +1527,7 @@ const App: React.FC = () => {
                 <div className="main-content">
                   <div className="grid-container">
                     <ColorGrid
+                      ref={colorGridRef}
                       hue={activeTab === "hex" ? 210 : hue}
                       isFiltering={isFiltering}
                       isATextContrast={wcagLevel === "A"}
@@ -1543,7 +1539,6 @@ const App: React.FC = () => {
                       keyHexCode={activeTab === "hex" ? "" : keyHexCode}
                       isPickingColor={isPickingColor}
                       activeLValue={activeLValue}
-                      clearActiveDotsSignal={clearActiveDotsSignal}
                       activeTab={activeTab}
                       activeSwatchId={activeSwatchId}
                       forceGrayscale={activeTab === "hex"}

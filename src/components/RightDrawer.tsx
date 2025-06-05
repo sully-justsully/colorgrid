@@ -1,6 +1,4 @@
 import React from "react";
-import { ReactComponent as TrashIcon } from "../icons/trash.svg";
-import { ReactComponent as EditIcon } from "../icons/edit.svg";
 import { ReactComponent as DownloadIcon } from "../icons/download.svg";
 import { ReactComponent as CloseIcon } from "../icons/close.svg";
 import { trackEvent, AnalyticsEvents } from "../utils/analytics";

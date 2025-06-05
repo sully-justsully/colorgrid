@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect } from "react";
+import React, { useState, useRef } from "react";
 import "../styles/ScorePill.css";
 import { ReactComponent as PositiveIcon } from "../icons/positive.svg";
 import { ReactComponent as WarningIcon } from "../icons/warning.svg";
@@ -58,7 +58,6 @@ const ScorePill: React.FC<ScorePillProps> = ({
   scores,
 }) => {
   const [showTooltip, setShowTooltip] = useState(false);
-  const [tooltipPosition, setTooltipPosition] = useState({ top: 0, left: 0 });
   const pillRef = useRef<HTMLDivElement>(null);
 
   const v = type || getVariant(score);
@@ -68,10 +67,6 @@ const ScorePill: React.FC<ScorePillProps> = ({
 
     if (pillRef.current) {
       const rect = pillRef.current.getBoundingClientRect();
-      setTooltipPosition({
-        top: rect.bottom + 8,
-        left: rect.left + rect.width / 2,
-      });
     }
     setShowTooltip(true);
   };
