@@ -150,7 +150,6 @@ const ColorGrid: React.FC<ColorGridProps> = ({
       aaa: isAAATextContrast ? 7 : 0,
     };
 
-    // Use a more efficient loop structure
     for (let row = 0; row < 101; row++) {
       for (let col = 0; col < 101; col++) {
         const brightness = 100 - row;
@@ -158,7 +157,6 @@ const ColorGrid: React.FC<ColorGridProps> = ({
         const cached = colorCache[brightness]?.[col];
 
         if (cached) {
-          // For HEX tab, always use grayscale color
           let dotHexColor = cached.hexColor;
           if (activeTab === "hex" || forceGrayscale) {
             const [r, g, b] = hsbToRgb(hue, 0, brightness);
@@ -168,18 +166,32 @@ const ColorGrid: React.FC<ColorGridProps> = ({
           const dotKey = `${row}-${col}`;
           let isFiltered = false;
 
-          // Check if this dot is active for any swatch
-          const isActiveForAnySwatch = Array.from(activeDots.values()).includes(
-            dotKey
-          );
+          // Only check for active dots in lightness tab
+          let isActiveForAnySwatch = false;
+          let isInActiveDots = false;
+          if (activeTab === "lightness") {
+            isActiveForAnySwatch = Array.from(activeDots.values()).includes(
+              dotKey
+            );
+            isInActiveDots = forceGrayscale
+              ? false
+              : (() => {
+                  if (activeSwatchId !== null) {
+                    const swatch = swatches.find(
+                      (s) => s.id === activeSwatchId
+                    );
+                    if (swatch) {
+                      return isDotActive(dotKey, swatch.id);
+                    }
+                  }
+                  return false;
+                })();
+          }
 
-          // Only apply filtering if the dot is not active
           if (!isActiveForAnySwatch) {
-            // Apply all filters in a single pass
             if (isFiltering && lValuesSet.size > 0) {
               isFiltered = !lValuesSet.has(cached.labLightness);
             }
-
             if (
               !isFiltered &&
               (isATextContrast || isAATextContrast || isAAATextContrast)
@@ -193,28 +205,16 @@ const ColorGrid: React.FC<ColorGridProps> = ({
                   contrastThresholds.aaa
                 );
             }
-
-            // Only filter by activeLValue when explicitly picking a color
             if (isPickingColor && activeLValue !== null && !onDotHover) {
               isFiltered = Math.abs(cached.labLightness - activeLValue) > 0.5;
             }
           }
 
-          const isInActiveDots = forceGrayscale
-            ? false
-            : (() => {
-                // Use swatch hex color as key
-                if (activeSwatchId !== null) {
-                  const swatch = swatches.find((s) => s.id === activeSwatchId);
-                  if (swatch) {
-                    return isDotActive(dotKey, swatch.id);
-                  }
-                }
-                return false;
-              })();
-
-          // For active dots, ensure we use the correct color based on current hue
-          if (isActiveForAnySwatch && !forceGrayscale && activeTab !== "hex") {
+          if (
+            isActiveForAnySwatch &&
+            !forceGrayscale &&
+            activeTab === "lightness"
+          ) {
             const [r, g, b] = hsbToRgb(hue, saturation, brightness);
             dotHexColor = rgbToHex(r, g, b).toUpperCase();
           }
@@ -258,23 +258,17 @@ const ColorGrid: React.FC<ColorGridProps> = ({
 
   const handleDotClick = useCallback(
     (dot: Dot) => {
-      // Use the swatch hex color (uppercase) as the key
-      let swatchHexColor = undefined;
-      if (activeSwatchId !== null) {
-        const swatch = swatches.find((s) => s.id === activeSwatchId);
-        if (swatch) {
-          swatchHexColor = swatch.hexColor.toUpperCase();
-        }
+      // Find the matching swatch based on L* value
+      const matchingSwatch = swatches.find(
+        (s) => Math.round(s.lValue) === Math.round(dot.labLightness)
+      );
+
+      if (matchingSwatch) {
+        handleGridDotClick(dot, matchingSwatch.id);
+        onDotClick(dot);
       }
-      // Fallback: use the first swatch's hex color if no activeSwatchId
-      if (!swatchHexColor && swatches.length > 0) {
-        swatchHexColor = swatches[0].hexColor.toUpperCase();
-      }
-      if (!swatchHexColor) return;
-      handleGridDotClick(dot, swatchHexColor);
-      onDotClick(dot);
     },
-    [handleGridDotClick, onDotClick, activeSwatchId, swatches]
+    [handleGridDotClick, onDotClick, swatches]
   );
 
   // Precompute a map of swatch color to the first matching dot key
@@ -313,14 +307,18 @@ const ColorGrid: React.FC<ColorGridProps> = ({
   const renderedDots = useMemo(() => {
     return dots.map((dot, i) => {
       const dotKey = `${dot.row}-${dot.col}`;
-      // Assign each dot to a swatch by index (assuming dots are grouped by ramp)
-      // If you have a mapping from dot to swatch, use that instead
-      const swatch = swatches[i % swatches.length];
-      const swatchId = swatch ? swatch.id : undefined;
+      // Find the matching swatch based on L* value
+      const matchingSwatch = swatches.find(
+        (s) => Math.round(s.lValue) === Math.round(dot.labLightness)
+      );
+      const swatchId = matchingSwatch?.id;
+
+      // Only render as active if activeTab is 'lightness' and the dot matches the swatch's active state
       const isActive =
-        typeof swatchId === "number"
-          ? activeDots.get(swatchId) === dotKey
-          : false;
+        activeTab === "lightness" &&
+        typeof swatchId === "number" &&
+        activeDots.get(swatchId) === dotKey;
+
       // Only one dot is the key dot: the snappedKeyDot
       const isKey = snappedKeyDot
         ? dot.row === snappedKeyDot.row && dot.col === snappedKeyDot.col
@@ -338,7 +336,8 @@ const ColorGrid: React.FC<ColorGridProps> = ({
           }`}
           style={{ backgroundColor: dot.hexColor }}
           onClick={() => {
-            if (typeof swatchId === "number") handleGridDotClick(dot, swatchId);
+            if (activeTab === "lightness" && typeof swatchId === "number")
+              handleGridDotClick(dot, swatchId);
             onDotClick(dot);
           }}
           onMouseEnter={(e) => {
@@ -397,6 +396,8 @@ const ColorGrid: React.FC<ColorGridProps> = ({
     activeDots,
     onDotClick,
     snappedKeyDot,
+    onDotHover,
+    activeTab,
   ]);
 
   // Ref for tooltip to measure its size
@@ -419,13 +420,6 @@ const ColorGrid: React.FC<ColorGridProps> = ({
   // Debug: log tooltip position and hovered dot
   if (hoveredDot && tooltipPos) {
   }
-
-  // Effect: clear active dots when signal changes
-  useEffect(() => {
-    if (clearActiveDotsSignal !== undefined) {
-      clearActiveDots();
-    }
-  }, [clearActiveDotsSignal, clearActiveDots]);
 
   return (
     <div

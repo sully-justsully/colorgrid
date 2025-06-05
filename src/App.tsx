@@ -530,7 +530,7 @@ const App: React.FC = () => {
                 ? {
                     ...swatch,
                     hexColor: dot.hexColor,
-                    originalHexColor: undefined,
+                    originalHexColor: swatch.hexColor, // Store original color
                     whiteContrast: calculateContrastRatio(dot.hexColor),
                     blackContrast: calculateContrastRatio(
                       dot.hexColor,

@@ -2,97 +2,82 @@ import { useState, useCallback, useEffect, useRef } from "react";
 import { Dot } from "../types";
 
 export const useColorGrid = (activeTab: string) => {
-  // Add a ref to track if we've just cleared the dots
-  const justClearedRef = useRef(false);
-
-  // Map swatchId (number) -> dotKey
-  const [activeDots, setActiveDots] = useState<Map<number, string>>(() => {
-    console.log("Initializing activeDots state for tab:", activeTab);
-    // Skip loading from localStorage if we just cleared the dots
-    if (justClearedRef.current) {
-      console.log("Skipping localStorage load because dots were just cleared");
-      justClearedRef.current = false;
-      return new Map();
-    }
-
-    // Load from localStorage on initial mount
-    const savedDots = localStorage.getItem(`activeDots-${activeTab}`);
-    console.log("Found saved dots in localStorage:", savedDots);
-    if (savedDots) {
+  // Always initialize the state from localStorage, regardless of tab
+  const [lightnessActiveDots, setLightnessActiveDots] = useState<
+    Map<number, string>
+  >(() => {
+    const saved = localStorage.getItem("activeDots-lightness");
+    if (saved) {
       try {
-        const parsed = JSON.parse(savedDots);
-        const newMap = new Map(
-          Object.entries(parsed).map(([swatchId, dotKey]) => [
-            Number(swatchId),
-            dotKey as string,
-          ])
+        const parsed = JSON.parse(saved);
+        return new Map(
+          Object.entries(parsed).map(([k, v]) => [Number(k), v as string])
         );
-        console.log(
-          "Created initial map from localStorage:",
-          Array.from(newMap.entries())
-        );
-        return newMap;
-      } catch (e) {
-        console.error("Error loading saved active dots:", e);
+      } catch {
+        // Ignore error, start with empty
       }
     }
-    console.log("No saved dots found, starting with empty map");
     return new Map();
   });
 
-  // Save active dots to localStorage whenever they change
-  useEffect(() => {
-    // Don't save to localStorage if we just cleared the dots
-    if (justClearedRef.current) {
-      console.log("Skipping localStorage save because dots were just cleared");
-      justClearedRef.current = false; // Reset the flag so future saves work
-      return;
-    }
+  // Always expose the active dots, regardless of tab
+  const activeDots = lightnessActiveDots;
 
-    console.log(
-      "Saving active dots to localStorage:",
-      Array.from(activeDots.entries())
-    );
-    const dotsObject = Object.fromEntries(activeDots);
-    localStorage.setItem(`activeDots-${activeTab}`, JSON.stringify(dotsObject));
-  }, [activeDots, activeTab]);
-
-  const handleDotClick = useCallback((dot: Dot, swatchId: number) => {
-    const dotKey = `${dot.row}-${dot.col}`;
-    console.log("Updating active dot:", { swatchId, dotKey });
-
-    setActiveDots((prev) => {
-      const newActiveDots = new Map(prev);
-      // If the dot is already active for this swatch, do nothing; otherwise, set it as active
-      if (newActiveDots.get(swatchId) !== dotKey) {
+  const handleDotClick = useCallback(
+    (dot: Dot, swatchId: number) => {
+      if (activeTab !== "lightness") return;
+      const dotKey = `${dot.row}-${dot.col}`;
+      console.log("[DEBUG] Dot clicked:", { swatchId, dotKey });
+      setLightnessActiveDots((prev) => {
+        const newActiveDots = new Map(prev);
+        // Always update the active dot for this swatch
         newActiveDots.set(swatchId, dotKey);
-      }
-      console.log(
-        "New active dots state:",
-        Array.from(newActiveDots.entries())
-      );
-      return newActiveDots;
-    });
-    console.log("=== GRID DOT CLICK END ===");
-  }, []);
+        // Save to localStorage
+        const toObj = (map: Map<number, string>) => Object.fromEntries(map);
+        localStorage.setItem(
+          "activeDots-lightness",
+          JSON.stringify(toObj(newActiveDots))
+        );
+        return newActiveDots;
+      });
+    },
+    [activeTab]
+  );
 
   const isDotActive = useCallback(
     (dotKey: string, swatchId: number) => {
-      const isActive = activeDots.get(swatchId) === dotKey;
-      if (isActive) {
-        console.log("Dot is active:", { dotKey, swatchId });
-      }
-      return isActive;
+      return (
+        activeTab === "lightness" &&
+        lightnessActiveDots.get(swatchId) === dotKey
+      );
     },
-    [activeDots]
+    [lightnessActiveDots, activeTab]
   );
 
   const clearActiveDots = useCallback(() => {
-    console.log("Clearing active dots");
-    setActiveDots(new Map());
-    localStorage.removeItem(`activeDots-${activeTab}`);
-    justClearedRef.current = true;
+    if (activeTab !== "lightness") return;
+    setLightnessActiveDots(() => {
+      localStorage.removeItem("activeDots-lightness");
+      return new Map();
+    });
   }, [activeTab]);
+
+  // Effect to sync with localStorage on mount
+  useEffect(() => {
+    const saved = localStorage.getItem("activeDots-lightness");
+    if (saved) {
+      try {
+        const parsed = JSON.parse(saved);
+        setLightnessActiveDots(
+          new Map(
+            Object.entries(parsed).map(([k, v]) => [Number(k), v as string])
+          )
+        );
+      } catch {
+        // Ignore error, keep current state
+      }
+    }
+  }, []);
 
   return {
     handleDotClick,
