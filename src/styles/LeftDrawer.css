@@ -147,7 +147,7 @@
   left: 0;
   width: 400px;
   margin-left: -20px;
-  background: var(--color-overlay-background-light);
+  background: var(--color-overlay-background);
   backdrop-filter: blur(8px);
   -webkit-backdrop-filter: blur(8px);
   padding: 20px;

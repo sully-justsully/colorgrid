@@ -563,17 +563,6 @@ const App: React.FC = () => {
         setIsPickingColor(false);
         setActiveSwatchId(null);
       }
-
-      // Copy hex code to clipboard
-      navigator.clipboard.writeText(dot.hexColor).then(() => {
-        if (typeof window.gtag !== "undefined") {
-          window.gtag("event", "color_copied", {
-            hex_color: dot.hexColor,
-            l_value: dot.labLightness,
-            hsb_text: dot.hsbText,
-          });
-        }
-      });
     },
     [isPickingColor, activeSwatchId, activeTab, swatchesAdvanced]
   );
@@ -623,11 +612,18 @@ const App: React.FC = () => {
 
   const confirmResetRamps = () => {
     if (activeTab === "hex") {
-      setCustomHexCodes([]);
+      // Reset to a single white color ramp
+      setCustomHexCodes(["FFFFFF"]);
+      // Clear active dots
+      setClearActiveDotsSignal((prev) => prev + 1);
     } else if (activeTab === "lightness") {
-      setSwatchesAdvanced(createInitialSwatches(initialLValuesAdvanced));
+      // Reset to initial lightness ramps
+      const initialSwatches = createInitialSwatches(initialLValuesAdvanced);
+      setSwatchesAdvanced(initialSwatches);
+      // Clear active dots
+      setClearActiveDotsSignal((prev) => prev + 1);
     }
-    setClearActiveDotsSignal((prev) => prev + 1);
+
     setShowResetModal(false);
   };
 

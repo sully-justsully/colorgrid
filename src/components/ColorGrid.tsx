@@ -38,6 +38,18 @@ interface ColorGridProps {
   swatches: ColorSwatchType[];
 }
 
+// HSB color distance function
+function colorDistanceHsb(hex1: string, hex2: string) {
+  const hsb1 = hexToHsb(hex1);
+  const hsb2 = hexToHsb(hex2);
+  // Hue is circular, so use the minimum angle difference
+  const dh =
+    Math.min(Math.abs(hsb1.h - hsb2.h), 360 - Math.abs(hsb1.h - hsb2.h)) / 180; // normalize to [0,2]
+  const ds = (hsb1.s - hsb2.s) / 100;
+  const db = (hsb1.b - hsb2.b) / 100;
+  return Math.sqrt(dh * dh + ds * ds + db * db);
+}
+
 const ColorGrid: React.FC<ColorGridProps> = ({
   hue,
   isFiltering,
@@ -77,7 +89,6 @@ const ColorGrid: React.FC<ColorGridProps> = ({
   const prevActiveSwatchId = useRef(activeSwatchId);
   useEffect(() => {
     if (prevActiveSwatchId.current !== activeSwatchId) {
-      console.log("activeSwatchId changed:", activeSwatchId);
       prevActiveSwatchId.current = activeSwatchId;
     }
   }, [activeSwatchId]);
@@ -154,15 +165,6 @@ const ColorGrid: React.FC<ColorGridProps> = ({
             dotHexColor = rgbToHex(r, g, b).toUpperCase();
           }
 
-          // In forceGrayscale mode or hex tab, never show the key hex code dot
-          const isActive =
-            activeTab !== "hex" &&
-            !forceGrayscale &&
-            keyHsb !== null &&
-            Math.abs(keyHsb.h - hue) < 1 &&
-            Math.abs(keyHsb.s - saturation) < 1 &&
-            Math.abs(keyHsb.b - brightness) < 1;
-
           const dotKey = `${row}-${col}`;
           let isFiltered = false;
 
@@ -171,8 +173,8 @@ const ColorGrid: React.FC<ColorGridProps> = ({
             dotKey
           );
 
-          // Skip filtering for the key hex code dot or any active dot
-          if (!isActive && !isActiveForAnySwatch) {
+          // Only apply filtering if the dot is not active
+          if (!isActiveForAnySwatch) {
             // Apply all filters in a single pass
             if (isFiltering && lValuesSet.size > 0) {
               isFiltered = !lValuesSet.has(cached.labLightness);
@@ -192,7 +194,7 @@ const ColorGrid: React.FC<ColorGridProps> = ({
                 );
             }
 
-            // Only filter by activeLValue when explicitly picking a color, not on hover
+            // Only filter by activeLValue when explicitly picking a color
             if (isPickingColor && activeLValue !== null && !onDotHover) {
               isFiltered = Math.abs(cached.labLightness - activeLValue) > 0.5;
             }
@@ -200,9 +202,22 @@ const ColorGrid: React.FC<ColorGridProps> = ({
 
           const isInActiveDots = forceGrayscale
             ? false
-            : activeSwatchId !== null
-            ? isDotActive(dotKey, activeSwatchId)
-            : false;
+            : (() => {
+                // Use swatch hex color as key
+                if (activeSwatchId !== null) {
+                  const swatch = swatches.find((s) => s.id === activeSwatchId);
+                  if (swatch) {
+                    return isDotActive(dotKey, swatch.id);
+                  }
+                }
+                return false;
+              })();
+
+          // For active dots, ensure we use the correct color based on current hue
+          if (isActiveForAnySwatch && !forceGrayscale && activeTab !== "hex") {
+            const [r, g, b] = hsbToRgb(hue, saturation, brightness);
+            dotHexColor = rgbToHex(r, g, b).toUpperCase();
+          }
 
           const dot: Dot = {
             row,
@@ -210,8 +225,8 @@ const ColorGrid: React.FC<ColorGridProps> = ({
             hexColor: dotHexColor,
             labLightness: cached.labLightness,
             hsbText: cached.hsbText,
-            isActive,
-            isFiltered,
+            isActive: isActiveForAnySwatch,
+            isFiltered: isActiveForAnySwatch ? false : isFiltered,
             isInActiveDots,
           };
 
@@ -238,16 +253,28 @@ const ColorGrid: React.FC<ColorGridProps> = ({
     forceGrayscale,
     onDotHover,
     activeTab,
+    swatches,
   ]);
 
   const handleDotClick = useCallback(
     (dot: Dot) => {
-      // Always use a valid swatch ID (default to 0 if null)
-      const swatchId = activeSwatchId ?? 0;
-      handleGridDotClick(dot, swatchId);
+      // Use the swatch hex color (uppercase) as the key
+      let swatchHexColor = undefined;
+      if (activeSwatchId !== null) {
+        const swatch = swatches.find((s) => s.id === activeSwatchId);
+        if (swatch) {
+          swatchHexColor = swatch.hexColor.toUpperCase();
+        }
+      }
+      // Fallback: use the first swatch's hex color if no activeSwatchId
+      if (!swatchHexColor && swatches.length > 0) {
+        swatchHexColor = swatches[0].hexColor.toUpperCase();
+      }
+      if (!swatchHexColor) return;
+      handleGridDotClick(dot, swatchHexColor);
       onDotClick(dot);
     },
-    [handleGridDotClick, onDotClick, activeSwatchId]
+    [handleGridDotClick, onDotClick, activeSwatchId, swatches]
   );
 
   // Precompute a map of swatch color to the first matching dot key
@@ -264,22 +291,56 @@ const ColorGrid: React.FC<ColorGridProps> = ({
     return map;
   }, [swatches, dots]);
 
+  // Find the closest dot to keyHexCode (or exact match if present)
+  const snappedKeyDot = useMemo(() => {
+    if (!keyHexCode || dots.length === 0) return null;
+    let minDist = Infinity;
+    let closestDot = null;
+    for (const dot of dots) {
+      if (dot.hexColor.toUpperCase() === keyHexCode.toUpperCase()) {
+        return dot; // exact match
+      }
+      const dist = colorDistanceHsb(dot.hexColor, keyHexCode);
+      if (dist < minDist) {
+        minDist = dist;
+        closestDot = dot;
+      }
+    }
+    return closestDot;
+  }, [keyHexCode, dots]);
+
   // Memoize the rendered dots
   const renderedDots = useMemo(() => {
-    return dots.map((dot) => {
+    return dots.map((dot, i) => {
       const dotKey = `${dot.row}-${dot.col}`;
-      const isSelected =
-        swatchDotMap.has(dot.hexColor.toUpperCase()) &&
-        swatchDotMap.get(dot.hexColor.toUpperCase()) === dotKey;
+      // Assign each dot to a swatch by index (assuming dots are grouped by ramp)
+      // If you have a mapping from dot to swatch, use that instead
+      const swatch = swatches[i % swatches.length];
+      const swatchId = swatch ? swatch.id : undefined;
+      const isActive =
+        typeof swatchId === "number"
+          ? activeDots.get(swatchId) === dotKey
+          : false;
+      // Only one dot is the key dot: the snappedKeyDot
+      const isKey = snappedKeyDot
+        ? dot.row === snappedKeyDot.row && dot.col === snappedKeyDot.col
+        : false;
+
+      // Active or key dots cannot be filtered
+      const isFiltered = !isActive && !isKey ? dot.isFiltered : false;
+
       return (
         <div
           key={dotKey}
           data-testid="color-dot"
-          className={`dot ${dot.isActive ? "active" : ""} ${
-            dot.isFiltered ? "filtered" : ""
-          } ${isSelected ? "selected" : ""}`}
+          className={`dot${isActive ? " active" : ""}${isKey ? " key" : ""}${
+            isFiltered ? " filtered" : ""
+          }`}
           style={{ backgroundColor: dot.hexColor }}
-          onClick={() => handleDotClick(dot)}
+          onClick={() => {
+            if (typeof swatchId === "number") handleGridDotClick(dot, swatchId);
+            onDotClick(dot);
+          }}
           onMouseEnter={(e) => {
             setHoveredDot(dot);
             // Calculate position relative to grid
@@ -329,11 +390,13 @@ const ColorGrid: React.FC<ColorGridProps> = ({
     });
   }, [
     dots,
-    handleDotClick,
-    isDotActive,
+    handleGridDotClick,
     activeSwatchId,
-    onDotHover,
-    swatchDotMap,
+    swatches,
+    keyHexCode,
+    activeDots,
+    onDotClick,
+    snappedKeyDot,
   ]);
 
   // Ref for tooltip to measure its size
@@ -355,7 +418,6 @@ const ColorGrid: React.FC<ColorGridProps> = ({
 
   // Debug: log tooltip position and hovered dot
   if (hoveredDot && tooltipPos) {
-    console.log("TooltipPos:", tooltipPos, "HoveredDot:", hoveredDot);
   }
 
   // Effect: clear active dots when signal changes
@@ -364,8 +426,6 @@ const ColorGrid: React.FC<ColorGridProps> = ({
       clearActiveDots();
     }
   }, [clearActiveDotsSignal, clearActiveDots]);
-
-  console.log("ColorGrid render: activeSwatchId", activeSwatchId);
 
   return (
     <div
