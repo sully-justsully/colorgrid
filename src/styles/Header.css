@@ -16,8 +16,9 @@
 
 .app-title {
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   margin-right: auto;
+  flex-direction: column;
 }
 
 .app-title h1 {
@@ -54,4 +55,16 @@
 
 .section-header h3 {
   margin: 0;
+}
+
+.made-by {
+  font-size: 12px;
+  margin-top: 4px;
+  color: var(--color-neutral-400);
+}
+
+.wcag-filters {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
 }

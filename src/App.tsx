@@ -64,6 +64,7 @@ import { ReactComponent as InfoIcon } from "./icons/info.svg";
 import { ReactComponent as EditIcon } from "./icons/edit.svg";
 import { ReactComponent as TrashIcon } from "./icons/trash.svg";
 import ReplaceModal from "./components/ReplaceModal";
+import Header from "./components/Header";
 
 const STORAGE_KEY = "colorGridSwatches";
 const HEX_STORAGE_KEY = "colorGridHexCode";
@@ -1082,138 +1083,46 @@ const App: React.FC = () => {
           path="/"
           element={
             <>
-              <header className="app-header">
-                <button
-                  className="btn btn-secondary btn-icon-only"
-                  onClick={() => {
-                    toggleTheme();
-                    trackEvent(AnalyticsEvents.THEME_TOGGLE, {
-                      new_theme: isDarkMode ? "light" : "dark",
-                    });
-                  }}
-                  aria-label={
-                    isDarkMode ? "Switch to light mode" : "Switch to dark mode"
-                  }
-                >
-                  {isDarkMode ? <LightModeIcon /> : <DarkModeIcon />}
-                </button>
-                <div className="app-title">
-                  <h1>
-                    Color Grid Tool
-                    <span className="version-number">
-                      v.{packageJson.version}
-                    </span>
-                  </h1>
-                </div>
-                <div className="header-actions">
-                  <button
-                    onClick={() => {
-                      trackEvent(AnalyticsEvents.GET_FIGMA_FILE);
-                      window.open(
-                        "https://www.figma.com/community/file/1428517491497047139/design-system-variables-midnight-v-2-0",
-                        "_blank"
-                      );
-                    }}
-                    className="btn btn-secondary"
-                  >
-                    <FigmaIcon />
-                    Get Figma File
-                  </button>
-                  <button
-                    onClick={() => {
-                      trackEvent(AnalyticsEvents.VIEW_CONTRAST_GRID, {
-                        grid_size: activeTab,
-                        color_count: currentSwatches.length,
-                      });
-                      window.open(
-                        `/contrast-grid?tab=${
-                          activeTab === "lightness" ? "lightness" : "hex"
-                        }&swatches=${encodeURIComponent(
-                          JSON.stringify(currentSwatches)
-                        )}`,
-                        "_blank"
-                      );
-                    }}
-                    className="btn btn-secondary"
-                  >
-                    <GridIcon />
-                    View Contrast Grid
-                  </button>
-                  <div className="filters-dropdown" ref={dropdownRef}>
-                    <button
-                      onClick={() => {
-                        setShowFiltersDropdown(!showFiltersDropdown);
-                        trackEvent(AnalyticsEvents.WCAG_FILTER_CHANGE, {
-                          current_level: wcagLevel,
-                        });
-                      }}
-                      className="btn btn-secondary"
-                    >
-                      <EyeIcon />
-                      WCAG Filters
-                    </button>
-                    {showFiltersDropdown && (
-                      <div className="dropdown-menu">
-                        <div
-                          className="wcag-filters"
-                          style={{
-                            display: "flex",
-                            flexDirection: "column",
-                            gap: 8,
-                          }}
-                        >
-                          <label className="filter-option">
-                            <input
-                              type="checkbox"
-                              checked={wcagLevel === "A"}
-                              onChange={() =>
-                                handleWcagChange(
-                                  wcagLevel === "A" ? "none" : "A"
-                                )
-                              }
-                            />
-                            WCAG A (3:1)
-                          </label>
-                          <label className="filter-option">
-                            <input
-                              type="checkbox"
-                              checked={wcagLevel === "AA"}
-                              onChange={() =>
-                                handleWcagChange(
-                                  wcagLevel === "AA" ? "none" : "AA"
-                                )
-                              }
-                            />
-                            WCAG AA (4.5:1)
-                          </label>
-                          <label className="filter-option">
-                            <input
-                              type="checkbox"
-                              checked={wcagLevel === "AAA"}
-                              onChange={() =>
-                                handleWcagChange(
-                                  wcagLevel === "AAA" ? "none" : "AAA"
-                                )
-                              }
-                            />
-                            WCAG AAA (7:1)
-                          </label>
-                        </div>
-                      </div>
-                    )}
-                  </div>
-                  <button
-                    className="btn"
-                    onClick={() => {
-                      setIsColorSystemOpen(true);
-                      trackEvent(AnalyticsEvents.VIEW_SCORES);
-                    }}
-                  >
-                    <ColorIcon />
-                    Color System
-                  </button>
-                </div>
-              </header>
+              <Header
+                onThemeToggle={toggleTheme}
+                isDarkMode={isDarkMode}
+                version={packageJson.version}
+                onFigmaClick={() => {
+                  trackEvent(AnalyticsEvents.GET_FIGMA_FILE);
+                  window.open(
+                    "https://www.figma.com/community/file/1428517491497047139/design-system-variables-midnight-v-2-0",
+                    "_blank"
+                  );
+                }}
+                onContrastGridClick={() => {
+                  trackEvent(AnalyticsEvents.VIEW_CONTRAST_GRID, {
+                    grid_size: activeTab,
+                    color_count: currentSwatches.length,
+                  });
+                  window.open(
+                    `/contrast-grid?tab=${
+                      activeTab === "lightness" ? "lightness" : "hex"
+                    }&swatches=${encodeURIComponent(
+                      JSON.stringify(currentSwatches)
+                    )}`,
+                    "_blank"
+                  );
+                }}
+                onColorSystemClick={() => {
+                  setIsColorSystemOpen(true);
+                  trackEvent(AnalyticsEvents.VIEW_SCORES);
+                }}
+                onWcagFilterClick={() => {
+                  setShowFiltersDropdown(!showFiltersDropdown);
+                  trackEvent(AnalyticsEvents.WCAG_FILTER_CHANGE, {
+                    current_level: wcagLevel,
+                  });
+                }}
+                showFiltersDropdown={showFiltersDropdown}
+                wcagLevel={wcagLevel}
+                handleWcagChange={handleWcagChange}
+                setShowFiltersDropdown={setShowFiltersDropdown}
+              />
 
               <div className="main-container">
                 <div className="left-drawer">
