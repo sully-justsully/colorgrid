@@ -18,8 +18,9 @@ const DismissibleMessage: React.FC<DismissibleMessageProps> = ({
     </div>
     <div className="dismissible-message-body">
       Colors with the same lightness value have the same contrast ratios. This
-      methodology creates the backbone of your accessible color system. Adjust
-      the lightness values in the left most inputs or use the defaults provided.
+      methodology creates the backbone of your accessible color system. To get
+      started, pick a hue and then start clicking dots on the grid to build your
+      palette.
     </div>
     <button className="dismissible-message-dismiss" onClick={onDismiss}>
       Dismiss
