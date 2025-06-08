@@ -1,6 +1,6 @@
 {
   "short_name": "Color Grid",
-  "name": "Color Grid Tool - Create Beautiful Color Palettes",
+  "name": "Color Grid - Create Beautiful Color Palettes",
   "icons": [
     {
       "src": "favicon.ico",
@@ -22,5 +22,5 @@
   "display": "standalone",
   "theme_color": "#121212",
   "background_color": "#121212",
-  "description": "Create beautiful accessible color palettes with the Color Grid Tool. Perfect for designers and developers to use in their design systems."
+  "description": "Create beautiful accessible color palettes with Color Grid. Perfect for designers and developers to use in their design systems."
 }

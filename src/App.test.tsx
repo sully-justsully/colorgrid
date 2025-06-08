@@ -24,7 +24,7 @@ describe("App Component", () => {
     );
     const headings = screen.getAllByRole("heading", { level: 1 });
     expect(
-      headings.some((h: Element) => h.textContent?.includes("Color Grid Tool"))
+      headings.some((h: Element) => h.textContent?.includes("Color Grid"))
     ).toBe(true);
     expect(
       headings.some((h: Element) =>

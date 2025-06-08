@@ -1,6 +1,6 @@
-# Color Grid Tool
+# Color Grid
 
-Color Grid Tool that will help you create color palettes that have accessibility baked into their framework 🤘
+Color Grid that will help you create color palettes that have accessibility baked into their framework 🤘
 
 You can create Simple, Advanced, or Custom palettes that using the CIE-LAB color space which is directly tied to color contrast. You can even see a contrast grid in real-time based on your selections. When you're done, export the whole palette as an SVG for easy Figma usage. Enjoy!
 
