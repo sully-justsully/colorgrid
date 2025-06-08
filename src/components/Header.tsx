@@ -44,12 +44,9 @@ const Header: React.FC<HeaderProps> = ({
         {isDarkMode ? <SunIcon /> : <MoonIcon />}
       </button>
       <div className="app-title">
-        <h1>
-          Color Grid Tool
-          <span className="version-number">v.{version}</span>
-        </h1>
+        <h1 className="main-title">Color Grid Tool</h1>
         <div className="made-by">
-          Made by{" "}
+          <span className="version-number">v.{version}</span> • Made by{" "}
           <a
             href="https://www.sullydesigns.com"
             target="_blank"

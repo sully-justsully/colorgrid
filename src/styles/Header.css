@@ -22,22 +22,15 @@
 }
 
 .app-title h1 {
-  margin: 0;
-  font-size: 18px;
-  font-weight: 500;
-  color: var(--color-neutral-00);
   display: flex;
   align-items: center;
   gap: 8px;
-  font-family: "Lato", sans-serif;
 }
 
 .version-number {
-  font-size: 12px;
   color: var(--color-neutral-400);
   font-weight: 400;
-  margin-top: 7px;
-  font-family: "Lato", sans-serif;
+  margin-top: 3px;
 }
 
 .header-actions {
@@ -59,7 +52,8 @@
 
 .made-by {
   font-size: 12px;
-  margin-top: 4px;
+  font-weight: 400;
+  margin-top: 3px;
   color: var(--color-neutral-400);
 }
 
