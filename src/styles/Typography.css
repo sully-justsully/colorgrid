@@ -19,9 +19,9 @@ h1 {
   gap: 8px;
   background: -webkit-linear-gradient(
     0deg,
-    var(--color-neutral-100) 0%,
-    var(--color-error-300) 50%,
-    var(--color-primary-400) 100%
+    #ff0a85 5%,
+    #9830ff 50%,
+    #3b3bff 95%
   );
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
