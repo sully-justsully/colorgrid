@@ -48,7 +48,7 @@ const Header: React.FC<HeaderProps> = ({
         <div className="made-by">
           <span className="version-number">v.{version}</span> • Made by{" "}
           <a
-            href="https://www.sullydesigns.com"
+            href="https://www.sullydesigns.com/work/color-grid"
             target="_blank"
             rel="noopener noreferrer"
           >
